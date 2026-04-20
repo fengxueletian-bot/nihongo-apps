@@ -394,6 +394,14 @@ function importData() {
     setTimeout(() => location.reload(), 1500);
   } catch(e) { showSyncMsg('❌ 数据格式错误，请检查'); }
 }
+function quickExport() {
+  var keys = Object.keys(localStorage), data = {};
+  keys.forEach(function(k) { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
+  var json = JSON.stringify(data);
+  try { navigator.clipboard.writeText(json).then(function() { alert("✅ 已复制！在其他设备首页粘贴导入"); }); }
+  catch(e) { prompt("请手动复制以下数据：", json); }
+}
+
 function showSyncMsg(msg) {
   const el = document.getElementById('syncMsg');
   el.textContent = msg; el.style.display = 'block';

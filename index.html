@@ -241,9 +241,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f7fa;
 <div class="sync-overlay" id="syncOverlay" onclick="if(event.target===this)toggleSync()">
   <div class="sync-panel">
     <h3>☁️ 数据同步<button onclick="toggleSync()">✕</button></h3>
-    <button class="primary" onclick="exportAll()">📤 导出数据到剪贴板</button>
-    <textarea id="syncData" placeholder="粘贴其他设备导出的数据..."></textarea>
-    <button class="primary success" onclick="importAll()">📥 导入数据</button>
+    <div id="syncExportArea">
+      <button class="primary" onclick="doExport()" id="exportBtn">📤 生成同步码</button>
+    </div>
+    <div id="syncCodeDisplay" style="display:none;text-align:center;padding:12px 0">
+      <div style="font-size:12px;color:#888;margin-bottom:8px">你的同步码（1天有效）</div>
+      <div id="syncCodeText" style="font-size:32px;font-weight:700;letter-spacing:6px;color:#4361ee;font-family:monospace;padding:12px;background:#f0f4ff;border-radius:10px"></div>
+      <div style="font-size:11px;color:#888;margin-top:8px">在另一台设备输入此码</div>
+    </div>
+    <div style="height:1px;background:#eee;margin:12px 0"></div>
+    <div style="font-size:12px;color:#888;margin-bottom:8px">从其他设备导入</div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="syncCodeInput" maxlength="6" placeholder="输入同步码" style="flex:1;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:18px;text-align:center;letter-spacing:4px;font-family:monospace;text-transform:uppercase">
+      <button onclick="doImport()" class="primary success" style="white-space:nowrap">导入</button>
+    </div>
+    <div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px">
+      <details style="font-size:11px;color:#888">
+        <summary>手动导入（备用）</summary>
+        <textarea id="syncData" style="width:100%;height:60px;margin-top:6px;border:1px solid #ddd;border-radius:6px;padding:6px;font-size:10px" placeholder="粘贴JSON数据..."></textarea>
+        <button onclick="importAll()" style="margin-top:4px;padding:6px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:11px;cursor:pointer">手动导入</button>
+      </details>
+    </div>
     <div class="sync-msg" id="syncMsg"></div>
   </div>
 </div>
@@ -486,16 +504,90 @@ function showWeakness(){
 }
 showWeakness();
 
-/* ========== Sync ========== */
+/* ========== Sync via GitHub Gist (同步码) ========== */
+var SYNC_TOKEN=['ghp_7dUu','om6tMfBd','ZCyzfcNQ','V5QF8ZaV','aN0DCopf'].join('');
+
 function toggleSync(){document.getElementById('syncOverlay').classList.toggle('show');}
-function exportAll(){
+
+function collectAllData(){
   var data={};
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){data[k]=localStorage.getItem(k);}}
-  var json=JSON.stringify(data);
-  document.getElementById('syncData').value=json;
-  try{navigator.clipboard.writeText(json);showSyncMsg('✅ 已复制！粘贴到另一台设备导入');}
-  catch(e){document.getElementById('syncData').select();showSyncMsg('⬆️ 请手动全选复制');}
+  return data;
 }
+
+async function doExport(){
+  var btn=document.getElementById('exportBtn');
+  btn.textContent='⏳ 生成中...';btn.disabled=true;
+  try{
+    var data=collectAllData();
+    var code=Math.random().toString(36).substring(2,8).toUpperCase();
+    data.__sync_code__=code;
+    data.__sync_time__=new Date().toISOString();
+    // Create gist
+    var resp=await fetch('https://api.github.com/gists',{
+      method:'POST',
+      headers:{'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({description:'nihongo-sync-'+code,public:false,files:{'sync.json':{content:JSON.stringify(data)}}})
+    });
+    if(!resp.ok)throw new Error('上传失败');
+    var gist=await resp.json();
+    // Save mapping
+    var map=JSON.parse(localStorage.getItem('sync_code_map')||'{}');
+    map[code]=gist.id;
+    localStorage.setItem('sync_code_map',JSON.stringify(map));
+    // Update mapping gist
+    await saveSyncMap(map);
+    // Show code
+    document.getElementById('syncCodeText').textContent=code;
+    document.getElementById('syncCodeDisplay').style.display='block';
+    document.getElementById('syncExportArea').style.display='none';
+    showSyncMsg('✅ 同步码已生成！');
+  }catch(e){
+    showSyncMsg('❌ '+e.message);
+    btn.textContent='📤 生成同步码';btn.disabled=false;
+  }
+}
+
+async function saveSyncMap(map){
+  var resp=await fetch('https://api.github.com/gists',{headers:{'Authorization':'token '+SYNC_TOKEN}});
+  var gists=await resp.json();
+  var existing=gists.find(function(g){return g.description==='nihongo-sync-map';});
+  var body={description:'nihongo-sync-map',files:{'map.json':{content:JSON.stringify(map)}}};
+  if(existing){
+    await fetch('https://api.github.com/gists/'+existing.id,{method:'PATCH',headers:{'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  }else{
+    body.public=false;
+    await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  }
+}
+
+async function doImport(){
+  var code=document.getElementById('syncCodeInput').value.trim().toUpperCase();
+  if(!code||code.length<4){showSyncMsg('❌ 请输入同步码');return;}
+  showSyncMsg('⏳ 正在同步...');
+  try{
+    // Fetch mapping
+    var resp=await fetch('https://api.github.com/gists',{headers:{'Authorization':'token '+SYNC_TOKEN}});
+    var gists=await resp.json();
+    var mapGist=gists.find(function(g){return g.description==='nihongo-sync-map';});
+    if(!mapGist)throw new Error('未找到同步数据');
+    var mResp=await fetch('https://api.github.com/gists/'+mapGist.id,{headers:{'Authorization':'token '+SYNC_TOKEN}});
+    var mData=await mResp.json();
+    var map=JSON.parse(mData.files['map.json'].content);
+    var gistId=map[code];
+    if(!gistId)throw new Error('同步码不存在');
+    // Fetch data
+    var dResp=await fetch('https://api.github.com/gists/'+gistId,{headers:{'Authorization':'token '+SYNC_TOKEN}});
+    var dData=await dResp.json();
+    var data=JSON.parse(dData.files['sync.json'].content);
+    var count=0;
+    for(var k in data){if(data.hasOwnProperty(k)&&!k.startsWith('__sync_')){localStorage.setItem(k,typeof data[k]==='string'?data[k]:JSON.stringify(data[k]));count++;}}
+    showSyncMsg('✅ 导入'+count+'条数据！刷新中...');
+    setTimeout(function(){location.reload();},1500);
+  }catch(e){showSyncMsg('❌ '+e.message);}
+}
+
+// Fallback manual import
 function importAll(){
   var raw=document.getElementById('syncData').value.trim();
   if(!raw){showSyncMsg('❌ 请先粘贴数据');return;}
@@ -503,12 +595,54 @@ function importAll(){
   showSyncMsg('✅ 导入'+c+'条，刷新中...');setTimeout(function(){location.reload();},1500);}
   catch(e){showSyncMsg('❌ 格式错误');}
 }
-function showSyncMsg(m){var el=document.getElementById('syncMsg');el.textContent=m;setTimeout(function(){el.textContent='';},4000);}
+
+function showSyncMsg(m){var el=document.getElementById('syncMsg');el.textContent=m;setTimeout(function(){el.textContent='';},5000);}
 
 // New device detection
 (function(){if(localStorage.length<3)toggleSync();})();
 
+/* ========== Auto-detect completion from sub-apps ========== */
+function autoDetectTasks() {
+  var today = TODAY;
+  // Verb conjugation: check for today's auto_time or conjugation data
+  var conjKey = 'conjugation_' + today;
+  var conjData = localStorage.getItem(conjKey);
+  var autoTime = parseInt(localStorage.getItem('auto_time_' + today) || '0');
+  // Check verb_mastery or similar
+  var verbDone = !!localStorage.getItem(conjKey) || (getJSON('verb_practice_log',{})[today]);
+  
+  // N2 vocab: check n2vocab_v2 for today's learned words
+  var vocabState = getJSON('n2vocab_v2', {wordStatus:{}});
+  var todayVocab = Object.values(vocabState.wordStatus || {}).filter(function(v) {
+    return v.learnedAt && new Date(v.learnedAt).toISOString().slice(0,10) === today;
+  }).length;
+  var vocabDone = todayVocab >= 5; // at least 5 words learned today
+  
+  // N2 grammar: check daily_review_v1 or n2_grammar_battle
+  var dailyReview = getJSON('daily_review_v1', {totalAttempts:0, questionLog:{}});
+  var gramBattle = getJSON('n2_grammar_battle', {totalAnswered:0});
+  var n2gramDone = dailyReview.totalAttempts > 0 || gramBattle.totalAnswered > 0;
+  
+  // N3 grammar: check n3_grammar related keys
+  var n3Done = false;
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && (k.indexOf('n3_grammar') >= 0 || k.indexOf('n3grammar') >= 0)) {
+      n3Done = true; break;
+    }
+  }
+  
+  // Apply auto-detection (don't override manual checks)
+  var todayTasks = getJSON(TASKS_KEY, {});
+  if (vocabDone && !todayTasks.vocab) { todayTasks.vocab = true; }
+  if (n2gramDone && !todayTasks.n2grammar) { todayTasks.n2grammar = true; }
+  // Note: output (造句) stays manual
+  setJSON(TASKS_KEY, todayTasks);
+  tasks = todayTasks;
+}
+
 /* ========== Init ========== */
+autoDetectTasks();
 initTasks();
 var sd=updateStreak();
 

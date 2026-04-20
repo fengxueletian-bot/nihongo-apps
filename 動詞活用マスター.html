@@ -570,7 +570,8 @@ function startChallengeRound() {
     app.innerHTML = '<div class="card"><h2>🏆 結果</h2>'+
       '<div class="timer">'+challengeCorrect+' / '+challengeCount+' 問正解！</div>'+
       (challengeCorrect > state.challengeBest - 1 ? '<p style="text-align:center;color:#06d6a0;font-weight:700">🎉 新記録！</p>' : '')+
-      '<button class="btn btn-primary btn-block" onclick="renderChallenge()" style="margin-top:12px">もう一回</button></div>';
+      '<button class="btn btn-primary btn-block" onclick="renderChallenge()" style="margin-top:12px">もう一回</button>'+
+      '<button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer;display:block;margin-left:auto;margin-right:auto">☁️ 同步数据到其他设备</button></div>';
   }, 60000);
 }
 
@@ -705,6 +706,14 @@ function showSyncMsg(msg) {
   const el = document.getElementById('syncMsg');
   el.textContent = msg; el.style.display = 'block';
   setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+function quickExport() {
+  const keys = Object.keys(localStorage);
+  const data = {};
+  keys.forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
+  const json = JSON.stringify(data);
+  try { navigator.clipboard.writeText(json).then(() => alert('✅ 已复制！在其他设备首页粘贴导入')); }
+  catch(e) { prompt('请手动复制以下数据：', json); }
 }
 </script>
 <a href="index.html" style="position:fixed;bottom:16px;left:16px;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;z-index:998">🏠</a>

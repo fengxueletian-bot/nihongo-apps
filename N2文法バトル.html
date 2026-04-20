@@ -281,7 +281,7 @@ function render() {
 // === Battle Mode ===
 function renderBattle(el) {
   if (currentQ >= battleQuestions.length) {
-    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 全部完了！</h2><p>正确率: ' + Math.round(state.totalCorrect/Math.max(1,state.totalAnswered)*100) + '%</p></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div></div>';
+    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 全部完了！</h2><p>正确率: ' + Math.round(state.totalCorrect/Math.max(1,state.totalAnswered)*100) + '%</p></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div><div style="text-align:center"><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据到其他设备</button></div></div>';
     return;
   }
   const q = battleQuestions[currentQ];
@@ -390,13 +390,34 @@ function pickWord(idx) {
   const q = arrangeQuestions[currentQ];
   if (arrangeSelected.includes(idx)) return;
   arrangeSelected.push(idx);
-  document.getElementById('aw'+idx).style.opacity = '0.3';
-  document.getElementById('aw'+idx).style.pointerEvents = 'none';
+  updateArrangeDisplay();
+}
+
+function unpickWord(pos) {
+  const idx = arrangeSelected[pos];
+  arrangeSelected.splice(pos, 1);
+  updateArrangeDisplay();
+}
+
+function updateArrangeDisplay() {
+  const q = arrangeQuestions[currentQ];
+  // Update word bank visibility
+  q.words.forEach((w, i) => {
+    const el = document.getElementById('aw' + i);
+    if (el) {
+      if (arrangeSelected.includes(i)) {
+        el.style.opacity = '0.3';
+        el.style.pointerEvents = 'none';
+      } else {
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+      }
+    }
+  });
+  // Update answer area - click to remove
   const area = document.getElementById('arrangeAnswer');
-  area.innerHTML = arrangeSelected.map(i => `<div class="arrange-word placed">${q.words[i]}</div>`).join('');
-  if (arrangeSelected.length === q.words.length) {
-    document.getElementById('checkArrBtn').disabled = false;
-  }
+  area.innerHTML = arrangeSelected.map((i, pos) => `<div class="arrange-word placed" onclick="unpickWord(${pos})" title="点击取消">${q.words[i]}</div>`).join('');
+  document.getElementById('checkArrBtn').disabled = arrangeSelected.length !== q.words.length;
 }
 
 function resetArrange() { render(); }
@@ -460,12 +481,20 @@ function answerFill(blankId, idx) {
   state.sm2[key] = SM2.review(card, correct ? 4 : 1);
   saveState();
   updateStats();
+  // Show per-blank explanation immediately
+  const blankExplEl = document.createElement('div');
+  blankExplEl.className = 'explain';
+  blankExplEl.style.marginTop = '8px';
+  const correctOption = blank.options[blank.answer];
+  blankExplEl.innerHTML = `${correct ? '✅' : '❌'} （${blankId}）正解：<strong>${correctOption}</strong>`;
+  document.getElementById('fillOpts' + blankId).after(blankExplEl);
+
   // Check if all blanks answered
   if (Object.keys(fillAnswers).length === q.blanks.length) {
     const allCorrect = q.blanks.every(b => fillAnswers[b.id] === b.answer);
     const explEl = document.getElementById('fillExplain');
     explEl.classList.remove('hidden');
-    explEl.innerHTML = `<div class="explain">${allCorrect ? '✅ 全問正解！' : '一部間違いがあります。復習しましょう。'}</div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
+    explEl.innerHTML = `<div class="explain">${allCorrect ? '✅ 全問正解！' : '❌ 一部間違いがあります。復習しましょう。'}</div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
   }
 }
 
@@ -484,7 +513,22 @@ function renderReview(el) {
         復習待ち: ${due.length}個
       </p>
       ${weak.length > 0 ? `<h4 style="margin-top:16px;color:#e63946;">⚠️ 薄弱ポイント</h4>
-        ${weak.slice(0,10).map(([k,v]) => `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">${k} (ease: ${v.ease.toFixed(2)})</div>`).join('')}` : '<p style="color:#2ec4b6;margin-top:12px;">✨ 薄弱ポイントなし！</p>'}
+        ${weak.slice(0,10).map(([k,v]) => {
+        let label = k;
+        // Resolve key to readable grammar label
+        const parts = k.split('_');
+        if (parts[0] === 'battle' && battleQuestions[+parts[1]]) {
+          const bq = battleQuestions[+parts[1]];
+          label = bq.options.join(' vs ');
+        } else if (parts[0] === 'connect' && connectionQuestions[+parts[1]]) {
+          label = connectionQuestions[+parts[1]].grammar;
+        } else if (parts[0] === 'arrange' && arrangeQuestions[+parts[1]]) {
+          label = '\u6392\u5217: ' + arrangeQuestions[+parts[1]].answerText;
+        } else if (parts[0] === 'fill') {
+          label = '\u586b\u7a7a\u7b2c' + parts[1] + '\u984c-\u7a7a' + parts[2];
+        }
+        return '<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' + label + ' (ease: ' + v.ease.toFixed(2) + ')</div>';
+      }).join('')}` : '<p style="color:#2ec4b6;margin-top:12px;">\u2728 \u8584\u5f31\u30dd\u30a4\u30f3\u30c8\u306a\u3057\uff01</p>'}
       <div class="btn-group">
         <button class="btn btn-danger btn-sm" onclick="if(confirm('リセットしますか？')){localStorage.removeItem('${STORAGE_KEY}');location.reload();}">データリセット</button>
       </div>
@@ -524,6 +568,15 @@ function showSyncMsg(msg) {
   const el = document.getElementById('syncMsg');
   el.textContent = msg; el.style.display = 'block';
   setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function quickExport() {
+  const keys = Object.keys(localStorage);
+  const data = {};
+  keys.forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
+  const json = JSON.stringify(data);
+  try { navigator.clipboard.writeText(json).then(() => alert('✅ 已复制！在其他设备首页粘贴导入')); }
+  catch(e) { prompt('请手动复制以下数据：', json); }
 }
 </script>
 <a href="index.html" style="position:fixed;bottom:16px;left:16px;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;z-index:998">🏠</a>
