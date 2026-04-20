@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>N3 聴解トレーニング</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;background:#f5f7fa;color:#333;min-height:100vh;padding-bottom:80px}
+.header{background:#4361ee;color:#fff;padding:16px;text-align:center;position:sticky;top:0;z-index:10}
+.header h1{font-size:18px;margin-bottom:10px}
+.tabs{display:flex;gap:6px;justify-content:center}
+.tab{padding:6px 14px;border-radius:20px;font-size:13px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;cursor:pointer;transition:.2s}
+.tab.active{background:#fff;color:#4361ee;border-color:#fff;font-weight:600}
+.container{max-width:500px;margin:0 auto;padding:12px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-title{font-size:13px;color:#888;margin-bottom:8px;font-weight:600}
+.play-area{text-align:center}
+.play-btn{width:64px;height:64px;border-radius:50%;border:none;background:#4361ee;color:#fff;font-size:24px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
+.play-btn:disabled{background:#ccc;cursor:not-allowed}
+.play-btn:active:not(:disabled){transform:scale(.92)}
+.play-info{margin-top:8px;font-size:13px;color:#888}
+.speed-row{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.speed-btn{padding:4px 12px;border-radius:12px;border:1.5px solid #ddd;background:#fff;font-size:12px;cursor:pointer;transition:.2s}
+.speed-btn.active{border-color:#4361ee;color:#4361ee;font-weight:600}
+.question-text{font-size:15px;font-weight:600;margin-bottom:12px;line-height:1.5}
+.options{display:flex;flex-direction:column;gap:8px}
+.opt-btn{padding:12px 14px;border-radius:10px;border:1.5px solid #ddd;background:#fff;font-size:14px;text-align:left;cursor:pointer;transition:.15s;line-height:1.4}
+.opt-btn:active{transform:scale(.98)}
+.opt-btn.selected{border-color:#4361ee;background:#eef1ff}
+.opt-btn.correct{border-color:#2ecc71;background:#eafaf1}
+.opt-btn.wrong{border-color:#e74c3c;background:#fdecea}
+.opt-btn.reveal{border-color:#2ecc71;background:#eafaf1}
+.opt-btn.locked{pointer-events:none}
+.explanation{background:#f8f9ff;border-radius:10px;padding:14px;margin-top:12px;font-size:13px;line-height:1.7;display:none}
+.explanation.show{display:block}
+.explanation .script{background:#fff;border-radius:8px;padding:10px;margin-bottom:10px;font-size:13px;line-height:1.7}
+.explanation .script .speaker{color:#4361ee;font-weight:600}
+.explanation .analysis{color:#555}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10}
+.nav-btn{padding:8px 18px;border-radius:10px;border:1.5px solid #ddd;background:#fff;font-size:13px;cursor:pointer}
+.nav-btn:disabled{opacity:.4;cursor:not-allowed}
+.nav-btn.primary{background:#4361ee;color:#fff;border-color:#4361ee}
+.stats{font-size:12px;color:#888;text-align:center}
+.progress-bar{height:3px;background:#e0e0e0;border-radius:2px;margin-top:6px;overflow:hidden}
+.progress-fill{height:100%;background:#4361ee;transition:width .3s}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🎧 N3 聴解トレーニング</h1>
+<div class="tabs">
+<button class="tab active" onclick="switchMode(0)">要点理解</button>
+<button class="tab" onclick="switchMode(1)">細部聴取</button>
+<button class="tab" onclick="switchMode(2)">即時応答</button>
+</div>
+</div>
+<div class="container">
+<div class="card play-area" id="playCard">
+<div class="card-title">🔊 音声</div>
+<button class="play-btn" id="playBtn" onclick="playAudio()">▶</button>
+<div class="play-info" id="playInfo">再生回数：2回残り</div>
+<div class="speed-row">
+<button class="speed-btn" onclick="setSpeed(0.8)">0.8x</button>
+<button class="speed-btn active" onclick="setSpeed(1.0)">1.0x</button>
+<button class="speed-btn" onclick="setSpeed(1.2)">1.2x</button>
+</div>
+</div>
+<div class="card" id="questionCard">
+<div class="question-text" id="questionText"></div>
+<div class="options" id="optionsDiv"></div>
+<div class="explanation" id="explanationDiv"></div>
+</div>
+</div>
+<div class="nav-bar">
+<button class="nav-btn" id="prevBtn" onclick="prevQ()">← 前へ</button>
+<div class="stats" id="statsDiv">
+<div id="statsText">1 / 10</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+<button class="nav-btn primary" id="nextBtn" onclick="nextQ()">次へ →</button>
+</div>
+<script>
+var DATA = {
+yoten: [
+  {type:"dialogue",speakers:[{name:"女",text:"来週の土曜日、映画に行かない？"},{name:"男",text:"いいね。でも、午前中はバイトがあるんだ。"},{name:"女",text:"じゃ、午後の回にしよう。3時のはどう？"},{name:"男",text:"うん、それがいいね。駅の前で会おう。"}],question:"二人はいつ映画を見ますか。",options:["来週の土曜日の午前","来週の土曜日の午後3時","来週の日曜日の午後","今週の土曜日の午後"],answer:1,explanation:"考点：時間の聞き取り。正解理由：男性は午前中バイトがあるため午後にし、女性が「3時の回」を提案して男性が同意した。"},
+  {type:"dialogue",speakers:[{name:"男",text:"すみません、この荷物を送りたいんですが。"},{name:"女",text:"はい。どちらまでですか。"},{name:"男",text:"大阪までです。いちばん早い方法でお願いします。"},{name:"女",text:"速達ですと明日届きますが、料金は1200円になります。普通だと3日で600円です。"},{name:"男",text:"じゃ、速達でお願いします。"}],question:"男の人は何を選びましたか。",options:["普通で600円","速達で600円","速達で1200円","普通で1200円"],answer:2,explanation:"考点：選択内容の把握。正解理由：男性は「いちばん早い方法」を希望し、速達1200円を選んだ。"},
+  {type:"dialogue",speakers:[{name:"女",text:"田中さん、来月の歓迎会の場所、決まりましたか。"},{name:"男",text:"はい、駅前のイタリアンレストランにしました。"},{name:"女",text:"あ、あそこは予約が取りにくいですよね。"},{name:"男",text:"ええ、でも火曜日なら大丈夫でした。"},{name:"女",text:"火曜日ですね。わかりました。"}],question:"歓迎会について正しいのはどれですか。",options:["場所がまだ決まっていない","月曜日に行う","駅前のイタリアンレストランで火曜日に行う","中華レストランで行う"],answer:2,explanation:"考点：複数情報の統合。正解理由：場所は「駅前のイタリアンレストラン」、日は「火曜日」と決まった。"},
+  {type:"dialogue",speakers:[{name:"男",text:"もしもし、鈴木ですが、山田先生はいらっしゃいますか。"},{name:"女",text:"申し訳ございません。山田は今、会議中です。4時ごろ終わる予定です。"},{name:"男",text:"そうですか。では、4時過ぎにもう一度お電話します。"},{name:"女",text:"かしこまりました。山田に申し伝えます。"}],question:"鈴木さんはこのあとどうしますか。",options:["山田先生の会議に参加する","メールを送る","4時過ぎにもう一度電話する","明日また電話する"],answer:2,explanation:"考点：次の行動の聞き取り。正解理由：鈴木さんは「4時過ぎにもう一度お電話します」と言った。"},
+  {type:"dialogue",speakers:[{name:"女",text:"すみません、このセーターの色違いはありますか。"},{name:"男",text:"はい、白と青がございます。"},{name:"女",text:"青を見せてください。…あ、きれいですね。でもMサイズはありますか。"},{name:"男",text:"申し訳ございません。青はLサイズしか残っていません。白ならMがございます。"},{name:"女",text:"じゃ、白のMをください。"}],question:"女の人は何を買いますか。",options:["青のLサイズ","白のMサイズ","青のMサイズ","白のLサイズ"],answer:1,explanation:"考点：最終決定の把握。正解理由：青のMはなく、白のMがあったので「白のMをください」と決めた。"},
+  {type:"dialogue",speakers:[{name:"男",text:"今度の連休、どこか行きたいところある？"},{name:"女",text:"温泉に行きたいな。箱根はどう？"},{name:"男",text:"箱根はこの前行ったから、熱海にしない？"},{name:"女",text:"あ、いいね。熱海なら海も見えるし。"},{name:"男",text:"じゃ、ホテルを予約するね。"}],question:"二人はどこに行くことにしましたか。",options:["箱根の温泉","熱海","東京の海","京都"],answer:1,explanation:"考点：最終合意の聞き取り。正解理由：箱根は前に行ったので熱海を提案し、女性も同意した。"},
+  {type:"dialogue",speakers:[{name:"女",text:"李さん、日本語がとても上手ですね。どのくらい勉強しましたか。"},{name:"男",text:"ありがとうございます。大学で2年勉強して、日本に来てからもう1年になります。"},{name:"女",text:"じゃ、全部で3年ですね。"},{name:"男",text:"はい、でもまだまだです。"}],question:"李さんは日本語をどのくらい勉強しましたか。",options:["1年","2年","3年","4年"],answer:2,explanation:"考点：数量の計算。正解理由：大学で2年＋日本で1年＝合計3年。"},
+  {type:"dialogue",speakers:[{name:"男",text:"今日の会議、3時からでしたよね。"},{name:"女",text:"あ、さっきメールが来て、2時半に変更になりましたよ。"},{name:"男",text:"えっ、本当ですか。場所は同じですか。"},{name:"女",text:"場所は5階の大会議室に変わりました。"},{name:"男",text:"わかりました。ありがとうございます。"}],question:"会議について正しいのはどれですか。",options:["3時から、場所は変更なし","2時半から、5階の大会議室","3時から、5階の大会議室","2時半から、場所は変更なし"],answer:1,explanation:"考点：変更情報の正確な把握。正解理由：時間は3時→2時半に、場所は5階の大会議室に変更された。"}
+],
+saibun: [
+  {type:"dialogue",speakers:[{name:"女",text:"山田くん、明日の遠足、持ち物を確認しようよ。"},{name:"男",text:"うん。お弁当と水筒と…あと何がいるんだっけ。"},{name:"女",text:"先生がレジャーシートと帽子も持ってくるように言ってたよ。"},{name:"男",text:"あ、そうだった。帽子、家にあるかな…。"},{name:"女",text:"なかったら買わないとね。"}],question:"先生が持ってくるように言ったものは何ですか。",options:["お弁当と水筒","レジャーシートと帽子","お弁当と帽子","水筒とレジャーシート"],answer:1,explanation:"考点：特定の人が言った内容。正解理由：先生が言ったのは「レジャーシートと帽子」。弁当と水筒は自分たちで確認した。"},
+  {type:"dialogue",speakers:[{name:"男",text:"すみません、東京行きの新幹線は何番ホームですか。"},{name:"女",text:"東京行きは14番ホームです。次の電車は10時15分発です。"},{name:"男",text:"10時15分ですね。自由席はありますか。"},{name:"女",text:"はい、1号車から3号車が自由席です。"}],question:"自由席は何号車ですか。",options:["1号車だけ","1号車から3号車","14号車","10号車から15号車"],answer:1,explanation:"考点：具体的な数字の聞き取り。正解理由：「1号車から3号車が自由席」と案内された。"},
+  {type:"monologue",text:"お知らせします。本日午後2時から、3階の図書室で読書会を行います。参加希望の方は、昼休みまでに担任の先生に申し込んでください。持ち物は特にありません。お気に入りの本がある方は持ってきてもいいです。",question:"読書会に参加するにはどうすればいいですか。",options:["3階に直接行く","本を持って図書室に行く","昼休みまでに担任の先生に申し込む","放課後に申し込む"],answer:2,explanation:"考点：手続き方法の聞き取り。正解理由：「昼休みまでに担任の先生に申し込んでください」と指示されている。"},
+  {type:"dialogue",speakers:[{name:"女",text:"お電話ありがとうございます。ABCクリニックです。"},{name:"男",text:"予約をしたいのですが。木曜日の午後は空いていますか。"},{name:"女",text:"木曜日の午後は休診です。金曜日の午前はいかがですか。"},{name:"男",text:"金曜日は仕事があるので…水曜日はどうですか。"},{name:"女",text:"水曜日の午後3時なら空いています。"},{name:"男",text:"じゃ、それでお願いします。"}],question:"男の人はいつ予約しましたか。",options:["木曜日の午後","金曜日の午前","水曜日の午後3時","水曜日の午前"],answer:2,explanation:"考点：最終的な予約日時。正解理由：木曜午後は休診、金曜は仕事で無理、水曜午後3時で決定。"},
+  {type:"dialogue",speakers:[{name:"男",text:"ただいま。今日、会社で面白いことがあったよ。"},{name:"女",text:"何があったの？"},{name:"男",text:"新しい部長が来たんだけど、すごく若いんだ。まだ30歳だって。"},{name:"女",text:"へえ、30歳で部長なんてすごいね。"},{name:"男",text:"うん。それに、前はアメリカの会社にいたらしいよ。"}],question:"新しい部長について正しいのはどれですか。",options:["50歳で経験豊富","30歳で前はアメリカの会社にいた","アメリカ人で30歳","女性で30歳"],answer:1,explanation:"考点：人物情報の統合。正解理由：30歳で、以前はアメリカの会社にいたという2つの情報。"},
+  {type:"monologue",text:"まもなく、2番線に快速電車が参ります。この電車は、新宿、池袋、大宮に止まります。次の各駅停車は5分後に3番線から発車します。お急ぎの方は快速電車をご利用ください。",question:"大宮に行きたい人はどうすればいいですか。",options:["3番線で各駅停車に乗る","5分後の電車に乗る","2番線で快速電車に乗る","1番線で特急に乗る"],answer:2,explanation:"考点：適切な行動の判断。正解理由：快速電車は大宮に止まり、2番線から発車する。"},
+  {type:"dialogue",speakers:[{name:"女",text:"いらっしゃいませ。ご注文はお決まりですか。"},{name:"男",text:"ハンバーグ定食をお願いします。"},{name:"女",text:"ライスとパン、どちらになさいますか。"},{name:"男",text:"ライスで。あと、食後にコーヒーをお願いします。"},{name:"女",text:"かしこまりました。コーヒーはホットとアイス、どちらがよろしいですか。"},{name:"男",text:"ホットでお願いします。"}],question:"男の人は何を注文しましたか。",options:["ハンバーグ定食（パン）とアイスコーヒー","ハンバーグ定食（ライス）とホットコーヒー","ハンバーグ定食（ライス）とアイスコーヒー","ハンバーグ定食（パン）とホットコーヒー"],answer:1,explanation:"考点：複数の選択肢の組み合わせ。正解理由：ライスを選び、食後のコーヒーはホット。"},
+  {type:"dialogue",speakers:[{name:"男",text:"あのう、この辺に郵便局はありますか。"},{name:"女",text:"郵便局ですか。この道をまっすぐ行って、2つ目の信号を右に曲がってください。"},{name:"男",text:"2つ目の信号を右ですね。"},{name:"女",text:"はい、そうすると左側にコンビニがあります。郵便局はその隣です。"},{name:"男",text:"ありがとうございます。"}],question:"郵便局はどこにありますか。",options:["コンビニの中","2つ目の信号の左側","2つ目の信号を右に曲がった先のコンビニの隣","1つ目の信号を右に曲がったところ"],answer:2,explanation:"考点：道案内の理解。正解理由：2つ目の信号を右→左側のコンビニの隣。"},
+  {type:"dialogue",speakers:[{name:"女",text:"鈴木さん、引っ越しはいつですか。"},{name:"男",text:"来月の15日です。新しいアパートは会社から歩いて10分なんですよ。"},{name:"女",text:"いいですね。今は電車で1時間かかってるんですよね。"},{name:"男",text:"はい、だから朝がすごく楽になります。"}],question:"新しいアパートから会社までどのくらいですか。",options:["電車で1時間","歩いて1時間","歩いて10分","電車で10分"],answer:2,explanation:"考点：新旧情報の区別。正解理由：新しいアパートは「会社から歩いて10分」。電車で1時間は今の通勤時間。"}
+],
+sokuji: [
+  {type:"monologue",text:"すみません、この席、空いていますか。",question:"何と答えますか。",options:["はい、どうぞ。","はい、空けました。","いいえ、空いていません。座ってください。","はい、空いてよかったです。"],answer:0,explanation:"考点：許可の応答。正解理由：「どうぞ」は席を使っていいという自然な返答。"},
+  {type:"monologue",text:"昨日のテスト、どうだった？",question:"何と答えますか。",options:["うん、昨日だったね。","あまりよくできなかった。","テストは好きだよ。","昨日は忙しかった。"],answer:1,explanation:"考点：質問の意図理解。正解理由：テストの結果・出来を聞いているので、出来具合を答える。"},
+  {type:"monologue",text:"この荷物、重そうですね。手伝いましょうか。",question:"何と答えますか。",options:["はい、重いです。","いいえ、手伝いません。","ありがとうございます。お願いします。","重くないですよ、見てください。"],answer:2,explanation:"考点：申し出への応答。正解理由：手伝いの申し出に感謝して受け入れる自然な返答。"},
+  {type:"monologue",text:"遅くなってすみません。電車が遅れて…。",question:"何と答えますか。",options:["電車は便利ですね。","大丈夫ですよ。気にしないでください。","はい、遅れましたね。","どの電車ですか。"],answer:1,explanation:"考点：謝罪への応答。正解理由：遅刻の謝罪に対して相手を安心させる返答。"},
+  {type:"monologue",text:"週末、一緒に買い物に行かない？",question:"何と答えますか。",options:["うん、買い物は楽しいよね。","行かないよ。さようなら。","いいね、行こう！","週末は土曜日と日曜日だよ。"],answer:2,explanation:"考点：誘いへの応答。正解理由：「いいね、行こう」は誘いを受ける自然な表現。"},
+  {type:"monologue",text:"あのう、写真を撮っていただけませんか。",question:"何と答えますか。",options:["写真が好きです。","いい写真ですね。","ええ、いいですよ。はい、チーズ。","撮っていただきました。"],answer:2,explanation:"考点：依頼への応答。正解理由：写真撮影の依頼を快く引き受ける自然な返答。"},
+  {type:"monologue",text:"明日の天気、知ってる？",question:"何と答えますか。",options:["天気予報は毎日見るよ。","知ってるよ。","うん、雨が降るらしいよ。","明日は月曜日だよ。"],answer:2,explanation:"考点：情報提供の応答。正解理由：天気を聞かれて具体的な情報を伝えている。「知ってるよ」だけでは情報不足。"},
+  {type:"monologue",text:"お誕生日おめでとうございます。これ、プレゼントです。",question:"何と答えますか。",options:["はい、誕生日です。","わあ、ありがとう！うれしい！","プレゼントは好きです。","おめでとうございます。"],answer:1,explanation:"考点：お祝い・贈り物への応答。正解理由：感謝と喜びを表す自然な返答。"}
+]
+};
+
+var modes = ["yoten","saibun","sokuji"];
+var modeNames = ["要点理解","細部聴取","即時応答"];
+var currentMode = 0;
+var currentIndex = 0;
+var speed = 1.0;
+var speaking = false;
+var state = loadState();
+
+function loadState(){
+  try{var s=localStorage.getItem("n3listen");return s?JSON.parse(s):{answered:{},playsLeft:{}};}catch(e){return {answered:{},playsLeft:{}};}
+}
+function saveState(){try{localStorage.setItem("n3listen",JSON.stringify(state));}catch(e){}}
+function key(){return modes[currentMode]+"_"+currentIndex;}
+function items(){return DATA[modes[currentMode]];}
+function item(){return items()[currentIndex];}
+function playsLeft(){var k=key();return state.playsLeft[k]!==undefined?state.playsLeft[k]:2;}
+function isAnswered(){return state.answered[key()]!==undefined;}
+function answeredVal(){return state.answered[key()];}
+
+function switchMode(m){
+  if(speaking)window.speechSynthesis.cancel();
+  currentMode=m;currentIndex=0;
+  document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active",i===m);});
+  render();
+}
+
+function setSpeed(s){
+  speed=s;
+  document.querySelectorAll(".speed-btn").forEach(function(b){b.classList.toggle("active",parseFloat(b.textContent)===s);});
+}
+
+function playAudio(){
+  if(speaking||playsLeft()<=0)return;
+  var it=item();
+  var textToSpeak="";
+  if(it.type==="dialogue"){
+    it.speakers.forEach(function(sp){textToSpeak+=sp.text+"\n";});
+  }else{
+    textToSpeak=it.text;
+  }
+  var k=key();
+  state.playsLeft[k]=(state.playsLeft[k]!==undefined?state.playsLeft[k]:2)-1;
+  saveState();
+  speaking=true;
+  updatePlayUI();
+  var u=new SpeechSynthesisUtterance(textToSpeak);
+  u.lang="ja-JP";u.rate=speed;
+  u.onend=function(){speaking=false;updatePlayUI();};
+  u.onerror=function(){speaking=false;updatePlayUI();};
+  window.speechSynthesis.speak(u);
+}
+
+function updatePlayUI(){
+  var btn=document.getElementById("playBtn");
+  var info=document.getElementById("playInfo");
+  var left=playsLeft();
+  if(speaking){
+    btn.textContent="⏸";btn.disabled=true;
+    info.textContent="再生中...";
+  }else{
+    btn.textContent="▶";
+    btn.disabled=left<=0;
+    info.textContent="再生回数："+left+"回残り";
+  }
+}
+
+function selectOption(idx){
+  if(isAnswered())return;
+  var it=item();
+  state.answered[key()]=idx;
+  saveState();
+  renderOptions(it,idx);
+  renderExplanation(it);
+  updateNav();
+}
+
+function renderOptions(it,sel){
+  var div=document.getElementById("optionsDiv");
+  div.innerHTML="";
+  it.options.forEach(function(opt,i){
+    var b=document.createElement("button");
+    b.className="opt-btn locked";
+    b.textContent=opt;
+    if(sel!==undefined){
+      if(i===it.answer)b.classList.add(i===sel?"correct":"reveal");
+      else if(i===sel)b.classList.add("wrong");
+    }else{
+      b.className="opt-btn";
+      b.onclick=function(){selectOption(i);};
+    }
+    div.appendChild(b);
+  });
+}
+
+function renderExplanation(it){
+  var div=document.getElementById("explanationDiv");
+  if(!isAnswered()){div.className="explanation";return;}
+  var html='<div class="script">';
+  if(it.type==="dialogue"){
+    it.speakers.forEach(function(sp){html+='<span class="speaker">'+sp.name+'：</span>'+sp.text+'<br>';});
+  }else{
+    html+=it.text;
+  }
+  html+='</div><div class="analysis">'+it.explanation.replace(/\n/g,"<br>")+'</div>';
+  div.innerHTML=html;
+  div.className="explanation show";
+}
+
+function render(){
+  var it=item();
+  updatePlayUI();
+  document.getElementById("questionText").textContent=it.question;
+  if(isAnswered()){
+    renderOptions(it,answeredVal());
+  }else{
+    renderOptions(it);
+  }
+  renderExplanation(it);
+  updateNav();
+}
+
+function updateNav(){
+  var arr=items();
+  document.getElementById("prevBtn").disabled=currentIndex===0;
+  var ans=isAnswered();
+  var wrong=ans&&answeredVal()!==item().answer;
+  document.getElementById("nextBtn").disabled=!ans||(currentIndex>=arr.length-1);
+  document.getElementById("statsText").textContent=(currentIndex+1)+" / "+arr.length+"　正解："+countCorrect()+"/"+countAnswered();
+  document.getElementById("progressFill").style.width=((currentIndex+1)/arr.length*100)+"%";
+}
+
+function countCorrect(){
+  var c=0;var arr=items();var m=modes[currentMode];
+  for(var i=0;i<arr.length;i++){var k=m+"_"+i;if(state.answered[k]===arr[i].answer)c++;}return c;
+}
+function countAnswered(){
+  var c=0;var arr=items();var m=modes[currentMode];
+  for(var i=0;i<arr.length;i++){if(state.answered[m+"_"+i]!==undefined)c++;}return c;
+}
+
+function nextQ(){
+  if(speaking)window.speechSynthesis.cancel();
+  speaking=false;
+  if(currentIndex<items().length-1){currentIndex++;render();}
+}
+function prevQ(){
+  if(speaking)window.speechSynthesis.cancel();
+  speaking=false;
+  if(currentIndex>0){currentIndex--;render();}
+}
+
+render();
+</script>
+</body>
+</html>

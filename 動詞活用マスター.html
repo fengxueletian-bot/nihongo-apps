@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>動詞活用マスター</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh}
+.header{background:linear-gradient(135deg,#4361ee,#3a0ca3);color:#fff;padding:16px 20px;text-align:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:1.3rem;margin-bottom:4px}
+.header p{font-size:.8rem;opacity:.85}
+.nav{display:flex;gap:6px;padding:12px;overflow-x:auto;background:#fff;border-bottom:1px solid #e0e0e0}
+.nav button{flex-shrink:0;padding:8px 14px;border:2px solid #4361ee;border-radius:20px;background:#fff;color:#4361ee;font-size:.8rem;font-weight:600;cursor:pointer;transition:.2s}
+.nav button.active{background:#4361ee;color:#fff}
+.container{max-width:600px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.card h2{color:#4361ee;font-size:1.1rem;margin-bottom:12px}
+.card h3{font-size:1rem;margin-bottom:8px;color:#333}
+.btn{display:inline-block;padding:10px 20px;border:none;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+.btn-primary{background:#4361ee;color:#fff}
+.btn-primary:hover{background:#3a0ca3}
+.btn-secondary{background:#e8ecff;color:#4361ee}
+.btn-success{background:#06d6a0;color:#fff}
+.btn-danger{background:#ef476f;color:#fff}
+.btn-block{display:block;width:100%}
+.input-field{width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:12px;font-size:1.1rem;outline:none;transition:.2s}
+.input-field:focus{border-color:#4361ee}
+.quiz-question{font-size:1.15rem;line-height:1.7;margin-bottom:16px;padding:12px;background:#f8f9ff;border-radius:12px;text-align:center}
+.quiz-question .verb{font-size:1.4rem;color:#4361ee;font-weight:700}
+.quiz-question .target{color:#ef476f;font-weight:600}
+.result-correct{background:#d4edda;border:2px solid #06d6a0;border-radius:12px;padding:16px;margin:12px 0}
+.result-wrong{background:#fde8ec;border:2px solid #ef476f;border-radius:12px;padding:16px;margin:12px 0}
+.explanation{background:#f0f4ff;border-left:4px solid #4361ee;padding:12px 16px;margin:12px 0;border-radius:0 12px 12px 0;font-size:.9rem;line-height:1.6}
+.explanation strong{color:#4361ee}
+.stats-bar{display:flex;justify-content:space-around;padding:12px;background:#fff;border-radius:12px;margin-bottom:16px}
+.stats-bar .stat{text-align:center}
+.stats-bar .stat-num{font-size:1.3rem;font-weight:700;color:#4361ee}
+.stats-bar .stat-label{font-size:.7rem;color:#888}
+.table-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{background:#4361ee;color:#fff;padding:8px 6px;text-align:center}
+td{padding:8px 6px;border-bottom:1px solid #eee;text-align:center}
+tr:nth-child(even){background:#f8f9ff}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:600;margin:2px}
+.tag-1{background:#ffe0e6;color:#c9184a}
+.tag-2{background:#d0f4de;color:#087f5b}
+.tag-3{background:#e8d5f5;color:#7b2cbf}
+.progress-bar{height:6px;background:#e0e0e0;border-radius:3px;margin:8px 0;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#4361ee,#06d6a0);border-radius:3px;transition:width .3s}
+.timer{font-size:1.5rem;font-weight:700;color:#ef476f;text-align:center;margin:12px 0}
+ruby{ruby-position:over}rt{font-size:.6em;color:#888}
+.mode-select{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.mode-card{padding:16px;border:2px solid #e0e0e0;border-radius:14px;text-align:center;cursor:pointer;transition:.2s}
+.mode-card:hover,.mode-card.active{border-color:#4361ee;background:#f0f4ff}
+.mode-card .icon{font-size:1.8rem;margin-bottom:6px}
+.mode-card .label{font-size:.85rem;font-weight:600;color:#333}
+.hidden{display:none!important}
+.conj-type-select{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.conj-type-select button{padding:6px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:.78rem;cursor:pointer}
+.conj-type-select button.active{background:#4361ee;color:#fff;border-color:#4361ee}
+.reverse-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.reverse-options button{padding:10px;border:2px solid #ddd;border-radius:10px;background:#fff;font-size:.9rem;cursor:pointer;transition:.2s}
+.reverse-options button:hover{border-color:#4361ee}
+.reverse-options button.selected-correct{border-color:#06d6a0;background:#d4edda}
+.reverse-options button.selected-wrong{border-color:#ef476f;background:#fde8ec}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🔄 <ruby>動詞<rt>どうし</rt></ruby><ruby>活用<rt>かつよう</rt></ruby>マスター</h1>
+<p>N3 <ruby>動詞変形<rt>どうしへんけい</rt></ruby>トレーニング</p>
+</div>
+<div class="nav" id="mainNav">
+<button class="active" onclick="showMode('home')">🏠 ホーム</button>
+<button onclick="showMode('learn')">📖 <ruby>学習<rt>がくしゅう</rt></ruby></button>
+<button onclick="showMode('quick')">⚡ <ruby>快速<rt>かいそく</rt></ruby></button>
+<button onclick="showMode('reverse')">🔍 <ruby>逆引<rt>ぎゃくび</rt></ruby>き</button>
+<button onclick="showMode('challenge')">🏆 チャレンジ</button>
+<button onclick="showMode('weak')">💪 <ruby>弱点<rt>じゃくてん</rt></ruby></button>
+</div>
+<div class="container" id="app"></div>
+
+<script>
+/* ===== VERB DATABASE ===== */
+const VERBS_1 = [
+  {dict:'書く',reading:'かく',stem:'書',stemR:'か',group:1,endKana:'く'},
+  {dict:'読む',reading:'よむ',stem:'読',stemR:'よ',group:1,endKana:'む'},
+  {dict:'話す',reading:'はなす',stem:'話',stemR:'はな',group:1,endKana:'す'},
+  {dict:'待つ',reading:'まつ',stem:'待',stemR:'ま',group:1,endKana:'つ'},
+  {dict:'死ぬ',reading:'しぬ',stem:'死',stemR:'し',group:1,endKana:'ぬ'},
+  {dict:'飛ぶ',reading:'とぶ',stem:'飛',stemR:'と',group:1,endKana:'ぶ'},
+  {dict:'買う',reading:'かう',stem:'買',stemR:'か',group:1,endKana:'う'},
+  {dict:'走る',reading:'はしる',stem:'走',stemR:'はし',group:1,endKana:'る'},
+  {dict:'泳ぐ',reading:'およぐ',stem:'泳',stemR:'およ',group:1,endKana:'ぐ'},
+  {dict:'行く',reading:'いく',stem:'行',stemR:'い',group:1,endKana:'く',special:true},
+  {dict:'遊ぶ',reading:'あそぶ',stem:'遊',stemR:'あそ',group:1,endKana:'ぶ'},
+  {dict:'持つ',reading:'もつ',stem:'持',stemR:'も',group:1,endKana:'つ'},
+  {dict:'飲む',reading:'のむ',stem:'飲',stemR:'の',group:1,endKana:'む'},
+  {dict:'作る',reading:'つくる',stem:'作',stemR:'つく',group:1,endKana:'る'},
+  {dict:'帰る',reading:'かえる',stem:'帰',stemR:'かえ',group:1,endKana:'る'},
+  {dict:'立つ',reading:'たつ',stem:'立',stemR:'た',group:1,endKana:'つ'},
+  {dict:'乗る',reading:'のる',stem:'乗',stemR:'の',group:1,endKana:'る'},
+  {dict:'歌う',reading:'うたう',stem:'歌',stemR:'うた',group:1,endKana:'う'},
+  {dict:'送る',reading:'おくる',stem:'送',stemR:'おく',group:1,endKana:'る'},
+  {dict:'思う',reading:'おもう',stem:'思',stemR:'おも',group:1,endKana:'う'},
+  {dict:'聞く',reading:'きく',stem:'聞',stemR:'き',group:1,endKana:'く'},
+  {dict:'休む',reading:'やすむ',stem:'休',stemR:'やす',group:1,endKana:'む'},
+  {dict:'選ぶ',reading:'えらぶ',stem:'選',stemR:'えら',group:1,endKana:'ぶ'},
+  {dict:'住む',reading:'すむ',stem:'住',stemR:'す',group:1,endKana:'む'},
+  {dict:'動く',reading:'うごく',stem:'動',stemR:'うご',group:1,endKana:'く'},
+  {dict:'払う',reading:'はらう',stem:'払',stemR:'はら',group:1,endKana:'う'},
+  {dict:'売る',reading:'うる',stem:'売',stemR:'う',group:1,endKana:'る'},
+  {dict:'使う',reading:'つかう',stem:'使',stemR:'つか',group:1,endKana:'う'},
+  {dict:'置く',reading:'おく',stem:'置',stemR:'お',group:1,endKana:'く'},
+  {dict:'頼む',reading:'たのむ',stem:'頼',stemR:'たの',group:1,endKana:'む'}
+];
+const VERBS_2 = [
+  {dict:'食べる',reading:'たべる',stem:'食',stemR:'た',group:2,endKana:'べる'},
+  {dict:'見る',reading:'みる',stem:'見',stemR:'',group:2,endKana:'みる'},
+  {dict:'起きる',reading:'おきる',stem:'起',stemR:'お',group:2,endKana:'きる'},
+  {dict:'寝る',reading:'ねる',stem:'寝',stemR:'',group:2,endKana:'ねる'},
+  {dict:'教える',reading:'おしえる',stem:'教',stemR:'おし',group:2,endKana:'える'},
+  {dict:'開ける',reading:'あける',stem:'開',stemR:'あ',group:2,endKana:'ける'},
+  {dict:'閉める',reading:'しめる',stem:'閉',stemR:'し',group:2,endKana:'める'},
+  {dict:'考える',reading:'かんがえる',stem:'考',stemR:'かんが',group:2,endKana:'える'},
+  {dict:'答える',reading:'こたえる',stem:'答',stemR:'こた',group:2,endKana:'える'},
+  {dict:'忘れる',reading:'わすれる',stem:'忘',stemR:'わす',group:2,endKana:'れる'},
+  {dict:'出かける',reading:'でかける',stem:'出',stemR:'で',group:2,endKana:'かける'},
+  {dict:'調べる',reading:'しらべる',stem:'調',stemR:'しら',group:2,endKana:'べる'},
+  {dict:'並べる',reading:'ならべる',stem:'並',stemR:'なら',group:2,endKana:'べる'},
+  {dict:'伝える',reading:'つたえる',stem:'伝',stemR:'つた',group:2,endKana:'える'},
+  {dict:'集める',reading:'あつめる',stem:'集',stemR:'あつ',group:2,endKana:'める'},
+  {dict:'決める',reading:'きめる',stem:'決',stemR:'き',group:2,endKana:'める'},
+  {dict:'始める',reading:'はじめる',stem:'始',stemR:'はじ',group:2,endKana:'める'},
+  {dict:'変える',reading:'かえる',stem:'変',stemR:'か',group:2,endKana:'える'},
+  {dict:'入れる',reading:'いれる',stem:'入',stemR:'い',group:2,endKana:'れる'},
+  {dict:'着る',reading:'きる',stem:'着',stemR:'',group:2,endKana:'きる'}
+];
+const VERBS_3 = [
+  {dict:'する',reading:'する',stem:'',stemR:'',group:3,endKana:'する',base:''},
+  {dict:'来る',reading:'くる',stem:'来',stemR:'',group:3,endKana:'くる',base:''},
+  {dict:'勉強する',reading:'べんきょうする',stem:'勉強',stemR:'べんきょう',group:3,endKana:'する',base:'勉強'},
+  {dict:'運動する',reading:'うんどうする',stem:'運動',stemR:'うんどう',group:3,endKana:'する',base:'運動'},
+  {dict:'料理する',reading:'りょうりする',stem:'料理',stemR:'りょうり',group:3,endKana:'する',base:'料理'},
+  {dict:'掃除する',reading:'そうじする',stem:'掃除',stemR:'そうじ',group:3,endKana:'する',base:'掃除'},
+  {dict:'洗濯する',reading:'せんたくする',stem:'洗濯',stemR:'せんたく',group:3,endKana:'する',base:'洗濯'},
+  {dict:'散歩する',reading:'さんぽする',stem:'散歩',stemR:'さんぽ',group:3,endKana:'する',base:'散歩'},
+  {dict:'心配する',reading:'しんぱいする',stem:'心配',stemR:'しんぱい',group:3,endKana:'する',base:'心配'},
+  {dict:'紹介する',reading:'しょうかいする',stem:'紹介',stemR:'しょうかい',group:3,endKana:'する',base:'紹介'}
+];
+
+const ALL_VERBS = [...VERBS_1,...VERBS_2,...VERBS_3];
+
+const CONJ_NAMES = [
+  {id:'masu',name:'ます<ruby>形<rt>けい</rt></ruby>',short:'ます形'},
+  {id:'te',name:'て<ruby>形<rt>けい</rt></ruby>',short:'て形'},
+  {id:'ta',name:'た<ruby>形<rt>けい</rt></ruby>',short:'た形'},
+  {id:'nai',name:'ない<ruby>形<rt>けい</rt></ruby>',short:'ない形'},
+  {id:'kanō',name:'<ruby>可能形<rt>かのうけい</rt></ruby>',short:'可能形'},
+  {id:'ukemi',name:'<ruby>受身形<rt>うけみけい</rt></ruby>',short:'受身形'},
+  {id:'shieki',name:'<ruby>使役形<rt>しえきけい</rt></ruby>',short:'使役形'},
+  {id:'shiekiukemi',name:'<ruby>使役受身形<rt>しえきうけみけい</rt></ruby>',short:'使役受身形'},
+  {id:'ishi',name:'<ruby>意志形<rt>いしけい</rt></ruby>',short:'意志形'},
+  {id:'meirei',name:'<ruby>命令形<rt>めいれいけい</rt></ruby>',short:'命令形'},
+  {id:'kinshi',name:'<ruby>禁止形<rt>きんしけい</rt></ruby>',short:'禁止形'},
+  {id:'ba',name:'<ruby>条件形<rt>じょうけんけい</rt></ruby>（ば）',short:'条件形'},
+  {id:'tara',name:'たら<ruby>形<rt>けい</rt></ruby>',short:'たら形'},
+  {id:'jisho',name:'<ruby>辞書形<rt>じしょけい</rt></ruby>',short:'辞書形'}
+];
+
+/* ===== CONJUGATION ENGINE ===== */
+const U_DAN = {'う':'い','く':'き','ぐ':'ぎ','す':'し','つ':'ち','ぬ':'に','ぶ':'び','む':'み','る':'り'};
+const A_DAN = {'う':'わ','く':'か','ぐ':'が','す':'さ','つ':'た','ぬ':'な','ぶ':'ば','む':'ま','る':'ら'};
+const E_DAN = {'う':'え','く':'け','ぐ':'げ','す':'せ','つ':'て','ぬ':'ね','ぶ':'べ','む':'め','る':'れ'};
+const O_DAN = {'う':'お','く':'こ','ぐ':'ご','す':'そ','つ':'と','ぬ':'の','ぶ':'ぼ','む':'も','る':'ろ'};
+
+function getTeForm(v) {
+  if (v.group === 2) { return v.reading.slice(0,-2) + 'て'; }
+  if (v.group === 3) {
+    if (v.dict === 'する') return 'して';
+    if (v.dict === '来る') return 'きて';
+    return v.stemR + 'して';
+  }
+  if (v.special && v.dict === '行く') return 'いって';
+  var e = v.endKana;
+  var s = v.reading.slice(0, -e.length);
+  if (e === 'う' || e === 'つ' || e === 'る') return s + U_DAN[e].replace(/[いちり]/,'') + 'って';
+  if (e === 'く') return s + 'いて';
+  if (e === 'ぐ') return s + 'いで';
+  if (e === 'す') return s + 'して';
+  if (e === 'ぬ' || e === 'ぶ' || e === 'む') return s + 'んで';
+  return '';
+}
+/* Simplified: for group 1, get te/ta base without て/た */
+function getTeTaBase(v) {
+  var te = getTeForm(v);
+  if (te.endsWith('で')) return {base: te.slice(0,-1), dakuten: true};
+  return {base: te.slice(0,-1), dakuten: false};
+}
+
+function conjugate(v, form) {
+  var r = v.reading;
+  var e = v.endKana;
+  var rs = v.reading.slice(0, -e.length); /* reading stem before endKana */
+  
+  if (v.group === 2) {
+    var stem2 = r.slice(0,-2); /* remove る and preceding vowel kana, actually remove last 2 for える/いる patterns */
+    /* For group 2: stem = reading minus last 1 char (る) -> but we need minus the る */
+    var s2 = r.slice(0,-1); /* e.g. たべる → たべ */
+    switch(form) {
+      case 'masu': return s2 + 'ます';
+      case 'te': return s2 + 'て';
+      case 'ta': return s2 + 'た';
+      case 'nai': return s2 + 'ない';
+      case 'kanō': return s2 + 'られる';
+      case 'ukemi': return s2 + 'られる';
+      case 'shieki': return s2 + 'させる';
+      case 'shiekiukemi': return s2 + 'させられる';
+      case 'ishi': return s2 + 'よう';
+      case 'meirei': return s2 + 'ろ';
+      case 'kinshi': return r + 'な';
+      case 'ba': return s2 + 'れば';
+      case 'tara': return s2 + 'たら';
+      case 'jisho': return r;
+    }
+  }
+  
+  if (v.group === 3) {
+    var base = v.base || '';
+    if (v.dict === '来る') {
+      switch(form) {
+        case 'masu': return 'きます';
+        case 'te': return 'きて';
+        case 'ta': return 'きた';
+        case 'nai': return 'こない';
+        case 'kanō': return 'こられる';
+        case 'ukemi': return 'こられる';
+        case 'shieki': return 'こさせる';
+        case 'shiekiukemi': return 'こさせられる';
+        case 'ishi': return 'こよう';
+        case 'meirei': return 'こい';
+        case 'kinshi': return 'くるな';
+        case 'ba': return 'くれば';
+        case 'tara': return 'きたら';
+        case 'jisho': return 'くる';
+      }
+    }
+    /* する verbs */
+    switch(form) {
+      case 'masu': return base + 'します';
+      case 'te': return base + 'して';
+      case 'ta': return base + 'した';
+      case 'nai': return base + 'しない';
+      case 'kanō': return base + 'できる';
+      case 'ukemi': return base + 'される';
+      case 'shieki': return base + 'させる';
+      case 'shiekiukemi': return base + 'させられる';
+      case 'ishi': return base + 'しよう';
+      case 'meirei': return base + 'しろ';
+      case 'kinshi': return base + 'するな';
+      case 'ba': return base + 'すれば';
+      case 'tara': return base + 'したら';
+      case 'jisho': return base + 'する';
+    }
+  }
+  
+  /* Group 1 */
+  var iDan = rs + U_DAN[e];
+  var aDan = rs + A_DAN[e];
+  var eDan = rs + E_DAN[e];
+  var oDan = rs + O_DAN[e];
+  
+  switch(form) {
+    case 'masu': return iDan + 'ます';
+    case 'te': return getTeForm(v);
+    case 'ta': {
+      var te = getTeForm(v);
+      if (te.endsWith('で')) return te.slice(0,-1) + 'だ';
+      return te.slice(0,-1) + 'た';
+    }
+    case 'nai': return aDan + 'ない';
+    case 'kanō': return eDan + 'る';
+    case 'ukemi': return aDan + 'れる';
+    case 'shieki': return aDan + 'せる';
+    case 'shiekiukemi': return aDan + 'せられる';
+    case 'ishi': return oDan + 'う';
+    case 'meirei': return eDan;
+    case 'kinshi': return r + 'な';
+    case 'ba': return eDan + 'ば';
+    case 'tara': {
+      var te2 = getTeForm(v);
+      if (te2.endsWith('で')) return te2.slice(0,-1) + 'だら';
+      return te2.slice(0,-1) + 'たら';
+    }
+    case 'jisho': return r;
+  }
+  return '?';
+}
+
+/* ===== STATE ===== */
+var state = JSON.parse(localStorage.getItem('verb_conj_state') || '{}');
+if (!state.weakPoints) state.weakPoints = {};
+if (!state.totalCorrect) state.totalCorrect = 0;
+if (!state.totalWrong) state.totalWrong = 0;
+if (!state.challengeBest) state.challengeBest = 0;
+function saveState() { localStorage.setItem('verb_conj_state', JSON.stringify(state)); }
+function addWeak(verbDict, form) {
+  var k = verbDict + '|' + form;
+  state.weakPoints[k] = (state.weakPoints[k]||0) + 1;
+  saveState();
+}
+function removeWeak(verbDict, form) {
+  var k = verbDict + '|' + form;
+  if (state.weakPoints[k]) { state.weakPoints[k]--; if (state.weakPoints[k] <= 0) delete state.weakPoints[k]; }
+  saveState();
+}
+
+var currentMode = 'home';
+var app = document.getElementById('app');
+
+function showMode(m) {
+  currentMode = m;
+  document.querySelectorAll('.nav button').forEach(function(b,i){
+    var modes = ['home','learn','quick','reverse','challenge','weak'];
+    b.classList.toggle('active', modes[i]===m);
+  });
+  switch(m) {
+    case 'home': renderHome(); break;
+    case 'learn': renderLearn(); break;
+    case 'quick': startQuick(); break;
+    case 'reverse': startReverse(); break;
+    case 'challenge': renderChallenge(); break;
+    case 'weak': startWeak(); break;
+  }
+}
+
+function groupLabel(g) { return g===1?'一類（五段）':g===2?'二類（一段）':'三類（不規則）'; }
+function groupTag(g) { return '<span class="tag tag-'+g+'">'+groupLabel(g)+'</span>'; }
+
+function renderHome() {
+  var total = state.totalCorrect + state.totalWrong;
+  var rate = total ? Math.round(state.totalCorrect/total*100) : 0;
+  var weakCount = Object.keys(state.weakPoints).length;
+  app.innerHTML = '<div class="card"><h2>📊 <ruby>学習<rt>がくしゅう</rt></ruby>データ</h2>'+
+    '<div class="stats-bar"><div class="stat"><div class="stat-num">'+state.totalCorrect+'</div><div class="stat-label">正解</div></div>'+
+    '<div class="stat"><div class="stat-num">'+state.totalWrong+'</div><div class="stat-label">不正解</div></div>'+
+    '<div class="stat"><div class="stat-num">'+rate+'%</div><div class="stat-label">正答率</div></div>'+
+    '<div class="stat"><div class="stat-num">'+state.challengeBest+'</div><div class="stat-label">最高記録</div></div></div>'+
+    (weakCount?'<p style="color:#ef476f;font-size:.85rem;margin-top:8px">⚠️ 弱点：'+weakCount+'項目</p>':'')+
+    '</div>'+
+    '<div class="card"><h2>🎯 モードを選ぼう</h2><div class="mode-select">'+
+    '<div class="mode-card" onclick="showMode(\'learn\')"><div class="icon">📖</div><div class="label">学習モード</div></div>'+
+    '<div class="mode-card" onclick="showMode(\'quick\')"><div class="icon">⚡</div><div class="label">快速変形</div></div>'+
+    '<div class="mode-card" onclick="showMode(\'reverse\')"><div class="icon">🔍</div><div class="label">逆引き</div></div>'+
+    '<div class="mode-card" onclick="showMode(\'challenge\')"><div class="icon">🏆</div><div class="label">混合チャレンジ</div></div>'+
+    '</div>'+(weakCount?'<button class="btn btn-danger btn-block" onclick="showMode(\'weak\')" style="margin-top:8px">💪 弱点強化（'+weakCount+'問）</button>':'')+'</div>';
+}
+
+/* ===== LEARN MODE ===== */
+function renderLearn() {
+  var html = '<div class="card"><h2>📖 <ruby>変形<rt>へんけい</rt></ruby>ルールを<ruby>学<rt>まな</rt></ruby>ぼう</h2>'+
+    '<p style="font-size:.85rem;color:#666;margin-bottom:12px">各変形のルールと例を確認できます</p>';
+  CONJ_NAMES.forEach(function(c){
+    html += '<button class="btn btn-secondary" style="margin:4px" onclick="showLearnDetail(\''+c.id+'\')">'+c.short+'</button>';
+  });
+  html += '</div>';
+  app.innerHTML = html;
+}
+
+function showLearnDetail(formId) {
+  var cn = CONJ_NAMES.find(function(c){return c.id===formId;});
+  var html = '<div class="card"><button class="btn btn-secondary" onclick="renderLearn()" style="margin-bottom:12px">← 戻る</button>'+
+    '<h2>'+cn.name+'</h2>';
+  
+  html += '<h3 style="margin-top:12px">📝 ルール</h3>';
+  html += '<div class="explanation">' + getRule(formId) + '</div>';
+  
+  html += '<h3 style="margin-top:12px">📋 変形表</h3><div class="table-wrap"><table><tr><th>動詞</th><th>タイプ</th><th>'+cn.short+'</th></tr>';
+  
+  var examples = [VERBS_1[0],VERBS_1[2],VERBS_1[4],VERBS_1[6],VERBS_1[8],VERBS_1[9],
+    VERBS_2[0],VERBS_2[1],VERBS_3[0],VERBS_3[1],VERBS_3[2]];
+  examples.forEach(function(v){
+    html += '<tr><td>'+v.dict+'（'+v.reading+'）</td><td>'+groupTag(v.group)+'</td><td><strong>'+conjugate(v,formId)+'</strong></td></tr>';
+  });
+  html += '</table></div></div>';
+  app.innerHTML = html;
+}
+
+function getRule(formId) {
+  var rules = {
+    'masu': '<strong>一類：</strong>語尾をイ段に変えて「ます」<br><strong>二類：</strong>「る」を取って「ます」<br><strong>三類：</strong>する→します、来る→きます',
+    'te': '<strong>一類：</strong>音便規則あり！<br>・く→いて（書く→書いて）※行く→行って（特殊）<br>・ぐ→いで（泳ぐ→泳いで）<br>・す→して（話す→話して）<br>・う/つ/る→って（買う→買って）<small>【促音便】</small><br>・ぬ/ぶ/む→んで（死ぬ→死んで）<small>【撥音便】</small><br><strong>二類：</strong>「る」→「て」<br><strong>三類：</strong>する→して、来る→きて',
+    'ta': '<strong>て形と同じ音便規則。</strong>て→た、で→だ に置き換え',
+    'nai': '<strong>一類：</strong>語尾をア段に変えて「ない」（う→わない）<br><strong>二類：</strong>「る」→「ない」<br><strong>三類：</strong>する→しない、来る→こない',
+    'kanō': '<strong>一類：</strong>語尾をエ段に変えて「る」（書く→書ける）<br><strong>二類：</strong>「る」→「られる」（食べる→食べられる）<br><strong>三類：</strong>する→できる、来る→こられる<br>⚠️ 一類と二類で作り方が違う！',
+    'ukemi': '<strong>一類：</strong>ア段＋「れる」<br><strong>二類：</strong>「る」→「られる」<br><strong>三類：</strong>する→される、来る→こられる',
+    'shieki': '<strong>一類：</strong>ア段＋「せる」<br><strong>二類：</strong>「る」→「させる」<br><strong>三類：</strong>する→させる、来る→こさせる',
+    'shiekiukemi': '<strong>一類：</strong>ア段＋「せられる」<br><strong>二類：</strong>「る」→「させられる」<br><strong>三類：</strong>する→させられる、来る→こさせられる<br>⚠️ する→される（受身）vs させる（使役）vs させられる（使役受身）を区別！',
+    'ishi': '<strong>一類：</strong>語尾をオ段に変えて「う」<br><strong>二類：</strong>「る」→「よう」<br><strong>三類：</strong>する→しよう、来る→こよう',
+    'meirei': '<strong>一類：</strong>語尾をエ段にする<br><strong>二類：</strong>「る」→「ろ」<br><strong>三類：</strong>する→しろ、来る→こい',
+    'kinshi': '<strong>全グループ共通：辞書形＋「な」</strong>',
+    'ba': '<strong>一類：</strong>語尾をエ段に変えて「ば」<br><strong>二類：</strong>「る」→「れば」<br><strong>三類：</strong>する→すれば、来る→くれば',
+    'tara': '<strong>た形＋「ら」</strong>（た→たら、だ→だら）',
+    'jisho': '<strong>辞書形（基本形）はそのまま。</strong>'
+  };
+  return rules[formId] || '';
+}
+
+/* ===== QUICK MODE ===== */
+var quickVerb, quickForm, quickAnswered;
+function startQuick() {
+  quickAnswered = false;
+  quickVerb = ALL_VERBS[Math.floor(Math.random()*ALL_VERBS.length)];
+  quickForm = CONJ_NAMES[Math.floor(Math.random()*CONJ_NAMES.length)];
+  var correct = conjugate(quickVerb, quickForm.id);
+  
+  app.innerHTML = '<div class="card"><h2>⚡ <ruby>快速変形<rt>かいそくへんけい</rt></ruby></h2>'+
+    '<div class="quiz-question"><span class="verb">'+quickVerb.dict+'（'+quickVerb.reading+'）</span><br>'+
+    '→ <span class="target">'+quickForm.name+'</span> に<ruby>変<rt>か</rt></ruby>えよう！</div>'+
+    groupTag(quickVerb.group)+
+    '<div style="margin:16px 0"><input class="input-field" id="quickInput" placeholder="ひらがなで入力..." autocomplete="off"></div>'+
+    '<button class="btn btn-primary btn-block" id="quickSubmit" onclick="checkQuick()">チェック ✓</button>'+
+    '<div id="quickResult"></div></div>';
+  
+  document.getElementById('quickInput').addEventListener('keydown', function(ev){
+    if (ev.key==='Enter') checkQuick();
+  });
+  document.getElementById('quickInput').focus();
+}
+
+function checkQuick() {
+  if (quickAnswered) { startQuick(); return; }
+  quickAnswered = true;
+  var input = document.getElementById('quickInput').value.trim();
+  var correct = conjugate(quickVerb, quickForm.id);
+  var isCorrect = input === correct;
+  
+  if (isCorrect) { state.totalCorrect++; removeWeak(quickVerb.dict, quickForm.id); }
+  else { state.totalWrong++; addWeak(quickVerb.dict, quickForm.id); }
+  saveState();
+  
+  var html = '<div class="'+(isCorrect?'result-correct':'result-wrong')+'">';
+  html += isCorrect ? '✅ 正解！' : '❌ 不正解… 正しい答え：<strong>'+correct+'</strong>';
+  html += '</div>';
+  html += '<div class="explanation">';
+  html += '<strong>動詞タイプ：</strong>'+groupLabel(quickVerb.group)+'<br>';
+  html += '<strong>変形：</strong>'+quickVerb.reading+' → '+correct+'<br>';
+  html += '<strong>ルール：</strong>'+getShortRule(quickVerb, quickForm.id);
+  html += '</div>';
+  html += '<button class="btn btn-primary btn-block" onclick="startQuick()" style="margin-top:12px">次の問題 →</button>';
+  
+  document.getElementById('quickResult').innerHTML = html;
+  document.getElementById('quickSubmit').classList.add('hidden');
+}
+
+function getShortRule(v, formId) {
+  if (v.special && v.dict === '行く' && (formId==='te'||formId==='ta'||formId==='tara')) {
+    return '⚠️ 行く は特殊！行って（行いて ではない）';
+  }
+  if (v.group === 3 && v.dict === '来る') {
+    return '⚠️ 来る は不規則動詞。読み方が変化する（く/き/こ）';
+  }
+  if (v.group === 3 && formId === 'kanō') {
+    return 'する→できる（「される」ではない！）';
+  }
+  if (v.group === 1 && formId === 'te') {
+    var e = v.endKana;
+    if (e==='う'||e==='つ'||e==='る') return '促音便：'+e+'→って';
+    if (e==='ぬ'||e==='ぶ'||e==='む') return '撥音便：'+e+'→んで';
+    if (e==='く') return 'イ音便：く→いて';
+    if (e==='ぐ') return 'イ音便（濁）：ぐ→いで';
+    if (e==='す') return 'す→して';
+  }
+  if (v.group === 1 && formId === 'kanō') return '一類はエ段＋る（二類の「られる」と違う！）';
+  return groupLabel(v.group)+'の'+CONJ_NAMES.find(function(c){return c.id===formId;}).short+'標準ルール';
+}
+
+/* ===== REVERSE MODE ===== */
+var revVerb, revForm, revAnswered;
+function startReverse() {
+  revAnswered = false;
+  revVerb = ALL_VERBS[Math.floor(Math.random()*ALL_VERBS.length)];
+  var availForms = CONJ_NAMES.filter(function(c){return c.id!=='jisho'&&c.id!=='kinshi';});
+  revForm = availForms[Math.floor(Math.random()*availForms.length)];
+  var conjugated = conjugate(revVerb, revForm.id);
+  
+  /* Generate options: correct verb + 3 wrong */
+  var options = [{verb:revVerb, form:revForm, label:revVerb.dict+'（'+revVerb.reading+'）の'+revForm.short}];
+  var used = [revVerb.dict+'|'+revForm.id];
+  while (options.length < 4) {
+    var rv = ALL_VERBS[Math.floor(Math.random()*ALL_VERBS.length)];
+    var rf = availForms[Math.floor(Math.random()*availForms.length)];
+    var key = rv.dict+'|'+rf.id;
+    if (used.indexOf(key)===-1) {
+      used.push(key);
+      options.push({verb:rv,form:rf,label:rv.dict+'（'+rv.reading+'）の'+rf.short});
+    }
+  }
+  /* Shuffle */
+  for (var i = options.length-1; i > 0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var t = options[i]; options[i] = options[j]; options[j] = t;
+  }
+  var correctIdx = options.findIndex(function(o){return o.verb===revVerb&&o.form===revForm;});
+  
+  app.innerHTML = '<div class="card"><h2>🔍 <ruby>逆引<rt>ぎゃくび</rt></ruby>き<ruby>推理<rt>すいり</rt></ruby></h2>'+
+    '<div class="quiz-question">この<ruby>形<rt>かたち</rt></ruby>は<ruby>何<rt>なに</rt></ruby>？<br><span class="verb">'+conjugated+'</span></div>'+
+    '<p style="font-size:.85rem;color:#666;margin-bottom:8px"><ruby>原形<rt>げんけい</rt></ruby>と<ruby>変形<rt>へんけい</rt></ruby>タイプを<ruby>選<rt>えら</rt></ruby>んでください</p>'+
+    '<div class="reverse-options" id="revOptions">'+
+    options.map(function(o,i){return '<button onclick="checkReverse('+i+','+correctIdx+')" data-idx="'+i+'">'+o.label+'</button>';}).join('')+
+    '</div><div id="revResult"></div></div>';
+}
+
+function checkReverse(sel, correct) {
+  if (revAnswered) return;
+  revAnswered = true;
+  var btns = document.querySelectorAll('#revOptions button');
+  btns[correct].classList.add('selected-correct');
+  if (sel !== correct) btns[sel].classList.add('selected-wrong');
+  
+  var isCorrect = sel === correct;
+  if (isCorrect) { state.totalCorrect++; removeWeak(revVerb.dict, revForm.id); }
+  else { state.totalWrong++; addWeak(revVerb.dict, revForm.id); }
+  saveState();
+  
+  var conjugated = conjugate(revVerb, revForm.id);
+  var html = '<div class="'+(isCorrect?'result-correct':'result-wrong')+'" style="margin-top:12px">';
+  html += isCorrect ? '✅ 正解！' : '❌ 不正解…';
+  html += '</div><div class="explanation">';
+  html += '<strong>答え：</strong>'+revVerb.dict+'（'+revVerb.reading+'）→ '+revForm.short+' = '+conjugated+'<br>';
+  html += '<strong>動詞タイプ：</strong>'+groupLabel(revVerb.group)+'<br>';
+  html += '<strong>ルール：</strong>'+getShortRule(revVerb, revForm.id);
+  html += '</div>';
+  html += '<button class="btn btn-primary btn-block" onclick="startReverse()" style="margin-top:12px">次の問題 →</button>';
+  document.getElementById('revResult').innerHTML = html;
+}
+
+/* ===== CHALLENGE MODE ===== */
+var challengeTimer, challengeCount, challengeCorrect, challengeRunning;
+function renderChallenge() {
+  app.innerHTML = '<div class="card"><h2>🏆 <ruby>混合<rt>こんごう</rt></ruby>チャレンジ</h2>'+
+    '<p style="font-size:.9rem;margin-bottom:12px">1<ruby>分間<rt>ぷんかん</rt></ruby>で<ruby>何問<rt>なんもん</rt></ruby><ruby>正解<rt>せいかい</rt></ruby>できる？</p>'+
+    '<p style="font-size:.85rem;color:#888">最高記録：<strong>'+state.challengeBest+'</strong>問</p>'+
+    '<button class="btn btn-primary btn-block" onclick="startChallengeRound()" style="margin-top:12px">スタート！</button></div>';
+}
+
+function startChallengeRound() {
+  challengeCount = 0;
+  challengeCorrect = 0;
+  challengeRunning = true;
+  nextChallengeQ();
+  challengeTimer = setTimeout(function(){
+    challengeRunning = false;
+    if (challengeCorrect > state.challengeBest) { state.challengeBest = challengeCorrect; saveState(); }
+    app.innerHTML = '<div class="card"><h2>🏆 結果</h2>'+
+      '<div class="timer">'+challengeCorrect+' / '+challengeCount+' 問正解！</div>'+
+      (challengeCorrect > state.challengeBest - 1 ? '<p style="text-align:center;color:#06d6a0;font-weight:700">🎉 新記録！</p>' : '')+
+      '<button class="btn btn-primary btn-block" onclick="renderChallenge()" style="margin-top:12px">もう一回</button></div>';
+  }, 60000);
+}
+
+function nextChallengeQ() {
+  if (!challengeRunning) return;
+  var v = ALL_VERBS[Math.floor(Math.random()*ALL_VERBS.length)];
+  var f = CONJ_NAMES[Math.floor(Math.random()*CONJ_NAMES.length)];
+  var correct = conjugate(v, f.id);
+  var elapsed = challengeCount > 0 ? '' : '';
+  
+  app.innerHTML = '<div class="card"><div class="timer" id="chalTime">60</div>'+
+    '<div class="stats-bar"><div class="stat"><div class="stat-num" id="chalScore">'+challengeCorrect+'</div><div class="stat-label">正解</div></div>'+
+    '<div class="stat"><div class="stat-num">'+challengeCount+'</div><div class="stat-label">出題</div></div></div>'+
+    '<div class="quiz-question"><span class="verb">'+v.dict+'</span> → <span class="target">'+f.short+'</span></div>'+
+    '<input class="input-field" id="chalInput" placeholder="ひらがなで..." autocomplete="off">'+
+    '<button class="btn btn-primary btn-block" onclick="checkChallenge(\''+correct.replace(/'/g,"\\'")+'\')" style="margin-top:8px">OK</button></div>';
+  
+  document.getElementById('chalInput').addEventListener('keydown',function(ev){
+    if (ev.key==='Enter') checkChallenge(correct);
+  });
+  document.getElementById('chalInput').focus();
+  
+  /* Update timer display */
+  var startT = Date.now();
+  var ti = setInterval(function(){
+    if (!challengeRunning) { clearInterval(ti); return; }
+    var left = Math.max(0, 60 - Math.floor((Date.now()-startT)/1000));
+    var el = document.getElementById('chalTime');
+    if (el) el.textContent = left;
+  }, 500);
+}
+
+function checkChallenge(correct) {
+  if (!challengeRunning) return;
+  challengeCount++;
+  var input = document.getElementById('chalInput').value.trim();
+  if (input === correct) {
+    challengeCorrect++;
+    state.totalCorrect++;
+  } else {
+    state.totalWrong++;
+  }
+  saveState();
+  nextChallengeQ();
+}
+
+/* ===== WEAK MODE ===== */
+function startWeak() {
+  var keys = Object.keys(state.weakPoints);
+  if (keys.length === 0) {
+    app.innerHTML = '<div class="card"><h2>💪 <ruby>弱点強化<rt>じゃくてんきょうか</rt></ruby></h2><p>弱点はありません！🎉</p>'+
+      '<button class="btn btn-primary btn-block" onclick="showMode(\'home\')" style="margin-top:12px">ホームへ</button></div>';
+    return;
+  }
+  /* Pick a weak point */
+  var weighted = [];
+  keys.forEach(function(k){ for(var i=0;i<state.weakPoints[k];i++) weighted.push(k); });
+  var pick = weighted[Math.floor(Math.random()*weighted.length)];
+  var parts = pick.split('|');
+  var vDict = parts[0], fId = parts[1];
+  var v = ALL_VERBS.find(function(x){return x.dict===vDict;});
+  var f = CONJ_NAMES.find(function(c){return c.id===fId;});
+  if (!v || !f) { delete state.weakPoints[pick]; saveState(); startWeak(); return; }
+  
+  var correct = conjugate(v, f.id);
+  app.innerHTML = '<div class="card"><h2>💪 <ruby>弱点強化<rt>じゃくてんきょうか</rt></ruby></h2>'+
+    '<p style="font-size:.8rem;color:#ef476f;margin-bottom:8px">残り弱点：'+keys.length+'項目（この問題の失敗回数：'+state.weakPoints[pick]+'）</p>'+
+    '<div class="quiz-question"><span class="verb">'+v.dict+'（'+v.reading+'）</span><br>→ <span class="target">'+f.name+'</span></div>'+
+    groupTag(v.group)+
+    '<div style="margin:16px 0"><input class="input-field" id="weakInput" placeholder="ひらがなで入力..." autocomplete="off"></div>'+
+    '<button class="btn btn-danger btn-block" id="weakSubmit" onclick="checkWeak(\''+vDict.replace(/'/g,"\\'")+'\',\''+fId+'\',\''+correct.replace(/'/g,"\\'")+'\')" >チェック ✓</button>'+
+    '<div id="weakResult"></div></div>';
+  document.getElementById('weakInput').addEventListener('keydown',function(ev){
+    if (ev.key==='Enter') document.getElementById('weakSubmit').click();
+  });
+  document.getElementById('weakInput').focus();
+}
+
+var weakAnswered = false;
+function checkWeak(vDict, fId, correct) {
+  if (weakAnswered) { weakAnswered = false; startWeak(); return; }
+  weakAnswered = true;
+  var input = document.getElementById('weakInput').value.trim();
+  var isCorrect = input === correct;
+  var v = ALL_VERBS.find(function(x){return x.dict===vDict;});
+  
+  if (isCorrect) { state.totalCorrect++; removeWeak(vDict, fId); }
+  else { state.totalWrong++; addWeak(vDict, fId); }
+  saveState();
+  
+  var html = '<div class="'+(isCorrect?'result-correct':'result-wrong')+'" style="margin-top:12px">';
+  html += isCorrect ? '✅ 正解！弱点ポイント-1' : '❌ 不正解… 答え：<strong>'+correct+'</strong>（弱点ポイント+1）';
+  html += '</div><div class="explanation">';
+  html += '<strong>動詞タイプ：</strong>'+groupLabel(v.group)+'<br>';
+  html += '<strong>ルール：</strong>'+getShortRule(v, fId);
+  html += '</div>';
+  html += '<button class="btn btn-danger btn-block" onclick="weakAnswered=false;startWeak()" style="margin-top:12px">次の問題 →</button>';
+  document.getElementById('weakResult').innerHTML = html;
+  document.getElementById('weakSubmit').classList.add('hidden');
+}
+
+/* Init */
+renderHome();
+</script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta name="google" content="notranslate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N2文法バトル</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 16px; }
+.header { text-align: center; padding: 20px 0; }
+.header h1 { font-size: 24px; color: #1a1a2e; }
+.header .sub { color: #666; margin-top: 8px; font-size: 14px; }
+.stats { display: flex; justify-content: space-around; background: white; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.stat { text-align: center; }
+.stat .num { font-size: 24px; font-weight: bold; color: #4361ee; }
+.stat .label { font-size: 12px; color: #666; margin-top: 4px; }
+.tabs { display: flex; gap: 8px; margin: 16px 0; overflow-x: auto; padding-bottom: 4px; }
+.tab { padding: 10px 14px; border-radius: 20px; border: none; background: white; color: #333; font-size: 13px; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: all 0.2s; }
+.tab.active { background: #4361ee; color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin: 16px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.progress-bar { height: 6px; background: #e9ecef; border-radius: 3px; margin: 12px 0; }
+.progress-bar .fill { height: 100%; background: #4361ee; border-radius: 3px; transition: width 0.3s; }
+.btn { padding: 12px 24px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: #4361ee; color: white; }
+.btn-primary:hover { background: #3651d4; }
+.btn-success { background: #2ec4b6; color: white; }
+.btn-danger { background: #e63946; color: white; }
+.btn-outline { background: white; border: 2px solid #4361ee; color: #4361ee; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.quiz-option { padding: 14px 18px; border: 2px solid #e9ecef; border-radius: 10px; cursor: pointer; text-align: left; font-size: 15px; transition: all 0.2s; line-height: 1.6; }
+.quiz-option:hover { border-color: #4361ee; background: #f0f3ff; }
+.quiz-option.correct { border-color: #2ec4b6; background: #e8faf8; }
+.quiz-option.wrong { border-color: #e63946; background: #fde8ea; }
+.quiz-option.disabled { pointer-events: none; }
+.hidden { display: none; }
+.q-text { font-size: 16px; line-height: 1.8; margin: 12px 0; }
+.explain { margin-top: 16px; padding: 14px; background: #f8f9fa; border-radius: 10px; font-size: 14px; line-height: 1.8; border-left: 4px solid #4361ee; }
+.counter { text-align: center; font-size: 13px; color: #666; margin: 8px 0; }
+.arrange-area { display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 12px; border: 2px dashed #e9ecef; border-radius: 10px; margin: 12px 0; }
+.arrange-word { padding: 10px 16px; background: #4361ee; color: white; border-radius: 8px; cursor: pointer; font-size: 15px; transition: all 0.2s; user-select: none; }
+.arrange-word:hover { background: #3651d4; }
+.arrange-word.placed { background: #2ec4b6; }
+.word-bank { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: #f8f9fa; border-radius: 10px; min-height: 50px; }
+.blank { display: inline-block; border-bottom: 2px solid #4361ee; min-width: 80px; padding: 2px 4px; margin: 0 2px; }
+.passage { font-size: 15px; line-height: 2.2; padding: 16px; background: #f8f9fa; border-radius: 10px; margin: 12px 0; }
+.sm2-info { font-size: 12px; color: #999; text-align: center; margin-top: 8px; }
+ruby rt { font-size: 0.6em; color: #4361ee; }
+.result-banner { text-align: center; padding: 16px; border-radius: 10px; margin: 12px 0; }
+.result-banner.good { background: #e8faf8; color: #2ec4b6; }
+.result-banner.bad { background: #fde8ea; color: #e63946; }
+.grammar-tag { display: inline-block; padding: 4px 10px; background: #e3f2fd; color: #1565c0; border-radius: 4px; font-size: 12px; margin: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+<h1>⚔️ N2文法バトル</h1>
+<div class="sub" id="subInfo">語法辨析训练</div>
+</div>
+
+<div class="stats">
+<div class="stat"><div class="num" id="statTotal">0</div><div class="label">总题数</div></div>
+<div class="stat"><div class="num" id="statCorrect">0</div><div class="label">正确</div></div>
+<div class="stat"><div class="num" id="statWeak">0</div><div class="label">薄弱点</div></div>
+<div class="stat"><div class="num" id="statStreak">0</div><div class="label">连对</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab active" onclick="switchMode('battle')">⚔️ 辨析对决</button>
+<button class="tab" onclick="switchMode('connect')">🔗 接续判断</button>
+<button class="tab" onclick="switchMode('arrange')">🧩 排列组合</button>
+<button class="tab" onclick="switchMode('fill')">📝 语法填空</button>
+<button class="tab" onclick="switchMode('review')">📊 复习</button>
+</div>
+
+<div id="content"></div>
+</div>
+
+<script>
+// === SM-2 Spaced Repetition ===
+const SM2 = {
+  getDefault() { return { ease: 2.5, interval: 1, reps: 0, nextReview: 0 }; },
+  review(card, quality) {
+    // quality: 0-5
+    let { ease, interval, reps } = card;
+    if (quality >= 3) {
+      if (reps === 0) interval = 1;
+      else if (reps === 1) interval = 6;
+      else interval = Math.round(interval * ease);
+      reps++;
+    } else {
+      reps = 0; interval = 1;
+    }
+    ease = Math.max(1.3, ease + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    const nextReview = Date.now() + interval * 86400000;
+    return { ease, interval, reps, nextReview };
+  }
+};
+
+// === Data Store ===
+const STORAGE_KEY = 'n2_grammar_battle';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || {
+  totalAnswered: 0, totalCorrect: 0, streak: 0, sm2: {}, wrongLog: []
+};
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+// === Grammar Data (30+ grammar points, 15+ comparison pairs) ===
+const grammarPoints = [
+  { id:'g1', grammar:'〜につれて', meaning:'随着…', connection:'V辞書形/N+につれて', example:'<ruby>年<rt>とし</rt></ruby>をとるにつれて、<ruby>体力<rt>たいりょく</rt></ruby>が<ruby>落<rt>お</rt></ruby>ちる。' },
+  { id:'g2', grammar:'〜にしたがって', meaning:'随着…/按照…', connection:'V辞書形/N+にしたがって', example:'<ruby>高度<rt>こうど</rt></ruby>が<ruby>上<rt>あ</rt></ruby>がるにしたがって、<ruby>気温<rt>きおん</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がる。' },
+  { id:'g3', grammar:'〜とともに', meaning:'随着…/和…一起', connection:'V辞書形/N+とともに', example:'<ruby>時代<rt>じだい</rt></ruby>とともに<ruby>生活<rt>せいかつ</rt></ruby>が<ruby>変<rt>か</rt></ruby>わった。' },
+  { id:'g4', grammar:'〜ばかりだ', meaning:'一直（变坏）', connection:'V辞書形+ばかりだ', example:'<ruby>成績<rt>せいせき</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がるばかりだ。' },
+  { id:'g5', grammar:'〜一方だ', meaning:'一直…（趋势）', connection:'V辞書形+一方だ', example:'<ruby>物価<rt>ぶっか</rt></ruby>は<ruby>上<rt>あ</rt></ruby>がる<ruby>一方<rt>いっぽう</rt></ruby>だ。' },
+  { id:'g6', grammar:'〜うちに', meaning:'趁着…', connection:'Vている/ない/A/Na-な/N-の+うちに', example:'<ruby>若<rt>わか</rt></ruby>いうちに<ruby>旅行<rt>りょこう</rt></ruby>したい。' },
+  { id:'g7', grammar:'〜あいだに', meaning:'在…期间', connection:'Vている/N-の+あいだに', example:'<ruby>留守<rt>るす</rt></ruby>のあいだに<ruby>届<rt>とど</rt></ruby>いた。' },
+  { id:'g8', grammar:'〜わけがない', meaning:'不可能…', connection:'V普通形/A/Na-な+わけがない', example:'そんなこと<ruby>知<rt>し</rt></ruby>っているわけがない。' },
+  { id:'g9', grammar:'〜わけではない', meaning:'并非…', connection:'V普通形/A/Na-な+わけではない', example:'<ruby>嫌<rt>きら</rt></ruby>いなわけではない。' },
+  { id:'g10', grammar:'〜わけにはいかない', meaning:'不能…', connection:'V辞書形/ない形+わけにはいかない', example:'<ruby>約束<rt>やくそく</rt></ruby>を<ruby>破<rt>やぶ</rt></ruby>るわけにはいかない。' },
+  { id:'g11', grammar:'〜ことはない', meaning:'没必要…', connection:'V辞書形+ことはない', example:'そんなに<ruby>心配<rt>しんぱい</rt></ruby>することはない。' },
+  { id:'g12', grammar:'〜ものだ', meaning:'应该…/真是…', connection:'V辞書形+ものだ', example:'<ruby>人<rt>ひと</rt></ruby>には<ruby>親切<rt>しんせつ</rt></ruby>にするものだ。' },
+  { id:'g13', grammar:'〜ものではない', meaning:'不应该…', connection:'V辞書形+ものではない', example:'<ruby>人<rt>ひと</rt></ruby>の<ruby>悪口<rt>わるくち</rt></ruby>を<ruby>言<rt>い</rt></ruby>うものではない。' },
+  { id:'g14', grammar:'〜ことになっている', meaning:'规定/预定…', connection:'V辞書形/ない形+ことになっている', example:'ここでは<ruby>禁煙<rt>きんえん</rt></ruby>することになっている。' },
+  { id:'g15', grammar:'〜ようにしている', meaning:'尽量做到…', connection:'V辞書形/ない形+ようにしている', example:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>野菜<rt>やさい</rt></ruby>を<ruby>食<rt>た</rt></ruby>べるようにしている。' },
+  { id:'g16', grammar:'〜てたまらない', meaning:'…得受不了', connection:'Vて/A-くて/Na-で+たまらない', example:'<ruby>暑<rt>あつ</rt></ruby>くてたまらない。' },
+  { id:'g17', grammar:'〜てしょうがない', meaning:'…得没办法', connection:'Vて/A-くて/Na-で+しょうがない', example:'<ruby>眠<rt>ねむ</rt></ruby>くてしょうがない。' },
+  { id:'g18', grammar:'〜てならない', meaning:'非常…', connection:'Vて/A-くて/Na-で+ならない', example:'<ruby>残念<rt>ざんねん</rt></ruby>でならない。' },
+  { id:'g19', grammar:'〜に<ruby>違<rt>ちが</rt></ruby>いない', meaning:'一定是…', connection:'V普通形/A/Na/N+に違いない', example:'あの<ruby>人<rt>ひと</rt></ruby>は<ruby>日本人<rt>にほんじん</rt></ruby>に<ruby>違<rt>ちが</rt></ruby>いない。' },
+  { id:'g20', grammar:'〜おそれがある', meaning:'恐怕会…', connection:'V辞書形/N-の+おそれがある', example:'<ruby>台風<rt>たいふう</rt></ruby>が<ruby>来<rt>く</rt></ruby>るおそれがある。' },
+  { id:'g21', grammar:'〜っぽい', meaning:'容易…/像…', connection:'V-ます/A語幹/N+っぽい', example:'この<ruby>服<rt>ふく</rt></ruby>は<ruby>安<rt>やす</rt></ruby>っぽい。' },
+  { id:'g22', grammar:'〜気味', meaning:'有点…', connection:'V-ます/N+気味', example:'<ruby>風邪<rt>かぜ</rt></ruby><ruby>気味<rt>ぎみ</rt></ruby>だ。' },
+  { id:'g23', grammar:'〜がちだ', meaning:'容易…/往往…', connection:'V-ます/N+がちだ', example:'<ruby>冬<rt>ふゆ</rt></ruby>は<ruby>運動不足<rt>うんどうぶそく</rt></ruby>になりがちだ。' },
+  { id:'g24', grammar:'〜どころではない', meaning:'哪有心思…', connection:'V辞書形/N+どころではない', example:'<ruby>試験前<rt>しけんまえ</rt></ruby>で<ruby>遊<rt>あそ</rt></ruby>ぶどころではない。' },
+  { id:'g25', grammar:'〜ないことはない', meaning:'并非不…', connection:'Vない形+ことはない', example:'<ruby>行<rt>い</rt></ruby>けないことはないが、<ruby>遠<rt>とお</rt></ruby>い。' },
+  { id:'g26', grammar:'〜からには', meaning:'既然…就…', connection:'V普通形+からには', example:'<ruby>約束<rt>やくそく</rt></ruby>したからには<ruby>守<rt>まも</rt></ruby>る。' },
+  { id:'g27', grammar:'〜以上は', meaning:'既然…就…', connection:'V普通形/Na-な/N-の+以上は', example:'<ruby>学生<rt>がくせい</rt></ruby>である<ruby>以上<rt>いじょう</rt></ruby>は<ruby>勉強<rt>べんきょう</rt></ruby>すべきだ。' },
+  { id:'g28', grammar:'〜上で', meaning:'在…方面/…之后', connection:'V辞書形/た形/N-の+上で', example:'よく<ruby>考<rt>かんが</rt></ruby>えた<ruby>上<rt>うえ</rt></ruby>で<ruby>決<rt>き</rt></ruby>める。' },
+  { id:'g29', grammar:'〜末に', meaning:'…之后终于', connection:'Vた形/N-の+末に', example:'<ruby>長<rt>なが</rt></ruby>い<ruby>議論<rt>ぎろん</rt></ruby>の<ruby>末<rt>すえ</rt></ruby>に<ruby>決<rt>き</rt></ruby>まった。' },
+  { id:'g30', grammar:'〜次第', meaning:'一…就…', connection:'V-ます形+次第', example:'<ruby>届<rt>とど</rt></ruby>き<ruby>次第<rt>しだい</rt></ruby><ruby>連絡<rt>れんらく</rt></ruby>します。' },
+  { id:'g31', grammar:'〜たとたん', meaning:'刚…就…', connection:'Vた形+とたん(に)', example:'<ruby>立<rt>た</rt></ruby>ち<ruby>上<rt>あ</rt></ruby>がったとたん、めまいがした。' },
+  { id:'g32', grammar:'〜をきっかけに', meaning:'以…为契机', connection:'N+をきっかけに', example:'<ruby>留学<rt>りゅうがく</rt></ruby>をきっかけに<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>始<rt>はじ</rt></ruby>めた。' },
+  { id:'g33', grammar:'〜を<ruby>通<rt>つう</rt></ruby>じて', meaning:'通过…/整个…', connection:'N+を通じて', example:'インターネットを<ruby>通<rt>つう</rt></ruby>じて<ruby>情報<rt>じょうほう</rt></ruby>を<ruby>集<rt>あつ</rt></ruby>める。' },
+  { id:'g34', grammar:'〜にかけては', meaning:'在…方面', connection:'N+にかけては', example:'<ruby>料理<rt>りょうり</rt></ruby>にかけては<ruby>誰<rt>だれ</rt></ruby>にも<ruby>負<rt>ま</rt></ruby>けない。' },
+  { id:'g35', grammar:'〜に<ruby>反<rt>はん</rt></ruby>して', meaning:'与…相反', connection:'N+に反して', example:'<ruby>予想<rt>よそう</rt></ruby>に<ruby>反<rt>はん</rt></ruby>して<ruby>結果<rt>けっか</rt></ruby>はよかった。' },
+];
+
+// === Battle Mode: Comparison Pairs (15+ groups) ===
+const battleQuestions = [
+  { sentence:'<ruby>経済<rt>けいざい</rt></ruby>が<ruby>発展<rt>はってん</rt></ruby>する＿＿、<ruby>環境問題<rt>かんきょうもんだい</rt></ruby>も<ruby>深刻<rt>しんこく</rt></ruby>になった。', options:['につれて','にしたがって'], answer:0, explain:'「につれて」は自然な変化に使う。「にしたがって」は指示・規則に従う意味もある。ここは経済発展という自然な変化なので「につれて」が適切。' },
+  { sentence:'<ruby>先生<rt>せんせい</rt></ruby>の<ruby>指示<rt>しじ</rt></ruby>＿＿、レポートを<ruby>書<rt>か</rt></ruby>いた。', options:['につれて','にしたがって'], answer:1, explain:'「にしたがって」には「指示・規則に従って」という意味がある。先生の指示に従うので「にしたがって」が正しい。' },
+  { sentence:'<ruby>最近<rt>さいきん</rt></ruby>、<ruby>体重<rt>たいじゅう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える＿＿。', options:['ばかりだ','一方だ'], answer:0, explain:'「ばかりだ」は悪い方向への一方的変化。「一方だ」はどちらの方向にも使えるが、ここは困っているニュアンスなので「ばかりだ」。' },
+  { sentence:'<ruby>物価<rt>ぶっか</rt></ruby>は<ruby>上<rt>あ</rt></ruby>がる＿＿。<ruby>給料<rt>きゅうりょう</rt></ruby>は<ruby>変<rt>か</rt></ruby>わらない。', options:['ばかりだ','一方だ'], answer:1, explain:'客観的に傾向を述べる場合は「一方だ」が自然。「ばかりだ」は話者の困惑を含む。' },
+  { sentence:'<ruby>若<rt>わか</rt></ruby>い＿＿、いろいろな<ruby>経験<rt>けいけん</rt></ruby>をしたい。', options:['うちに','あいだに'], answer:0, explain:'「うちに」は「その状態が変わらないうちに」。若さは変わるので「若いうちに」。「あいだに」は期間中のある時点の出来事。' },
+  { sentence:'<ruby>母<rt>はは</rt></ruby>が<ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby>に<ruby>行<rt>い</rt></ruby>っている＿＿、<ruby>宅配便<rt>たくはいびん</rt></ruby>が<ruby>届<rt>とど</rt></ruby>いた。', options:['うちに','あいだに'], answer:1, explain:'「あいだに」は「ある期間中に何かが起こった」。母が不在の期間中に届いた→「あいだに」。' },
+  { sentence:'あの<ruby>人<rt>ひと</rt></ruby>が<ruby>犯人<rt>はんにん</rt></ruby>の＿＿。', options:['わけがない','わけではない'], answer:0, explain:'「わけがない」=絶対にありえない。「わけではない」=必ずしもそうではない（部分否定）。ここは強い否定なので「わけがない」。' },
+  { sentence:'<ruby>野菜<rt>やさい</rt></ruby>が<ruby>嫌<rt>きら</rt></ruby>いな＿＿が、あまり<ruby>好<rt>す</rt></ruby>きではない。', options:['わけがない','わけではない'], answer:1, explain:'「わけではない」は部分否定。完全に嫌いではないが好きでもない→「わけではない」。' },
+  { sentence:'<ruby>約束<rt>やくそく</rt></ruby>した＿＿、<ruby>必<rt>かなら</rt></ruby>ず<ruby>行<rt>い</rt></ruby>く。', options:['からには','以上は'], answer:0, explain:'両方「既然～就」だが、「からには」は話者の強い決意・覚悟を示す。「以上は」は当然の義務を述べる。ここは個人の決意。' },
+  { sentence:'<ruby>社会人<rt>しゃかいじん</rt></ruby>である＿＿、<ruby>責任<rt>せきにん</rt></ruby>を<ruby>持<rt>も</rt></ruby>つべきだ。', options:['からには','以上は'], answer:1, explain:'「以上は」は身分・立場から当然の義務を述べる。社会人としての一般的義務なので「以上は」。' },
+  { sentence:'<ruby>暑<rt>あつ</rt></ruby>くて＿＿。', options:['たまらない','ならない'], answer:0, explain:'「たまらない」は我慢できないほどの感覚を口語的に表す。「ならない」はやや書き言葉的。日常会話では「たまらない」が自然。' },
+  { sentence:'<ruby>故郷<rt>こきょう</rt></ruby>のことが<ruby>懐<rt>なつ</rt></ruby>かしくて＿＿。', options:['しょうがない','ならない'], answer:1, explain:'「ならない」は感情・感覚が自然に込み上げてくる場合に使う。懐かしさは自然な感情なので「ならない」が適切。' },
+  { sentence:'この<ruby>冬<rt>ふゆ</rt></ruby>は<ruby>風邪<rt>かぜ</rt></ruby>を<ruby>引<rt>ひ</rt></ruby>き＿＿だ。', options:['がちだ','っぽい'], answer:0, explain:'「がちだ」は頻度が高い傾向。「っぽい」は外見や性質が似ている。風邪をよく引く傾向→「がちだ」。' },
+  { sentence:'あの<ruby>映画<rt>えいが</rt></ruby>は<ruby>子供<rt>こども</rt></ruby>＿＿。', options:['がちだ','っぽい'], answer:1, explain:'「っぽい」は「～のような」。映画の内容が子供向けのように見える→「っぽい」。「がちだ」は傾向なので不自然。' },
+  { sentence:'よく<ruby>考<rt>かんが</rt></ruby>えた＿＿、<ruby>決<rt>き</rt></ruby>めてください。', options:['上で','末に'], answer:0, explain:'「上で」は「～してから」の意味で、後文が依頼・決定。「末に」は「長い過程の結果」。依頼文なので「上で」。' },
+  { sentence:'<ruby>長<rt>なが</rt></ruby>い<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いの＿＿、やっと<ruby>結論<rt>けつろん</rt></ruby>が<ruby>出<rt>で</rt></ruby>た。', options:['上で','末に'], answer:1, explain:'「末に」は長い過程・苦労を経てようやく結果が出た場合。「長い話し合い」→「末に」。' },
+  { sentence:'<ruby>届<rt>とど</rt></ruby>き＿＿、ご<ruby>連絡<rt>れんらく</rt></ruby>します。', options:['次第','たとたん'], answer:0, explain:'「次第」は「～したらすぐ」で、まだ起きていない未来のこと。「たとたん」は過去の瞬間。' },
+  { sentence:'ドアを<ruby>開<rt>あ</rt></ruby>けた＿＿、<ruby>猫<rt>ねこ</rt></ruby>が<ruby>飛<rt>と</rt></ruby>び<ruby>出<rt>だ</rt></ruby>した。', options:['次第','たとたん'], answer:1, explain:'「たとたん」は「した瞬間に予想外のことが起きた」。ドアを開けた瞬間→「たとたん」。' },
+];
+
+// === Connection Questions ===
+const connectionQuestions = [
+  { grammar:'〜につれて', sentence:'<ruby>人口<rt>じんこう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える___につれて', connection:'V辞書形', correct:true, explain:'「増える」は辞書形。V辞書形+につれて は正しい接続。' },
+  { grammar:'〜につれて', sentence:'<ruby>人口<rt>じんこう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>えた___につれて', connection:'Vた形', correct:false, explain:'「につれて」はV辞書形に接続する。「増えた」はた形なので間違い。正しくは「増えるにつれて」。' },
+  { grammar:'〜ばかりだ', sentence:'<ruby>成績<rt>せいせき</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がる___ばかりだ', connection:'V辞書形', correct:true, explain:'「ばかりだ」はV辞書形に接続。「下がる」+「ばかりだ」は正しい。' },
+  { grammar:'〜ばかりだ', sentence:'<ruby>成績<rt>せいせき</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がって___ばかりだ', connection:'Vて形', correct:false, explain:'「ばかりだ」は辞書形に接続。て形は使えない。正しくは「下がるばかりだ」。' },
+  { grammar:'〜うちに', sentence:'<ruby>暖<rt>あたた</rt></ruby>かい___うちに', connection:'い形容詞', correct:true, explain:'い形容詞はそのまま「うちに」に接続できる。「暖かいうちに」は正しい。' },
+  { grammar:'〜うちに', sentence:'<ruby>元気<rt>げんき</rt></ruby>の___うちに', connection:'Na+の', correct:false, explain:'ナ形容詞は「な」で接続。正しくは「元気なうちに」。「の」は名詞用。' },
+  { grammar:'〜がちだ', sentence:'<ruby>忘<rt>わす</rt></ruby>れ___がちだ', connection:'V-ます形語幹', correct:true, explain:'「がちだ」はV-ます形の語幹に接続。「忘れます」→「忘れ」+「がちだ」は正しい。' },
+  { grammar:'〜がちだ', sentence:'<ruby>忘<rt>わす</rt></ruby>れる___がちだ', connection:'V辞書形', correct:false, explain:'「がちだ」はV-ます形の語幹に接続。辞書形ではない。正しくは「忘れがちだ」。' },
+  { grammar:'〜っぽい', sentence:'<ruby>怒<rt>おこ</rt></ruby>り___っぽい', connection:'V-ます形語幹', correct:true, explain:'「っぽい」はV-ます形の語幹に接続。「怒ります」→「怒り」+「っぽい」は正しい。' },
+  { grammar:'〜っぽい', sentence:'<ruby>子供<rt>こども</rt></ruby>___っぽい', connection:'N', correct:true, explain:'「っぽい」は名詞にも接続できる。「子供っぽい」=子供のような、は正しい。' },
+  { grammar:'〜次第', sentence:'<ruby>届<rt>とど</rt></ruby>き___次第', connection:'V-ます形語幹', correct:true, explain:'「次第」はV-ます形の語幹に接続。「届きます」→「届き」+「次第」は正しい。' },
+  { grammar:'〜次第', sentence:'<ruby>届<rt>とど</rt></ruby>いた___次第', connection:'Vた形', correct:false, explain:'「次第」はV-ます形語幹に接続。た形は使えない。正しくは「届き次第」。' },
+  { grammar:'〜おそれがある', sentence:'<ruby>地震<rt>じしん</rt></ruby>が<ruby>起<rt>お</rt></ruby>きる___おそれがある', connection:'V辞書形', correct:true, explain:'「おそれがある」はV辞書形に接続。「起きるおそれがある」は正しい。' },
+  { grammar:'〜おそれがある', sentence:'<ruby>被害<rt>ひがい</rt></ruby>の___おそれがある', connection:'N+の', correct:true, explain:'「おそれがある」はN+の にも接続できる。「被害のおそれがある」は正しい。' },
+  { grammar:'〜気味', sentence:'<ruby>太<rt>ふと</rt></ruby>り___気味', connection:'V-ます形語幹', correct:true, explain:'「気味」はV-ます形語幹に接続。「太ります」→「太り」+「気味」は正しい。' },
+  { grammar:'〜気味', sentence:'<ruby>風邪<rt>かぜ</rt></ruby>___気味', connection:'N', correct:true, explain:'「気味」は名詞にも接続。「風邪気味」は正しい。' },
+  { grammar:'〜わけにはいかない', sentence:'<ruby>行<rt>い</rt></ruby>く___わけにはいかない', connection:'V辞書形', correct:true, explain:'「わけにはいかない」はV辞書形に接続。「行くわけにはいかない」は正しい。' },
+  { grammar:'〜わけにはいかない', sentence:'<ruby>行<rt>い</rt></ruby>かない___わけにはいかない', connection:'Vない形', correct:true, explain:'「わけにはいかない」はVない形にも接続可。「行かないわけにはいかない」=行かなければならない。' },
+];
+
+// === Arrange Questions ===
+const arrangeQuestions = [
+  { context:'<ruby>経験<rt>けいけん</rt></ruby>が＿＿＿＿★＿＿<ruby>自信<rt>じしん</rt></ruby>がついてきた。', words:['増える','につれて','に','だんだん'], answer:[0,1,3,2], answerText:'増える につれて だんだん に' },
+  { context:'この<ruby>薬<rt>くすり</rt></ruby>は＿＿＿＿★＿＿<ruby>飲<rt>の</rt></ruby>んでください。', words:['食事<rt>しょくじ</rt></ruby>の','した','<ruby>上<rt>うえ</rt></ruby>で','を'], answer:[1,3,0,2], answerText:'した を 食事の 上で' },
+  { context:'<ruby>約束<rt>やくそく</rt></ruby>＿＿＿＿★＿＿<ruby>守<rt>まも</rt></ruby>るべきだ。', words:['以上は','した','は','からには'], answer:[1,3,2,0], answerText:'した からには は 以上は' },
+  { context:'ドアを＿＿＿＿★＿＿<ruby>飛<rt>と</rt></ruby>び<ruby>出<rt>だ</rt></ruby>した。', words:['とたん','開<rt>あ</rt></ruby>けた','<ruby>猫<rt>ねこ</rt></ruby>が','<ruby>'], answer:[1,0,3,2], answerText:'開けた とたん 猫が' },
+  { context:'<ruby>彼<rt>かれ</rt></ruby>は<ruby>料理<rt>りょうり</rt></ruby>＿＿＿＿★＿＿<ruby>負<rt>ま</rt></ruby>けない。', words:['に','かけては','<ruby>誰<rt>だれ</rt></ruby>にも','にも'], answer:[1,0,2,3], answerText:'にかけては に 誰にも' },
+  { context:'この<ruby>問題<rt>もんだい</rt></ruby>は＿＿＿＿★＿＿<ruby>解決<rt>かいけつ</rt></ruby>した。', words:['の','<ruby>議論<rt>ぎろん</rt></ruby>','<ruby>末<rt>すえ</rt></ruby>に','<ruby>長<rt>なが</rt></ruby>い'], answer:[3,1,0,2], answerText:'長い 議論 の 末に' },
+  { context:'<ruby>若<rt>わか</rt></ruby>い＿＿＿＿★＿＿したい。', words:['いろいろ','うちに','<ruby>経験<rt>けいけん</rt></ruby>を','な'], answer:[1,0,3,2], answerText:'うちに いろいろ な 経験を' },
+  { context:'<ruby>天気<rt>てんき</rt></ruby><ruby>予報<rt>よほう</rt></ruby>＿＿＿＿★＿＿<ruby>良<rt>よ</rt></ruby>い<ruby>天気<rt>てんき</rt></ruby>だった。', words:['に','<ruby>反<rt>はん</rt></ruby>して','は','<ruby>意外<rt>いがい</rt></ruby>と'], answer:[0,1,3,2], answerText:'に 反して 意外と は' },
+];
+
+// === Fill-in Questions ===
+const fillQuestions = [
+  { passage:'<ruby>最近<rt>さいきん</rt></ruby>、<ruby>日本<rt>にほん</rt></ruby>では<ruby>高齢化<rt>こうれいか</rt></ruby>が<ruby>進<rt>すす</rt></ruby>む（①）、<ruby>若<rt>わか</rt></ruby>い<ruby>労働力<rt>ろうどうりょく</rt></ruby>が<ruby>不足<rt>ふそく</rt></ruby>している。<ruby>政府<rt>せいふ</rt></ruby>は<ruby>対策<rt>たいさく</rt></ruby>を<ruby>考<rt>かんが</rt></ruby>えている（②）、まだ<ruby>十分<rt>じゅうぶん</rt></ruby>ではない。<ruby>問題<rt>もんだい</rt></ruby>が<ruby>解決<rt>かいけつ</rt></ruby>される（③）が<ruby>低<rt>ひく</rt></ruby>いと<ruby>言<rt>い</rt></ruby>われている。',
+    blanks:[
+      { id:1, options:['につれて','一方で','ものの','ばかりか'], answer:0 },
+      { id:2, options:['ものの','につれて','ばかりだ','次第'], answer:0 },
+      { id:3, options:['わけがない','おそれがある','ことはない','に違いない'], answer:1 }
+    ]
+  },
+  { passage:'<ruby>田中<rt>たなか</rt></ruby>さんは<ruby>留学<rt>りゅうがく</rt></ruby>を（①）<ruby>英語<rt>えいご</rt></ruby>の<ruby>勉強<rt>べんきょう</rt></ruby>を<ruby>始<rt>はじ</rt></ruby>めた。<ruby>毎日<rt>まいにち</rt></ruby><ruby>英語<rt>えいご</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う（②）いる。<ruby>最初<rt>さいしょ</rt></ruby>は<ruby>難<rt>むずか</rt></ruby>しかったが、<ruby>努力<rt>どりょく</rt></ruby>した（③）、やっと<ruby>話<rt>はな</rt></ruby>せるようになった。',
+    blanks:[
+      { id:1, options:['きっかけに','通じて','上で','末に'], answer:0 },
+      { id:2, options:['ことにしている','ようにしている','わけにはいかない','ものだ'], answer:1 },
+      { id:3, options:['末に','上で','次第','とたん'], answer:0 }
+    ]
+  },
+  { passage:'<ruby>来月<rt>らいげつ</rt></ruby>の<ruby>試験<rt>しけん</rt></ruby>まであと2<ruby>週間<rt>しゅうかん</rt></ruby>しかない。<ruby>遊<rt>あそ</rt></ruby>ぶ（①）。<ruby>合格<rt>ごうかく</rt></ruby>する（②）、<ruby>毎日<rt>まいにち</rt></ruby>5<ruby>時間<rt>じかん</rt></ruby><ruby>勉強<rt>べんきょう</rt></ruby>（③）。',
+    blanks:[
+      { id:1, options:['わけにはいかない','どころではない','ことはない','ものではない'], answer:1 },
+      { id:2, options:['からには','以上は','上で','末に'], answer:0 },
+      { id:3, options:['するものだ','しないことはない','するようにしている','することになっている'], answer:2 }
+    ]
+  },
+];
+
+// === Current Mode State ===
+let currentMode = 'battle';
+let currentQ = 0;
+let modeQuestions = [];
+let arrangeSelected = [];
+
+function switchMode(mode) {
+  currentMode = mode;
+  currentQ = 0;
+  arrangeSelected = [];
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const modes = ['battle','connect','arrange','fill','review'];
+    t.classList.toggle('active', modes[i] === mode);
+  });
+  render();
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = state.totalAnswered;
+  document.getElementById('statCorrect').textContent = state.totalCorrect;
+  const weakCount = Object.values(state.sm2).filter(s => s.ease < 2.0).length;
+  document.getElementById('statWeak').textContent = weakCount;
+  document.getElementById('statStreak').textContent = state.streak;
+}
+
+function render() {
+  updateStats();
+  const el = document.getElementById('content');
+  switch(currentMode) {
+    case 'battle': renderBattle(el); break;
+    case 'connect': renderConnect(el); break;
+    case 'arrange': renderArrange(el); break;
+    case 'fill': renderFill(el); break;
+    case 'review': renderReview(el); break;
+  }
+}
+
+// === Battle Mode ===
+function renderBattle(el) {
+  if (currentQ >= battleQuestions.length) {
+    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 全部完了！</h2><p>正确率: ' + Math.round(state.totalCorrect/Math.max(1,state.totalAnswered)*100) + '%</p></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div></div>';
+    return;
+  }
+  const q = battleQuestions[currentQ];
+  el.innerHTML = `
+    <div class="card">
+      <div class="counter">${currentQ+1} / ${battleQuestions.length}</div>
+      <div class="progress-bar"><div class="fill" style="width:${(currentQ/battleQuestions.length)*100}%"></div></div>
+      <div class="q-text">${q.sentence}</div>
+      <div class="quiz-options">
+        ${q.options.map((o,i) => `<div class="quiz-option" onclick="answerBattle(${i})">${o}</div>`).join('')}
+      </div>
+      <div id="battleExplain" class="hidden"></div>
+    </div>`;
+}
+
+function answerBattle(idx) {
+  const q = battleQuestions[currentQ];
+  const opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[q.answer].classList.add('correct');
+  const correct = idx === q.answer;
+  if (!correct) opts[idx].classList.add('wrong');
+  state.totalAnswered++;
+  if (correct) { state.totalCorrect++; state.streak++; } else { state.streak = 0; }
+  // SM-2
+  const key = 'battle_' + currentQ;
+  const card = state.sm2[key] || SM2.getDefault();
+  state.sm2[key] = SM2.review(card, correct ? 4 : 1);
+  saveState();
+  updateStats();
+  const explEl = document.getElementById('battleExplain');
+  explEl.classList.remove('hidden');
+  explEl.innerHTML = `<div class="explain">${correct ? '✅ 正解！' : '❌ 不正解'}<br>${q.explain}</div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
+}
+
+// === Connection Mode ===
+function renderConnect(el) {
+  if (currentQ >= connectionQuestions.length) {
+    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 完了！</h2></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div></div>';
+    return;
+  }
+  const q = connectionQuestions[currentQ];
+  el.innerHTML = `
+    <div class="card">
+      <div class="counter">${currentQ+1} / ${connectionQuestions.length}</div>
+      <div class="progress-bar"><div class="fill" style="width:${(currentQ/connectionQuestions.length)*100}%"></div></div>
+      <p style="font-size:14px;color:#666;">この接続は正しいですか？</p>
+      <div class="q-text">${q.sentence}</div>
+      <p style="margin-top:8px;"><span class="grammar-tag">${q.grammar}</span> <span class="grammar-tag">${q.connection}</span></p>
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="answerConnect(true)">⭕ 正しい</button>
+        <button class="btn btn-danger" onclick="answerConnect(false)">❌ 間違い</button>
+      </div>
+      <div id="connectExplain" class="hidden"></div>
+    </div>`;
+}
+
+function answerConnect(userAnswer) {
+  const q = connectionQuestions[currentQ];
+  const correct = userAnswer === q.correct;
+  state.totalAnswered++;
+  if (correct) { state.totalCorrect++; state.streak++; } else { state.streak = 0; }
+  const key = 'connect_' + currentQ;
+  const card = state.sm2[key] || SM2.getDefault();
+  state.sm2[key] = SM2.review(card, correct ? 4 : 1);
+  saveState();
+  updateStats();
+  document.querySelectorAll('.btn-success,.btn-danger').forEach(b => b.disabled = true);
+  const explEl = document.getElementById('connectExplain');
+  explEl.classList.remove('hidden');
+  explEl.innerHTML = `<div class="explain">${correct ? '✅ 正解！' : '❌ 不正解'}<br>${q.explain}</div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
+}
+
+// === Arrange Mode ===
+function renderArrange(el) {
+  if (currentQ >= arrangeQuestions.length) {
+    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 完了！</h2></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div></div>';
+    return;
+  }
+  const q = arrangeQuestions[currentQ];
+  arrangeSelected = [];
+  // Shuffle words
+  const indices = q.words.map((_,i)=>i);
+  for(let i=indices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[indices[i],indices[j]]=[indices[j],indices[i]];}
+  el.innerHTML = `
+    <div class="card">
+      <div class="counter">${currentQ+1} / ${arrangeQuestions.length}</div>
+      <div class="progress-bar"><div class="fill" style="width:${(currentQ/arrangeQuestions.length)*100}%"></div></div>
+      <p style="font-size:14px;color:#666;">正しい順番に並べてください（★の位置に注目）</p>
+      <div class="q-text">${q.context}</div>
+      <p style="font-size:13px;color:#999;margin:8px 0;">選んだ順:</p>
+      <div class="arrange-area" id="arrangeAnswer"></div>
+      <p style="font-size:13px;color:#999;margin:8px 0;">選択肢:</p>
+      <div class="word-bank" id="wordBank">
+        ${indices.map(i => `<div class="arrange-word" onclick="pickWord(${i})" id="aw${i}">${q.words[i]}</div>`).join('')}
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-outline btn-sm" onclick="resetArrange()">リセット</button>
+        <button class="btn btn-primary btn-sm" onclick="checkArrange()" id="checkArrBtn" disabled>確認</button>
+      </div>
+      <div id="arrangeExplain" class="hidden"></div>
+    </div>`;
+}
+
+function pickWord(idx) {
+  const q = arrangeQuestions[currentQ];
+  if (arrangeSelected.includes(idx)) return;
+  arrangeSelected.push(idx);
+  document.getElementById('aw'+idx).style.opacity = '0.3';
+  document.getElementById('aw'+idx).style.pointerEvents = 'none';
+  const area = document.getElementById('arrangeAnswer');
+  area.innerHTML = arrangeSelected.map(i => `<div class="arrange-word placed">${q.words[i]}</div>`).join('');
+  if (arrangeSelected.length === q.words.length) {
+    document.getElementById('checkArrBtn').disabled = false;
+  }
+}
+
+function resetArrange() { render(); }
+
+function checkArrange() {
+  const q = arrangeQuestions[currentQ];
+  const correct = JSON.stringify(arrangeSelected) === JSON.stringify(q.answer);
+  state.totalAnswered++;
+  if (correct) { state.totalCorrect++; state.streak++; } else { state.streak = 0; }
+  const key = 'arrange_' + currentQ;
+  const card = state.sm2[key] || SM2.getDefault();
+  state.sm2[key] = SM2.review(card, correct ? 4 : 1);
+  saveState();
+  updateStats();
+  const explEl = document.getElementById('arrangeExplain');
+  explEl.classList.remove('hidden');
+  explEl.innerHTML = `<div class="explain">${correct ? '✅ 正解！' : '❌ 不正解'}<br>正しい順番: ${q.answerText}</div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
+}
+
+// === Fill Mode ===
+let fillAnswers = {};
+function renderFill(el) {
+  if (currentQ >= fillQuestions.length) {
+    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 完了！</h2></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div></div>';
+    return;
+  }
+  fillAnswers = {};
+  const q = fillQuestions[currentQ];
+  let passageHtml = q.passage.replace(/（(\d+)）/g, (m, num) => `<span class="blank" id="blank${num}">（${num}）</span>`);
+  el.innerHTML = `
+    <div class="card">
+      <div class="counter">${currentQ+1} / ${fillQuestions.length}</div>
+      <div class="progress-bar"><div class="fill" style="width:${(currentQ/fillQuestions.length)*100}%"></div></div>
+      <div class="passage">${passageHtml}</div>
+      ${q.blanks.map(b => `
+        <div style="margin:12px 0;">
+          <p style="font-size:13px;color:#666;">（${b.id}）に入るものは？</p>
+          <div class="quiz-options" id="fillOpts${b.id}">
+            ${b.options.map((o,i) => `<div class="quiz-option" onclick="answerFill(${b.id},${i})">${o}</div>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <div id="fillExplain" class="hidden"></div>
+    </div>`;
+}
+
+function answerFill(blankId, idx) {
+  const q = fillQuestions[currentQ];
+  const blank = q.blanks.find(b => b.id === blankId);
+  if (fillAnswers[blankId] !== undefined) return;
+  fillAnswers[blankId] = idx;
+  const opts = document.querySelectorAll(`#fillOpts${blankId} .quiz-option`);
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[blank.answer].classList.add('correct');
+  if (idx !== blank.answer) opts[idx].classList.add('wrong');
+  const correct = idx === blank.answer;
+  state.totalAnswered++;
+  if (correct) { state.totalCorrect++; state.streak++; } else { state.streak = 0; }
+  const key = 'fill_' + currentQ + '_' + blankId;
+  const card = state.sm2[key] || SM2.getDefault();
+  state.sm2[key] = SM2.review(card, correct ? 4 : 1);
+  saveState();
+  updateStats();
+  // Check if all blanks answered
+  if (Object.keys(fillAnswers).length === q.blanks.length) {
+    const allCorrect = q.blanks.every(b => fillAnswers[b.id] === b.answer);
+    const explEl = document.getElementById('fillExplain');
+    explEl.classList.remove('hidden');
+    explEl.innerHTML = `<div class="explain">${allCorrect ? '✅ 全問正解！' : '一部間違いがあります。復習しましょう。'}</div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
+  }
+}
+
+// === Review Mode ===
+function renderReview(el) {
+  const entries = Object.entries(state.sm2).sort((a,b) => a[1].ease - b[1].ease);
+  const weak = entries.filter(([k,v]) => v.ease < 2.0);
+  const due = entries.filter(([k,v]) => v.nextReview <= Date.now());
+  el.innerHTML = `
+    <div class="card">
+      <h3 style="margin-bottom:12px;">📊 学習状況</h3>
+      <p style="font-size:14px;color:#666;line-height:1.8;">
+        総回答数: ${state.totalAnswered}<br>
+        正解率: ${state.totalAnswered ? Math.round(state.totalCorrect/state.totalAnswered*100) : 0}%<br>
+        薄弱文法: ${weak.length}個<br>
+        復習待ち: ${due.length}個
+      </p>
+      ${weak.length > 0 ? `<h4 style="margin-top:16px;color:#e63946;">⚠️ 薄弱ポイント</h4>
+        ${weak.slice(0,10).map(([k,v]) => `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">${k} (ease: ${v.ease.toFixed(2)})</div>`).join('')}` : '<p style="color:#2ec4b6;margin-top:12px;">✨ 薄弱ポイントなし！</p>'}
+      <div class="btn-group">
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('リセットしますか？')){localStorage.removeItem('${STORAGE_KEY}');location.reload();}">データリセット</button>
+      </div>
+    </div>`;
+}
+
+// Init
+render();
+</script>
+</body>
+</html>

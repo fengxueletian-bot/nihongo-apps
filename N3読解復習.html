@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>N3読解復習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh}
+.header{background:linear-gradient(135deg,#4361ee,#3a0ca3);color:#fff;padding:16px 20px;text-align:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:1.3rem}
+.header p{font-size:.8rem;opacity:.85}
+.container{max-width:600px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.card h2{color:#4361ee;font-size:1.1rem;margin-bottom:12px}
+.btn{display:inline-block;padding:10px 20px;border:none;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+.btn-primary{background:#4361ee;color:#fff}.btn-primary:hover{background:#3a0ca3}
+.btn-block{display:block;width:100%}
+.btn-secondary{background:#e8ecff;color:#4361ee}
+.option-btn{display:block;width:100%;padding:14px 16px;margin:8px 0;border:2px solid #e0e0e0;border-radius:12px;background:#fff;font-size:.9rem;text-align:left;cursor:pointer;transition:.2s;line-height:1.5}
+.option-btn:hover{border-color:#4361ee}
+.option-btn.correct{border-color:#06d6a0;background:#d4edda}
+.option-btn.wrong{border-color:#ef476f;background:#fde8ec}
+.result-correct{background:#d4edda;border:2px solid #06d6a0;border-radius:12px;padding:16px;margin:12px 0}
+.result-wrong{background:#fde8ec;border:2px solid #ef476f;border-radius:12px;padding:16px;margin:12px 0}
+.explanation{background:#f0f4ff;border-left:4px solid #4361ee;padding:12px 16px;margin:12px 0;border-radius:0 12px 12px 0;font-size:.88rem;line-height:1.7}
+.explanation strong{color:#4361ee}
+.passage{font-size:.95rem;line-height:2;padding:16px;background:#fafbff;border:1px solid #e8ecff;border-radius:12px;margin:12px 0}
+.timer{font-size:1rem;color:#ef476f;font-weight:700;text-align:right}
+.progress-bar{height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#4361ee,#06d6a0);border-radius:3px;transition:width .3s}
+.stats-bar{display:flex;justify-content:space-around;padding:12px;background:#f8f9ff;border-radius:12px;margin-bottom:12px}
+.stats-bar .stat{text-align:center}
+.stats-bar .stat-num{font-size:1.2rem;font-weight:700;color:#4361ee}
+.stats-bar .stat-label{font-size:.7rem;color:#888}
+.list-item{padding:14px;border:2px solid #e0e0e0;border-radius:12px;margin:8px 0;cursor:pointer;transition:.2s}
+.list-item:hover{border-color:#4361ee;background:#f8f9ff}
+.list-item.done{border-color:#06d6a0;background:#f0fff4}
+ruby{ruby-position:over}rt{font-size:.6em;color:#888}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📖 N3 <ruby>読解復習<rt>どっかいふくしゅう</rt></ruby></h1>
+<p>15<ruby>篇<rt>へん</rt></ruby>の<ruby>短文<rt>たんぶん</rt></ruby>で<ruby>読解力<rt>どっかいりょく</rt></ruby>アップ</p>
+</div>
+<div class="container" id="app"></div>
+
+<script>
+var PASSAGES = [
+{id:1,title:'天気予報',text:'<ruby>今日<rt>きょう</rt></ruby>の<ruby>天気<rt>てんき</rt></ruby>は<ruby>午前中<rt>ごぜんちゅう</rt></ruby><ruby>晴<rt>は</rt></ruby>れですが、<ruby>午後<rt>ごご</rt></ruby>から<ruby>雲<rt>くも</rt></ruby>が<ruby>多<rt>おお</rt></ruby>くなり、<ruby>夕方<rt>ゆうがた</rt></ruby>には<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>るでしょう。<ruby>気温<rt>きおん</rt></ruby>は<ruby>最高<rt>さいこう</rt></ruby>22<ruby>度<rt>ど</rt></ruby>で、<ruby>昨日<rt>きのう</rt></ruby>より3<ruby>度<rt>ど</rt></ruby><ruby>低<rt>ひく</rt></ruby>いです。<ruby>傘<rt>かさ</rt></ruby>を<ruby>持<rt>も</rt></ruby>って<ruby>出<rt>で</rt></ruby>かけることをお<ruby>勧<rt>すす</rt></ruby>めします。<ruby>明日<rt>あした</rt></ruby>は<ruby>一日中<rt>いちにちじゅう</rt></ruby><ruby>雨<rt>あめ</rt></ruby>の<ruby>予報<rt>よほう</rt></ruby>です。<ruby>週末<rt>しゅうまつ</rt></ruby>はまた<ruby>晴<rt>は</rt></ruby>れるでしょう。',
+questions:[
+{q:'今日の午後の天気はどうですか？',opts:['一日中晴れる','雲が多くなる','一日中雨が降る','雪が降る'],answer:1,explain:'【根拠】「午後から雲が多くなり」と書いてあります。午前中は晴れ、午後は曇り、夕方から雨。A「一日中晴れ」は午前だけ。C「一日中雨」は明日の予報。'},
+{q:'今日の気温について正しいのはどれですか？',opts:['昨日より高い','昨日と同じ','昨日より低い','25度以上'],answer:2,explain:'【根拠】「昨日より3度低い」と明記。最高22度で昨日は25度。'}
+]},
+{id:2,title:'電車の遅延',text:'<ruby>今朝<rt>けさ</rt></ruby>、<ruby>中央線<rt>ちゅうおうせん</rt></ruby>が<ruby>信号<rt>しんごう</rt></ruby><ruby>故障<rt>こしょう</rt></ruby>のため、30<ruby>分<rt>ぷん</rt></ruby><ruby>遅<rt>おく</rt></ruby>れて<ruby>運行<rt>うんこう</rt></ruby>しています。<ruby>振替輸送<rt>ふりかえゆそう</rt></ruby>は<ruby>総武線<rt>そうぶせん</rt></ruby>と<ruby>東西線<rt>とうざいせん</rt></ruby>で<ruby>行<rt>おこな</rt></ruby>っています。<ruby>復旧<rt>ふっきゅう</rt></ruby>は<ruby>午前<rt>ごぜん</rt></ruby>10<ruby>時<rt>じ</rt></ruby><ruby>頃<rt>ごろ</rt></ruby>の<ruby>見込<rt>みこ</rt></ruby>みです。お<ruby>急<rt>いそ</rt></ruby>ぎの<ruby>方<rt>かた</rt></ruby>は<ruby>振替輸送<rt>ふりかえゆそう</rt></ruby>をご<ruby>利用<rt>りよう</rt></ruby>ください。',
+questions:[
+{q:'中央線が遅れている理由は何ですか？',opts:['人身事故','信号故障','大雨','工事'],answer:1,explain:'【根拠】「信号故障のため」と明記。A人身事故、C大雨、D工事は書かれていません。'},
+{q:'急いでいる人はどうすればいいですか？',opts:['タクシーを使う','総武線か東西線を使う','10時まで待つ','歩いて行く'],answer:1,explain:'【根拠】「振替輸送は総武線と東西線で行っています」「お急ぎの方は振替輸送をご利用ください」。'}
+]},
+{id:3,title:'スーパーのお知らせ',text:'いつも「さくらマート」をご<ruby>利用<rt>りよう</rt></ruby>いただき、ありがとうございます。<ruby>来週<rt>らいしゅう</rt></ruby>の<ruby>月曜日<rt>げつようび</rt></ruby>から<ruby>金曜日<rt>きんようび</rt></ruby>まで、<ruby>店内<rt>てんない</rt></ruby><ruby>改装<rt>かいそう</rt></ruby>のため<ruby>休業<rt>きゅうぎょう</rt></ruby>いたします。<ruby>土曜日<rt>どようび</rt></ruby>からは<ruby>新<rt>あたら</rt></ruby>しくなった<ruby>店内<rt>てんない</rt></ruby>で<ruby>営業<rt>えいぎょう</rt></ruby>を<ruby>再開<rt>さいかい</rt></ruby>します。<ruby>再開<rt>さいかい</rt></ruby><ruby>記念<rt>きねん</rt></ruby>セールも<ruby>行<rt>おこな</rt></ruby>いますので、ぜひお<ruby>越<rt>こ</rt></ruby>しください。',
+questions:[
+{q:'お店はいつ再開しますか？',opts:['来週の月曜日','来週の金曜日','来週の土曜日','来月'],answer:2,explain:'【根拠】「月曜日から金曜日まで休業」「土曜日からは新しくなった店内で営業を再開」。'},
+{q:'休業の理由は何ですか？',opts:['在庫がない','店内改装','店員の研修','連休'],answer:1,explain:'【根拠】「店内改装のため休業」と明記。'}
+]},
+{id:4,title:'友達へのメール',text:'<ruby>美咲<rt>みさき</rt></ruby>ちゃんへ<br><ruby>久<rt>ひさ</rt></ruby>しぶり！<ruby>元気<rt>げんき</rt></ruby>？<ruby>私<rt>わたし</rt></ruby>は<ruby>先月<rt>せんげつ</rt></ruby><ruby>引<rt>ひ</rt></ruby>っ<ruby>越<rt>こ</rt></ruby>して、<ruby>新<rt>あたら</rt></ruby>しいアパートに<ruby>住<rt>す</rt></ruby>んでいるよ。<ruby>駅<rt>えき</rt></ruby>から<ruby>近<rt>ちか</rt></ruby>いし、<ruby>部屋<rt>へや</rt></ruby>も<ruby>広<rt>ひろ</rt></ruby>くて<ruby>気<rt>き</rt></ruby>に<ruby>入<rt>い</rt></ruby>ってる。ただ、<ruby>近<rt>ちか</rt></ruby>くにスーパーがないのがちょっと<ruby>不便<rt>ふべん</rt></ruby>。<ruby>今度<rt>こんど</rt></ruby>の<ruby>日曜日<rt>にちようび</rt></ruby>、<ruby>遊<rt>あそ</rt></ruby>びに<ruby>来<rt>こ</rt></ruby>ない？<ruby>新<rt>あたら</rt></ruby>しい<ruby>部屋<rt>へや</rt></ruby>を<ruby>見<rt>み</rt></ruby>せたいな。<br><ruby>由美<rt>ゆみ</rt></ruby>より',
+questions:[
+{q:'由美さんの新しいアパートの良い点は何ですか？',opts:['スーパーが近い','駅から近くて部屋が広い','家賃が安い','景色がいい'],answer:1,explain:'【根拠】「駅から近いし、部屋も広くて気に入ってる」。スーパーは近くにない（不便な点）。'},
+{q:'由美さんが美咲さんに頼んでいることは何ですか？',opts:['引っ越しの手伝い','買い物','日曜日に遊びに来ること','メールの返信'],answer:2,explain:'【根拠】「今度の日曜日、遊びに来ない？」は誘いの表現。'}
+]},
+{id:5,title:'図書館の利用案内',text:'<ruby>市立図書館<rt>しりつとしょかん</rt></ruby>のご<ruby>案内<rt>あんない</rt></ruby>です。<ruby>開館時間<rt>かいかんじかん</rt></ruby>は<ruby>火曜日<rt>かようび</rt></ruby>から<ruby>土曜日<rt>どようび</rt></ruby>の<ruby>午前<rt>ごぜん</rt></ruby>9<ruby>時<rt>じ</rt></ruby>から<ruby>午後<rt>ごご</rt></ruby>7<ruby>時<rt>じ</rt></ruby>までです。<ruby>日曜日<rt>にちようび</rt></ruby>は<ruby>午後<rt>ごご</rt></ruby>5<ruby>時<rt>じ</rt></ruby>まで。<ruby>月曜日<rt>げつようび</rt></ruby>は<ruby>休館日<rt>きゅうかんび</rt></ruby>です。<ruby>本<rt>ほん</rt></ruby>は1<ruby>人<rt>り</rt></ruby>5<ruby>冊<rt>さつ</rt></ruby>まで、2<ruby>週間<rt>しゅうかん</rt></ruby><ruby>借<rt>か</rt></ruby>りることができます。DVDは2<ruby>本<rt>ほん</rt></ruby>まで、1<ruby>週間<rt>しゅうかん</rt></ruby>です。',
+questions:[
+{q:'日曜日は何時まで開いていますか？',opts:['午後7時','午後5時','午後9時','休館日'],answer:1,explain:'【根拠】「日曜日は午後5時まで」と明記。午後7時は火～土の閉館時間。'},
+{q:'DVDを借りる期間はどのくらいですか？',opts:['2週間','1週間','3日間','1ヶ月'],answer:1,explain:'【根拠】「DVDは2本まで、1週間」。2週間は本の貸出期間。'}
+]},
+{id:6,title:'旅行の思い出',text:'<ruby>先週<rt>せんしゅう</rt></ruby>、<ruby>家族<rt>かぞく</rt></ruby>で<ruby>京都<rt>きょうと</rt></ruby>に<ruby>旅行<rt>りょこう</rt></ruby>に<ruby>行<rt>い</rt></ruby>きました。<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>日<rt>ひ</rt></ruby>は<ruby>金閣寺<rt>きんかくじ</rt></ruby>を<ruby>見<rt>み</rt></ruby>ました。とてもきれいでした。2<ruby>日目<rt>にちめ</rt></ruby>は<ruby>嵐山<rt>あらしやま</rt></ruby>を<ruby>散歩<rt>さんぽ</rt></ruby>しました。<ruby>竹林<rt>ちくりん</rt></ruby>がとても<ruby>美<rt>うつく</rt></ruby>しかったです。3<ruby>日目<rt>にちめ</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>だったので、<ruby>室内<rt>しつない</rt></ruby>の<ruby>市場<rt>いちば</rt></ruby>で<ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby>をしました。<ruby>抹茶<rt>まっちゃ</rt></ruby>のお<ruby>菓子<rt>かし</rt></ruby>をたくさん<ruby>買<rt>か</rt></ruby>いました。',
+questions:[
+{q:'2日目に何をしましたか？',opts:['金閣寺を見た','嵐山を散歩した','買い物をした','抹茶を飲んだ'],answer:1,explain:'【根拠】「2日目は嵐山を散歩しました」。金閣寺は1日目、買い物は3日目。'},
+{q:'3日目に買い物をした理由は何ですか？',opts:['お土産を買いたかった','雨が降ったから','市場が安かったから','時間があったから'],answer:1,explain:'【根拠】「3日目は雨だったので、室内の市場で買い物をしました」。雨→外で観光できない→室内で買い物。'}
+]},
+{id:7,title:'アルバイトの募集',text:'レストラン「<ruby>花<rt>はな</rt></ruby>」ではアルバイトを<ruby>募集<rt>ぼしゅう</rt></ruby>しています。<ruby>仕事<rt>しごと</rt></ruby>は<ruby>接客<rt>せっきゃく</rt></ruby>と<ruby>料理<rt>りょうり</rt></ruby>の<ruby>運<rt>はこ</rt></ruby>びです。<ruby>時給<rt>じきゅう</rt></ruby>は1000<ruby>円<rt>えん</rt></ruby>で、<ruby>土日<rt>どにち</rt></ruby>は1200<ruby>円<rt>えん</rt></ruby>です。<ruby>勤務<rt>きんむ</rt></ruby><ruby>時間<rt>じかん</rt></ruby>は<ruby>午後<rt>ごご</rt></ruby>5<ruby>時<rt>じ</rt></ruby>から<ruby>午後<rt>ごご</rt></ruby>10<ruby>時<rt>じ</rt></ruby>までで、<ruby>週<rt>しゅう</rt></ruby>3<ruby>日<rt>にち</rt></ruby><ruby>以上<rt>いじょう</rt></ruby><ruby>働<rt>はたら</rt></ruby>ける<ruby>方<rt>かた</rt></ruby>を<ruby>希望<rt>きぼう</rt></ruby>します。<ruby>経験<rt>けいけん</rt></ruby>がなくても<ruby>大丈夫<rt>だいじょうぶ</rt></ruby>です。',
+questions:[
+{q:'土曜日の時給はいくらですか？',opts:['1000円','1100円','1200円','1500円'],answer:2,explain:'【根拠】「土日は1200円」。平日は1000円。'},
+{q:'応募の条件として正しいのはどれですか？',opts:['料理の経験が必要','週3日以上働ける','午前中も働ける','20歳以上'],answer:1,explain:'【根拠】「週3日以上働ける方を希望」「経験がなくても大丈夫」。経験不要、勤務は午後のみ。'}
+]},
+{id:8,title:'健康について',text:'<ruby>最近<rt>さいきん</rt></ruby>、<ruby>運動不足<rt>うんどうぶそく</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>えています。<ruby>毎日<rt>まいにち</rt></ruby>30<ruby>分<rt>ぷん</rt></ruby><ruby>歩<rt>ある</rt></ruby>くだけでも<ruby>健康<rt>けんこう</rt></ruby>によいそうです。<ruby>特<rt>とく</rt></ruby>に<ruby>朝<rt>あさ</rt></ruby>の<ruby>散歩<rt>さんぽ</rt></ruby>は、<ruby>気分<rt>きぶん</rt></ruby>をよくする<ruby>効果<rt>こうか</rt></ruby>があります。エレベーターではなく<ruby>階段<rt>かいだん</rt></ruby>を<ruby>使<rt>つか</rt></ruby>うなど、<ruby>日常生活<rt>にちじょうせいかつ</rt></ruby>の<ruby>中<rt>なか</rt></ruby>で<ruby>少<rt>すこ</rt></ruby>しずつ<ruby>体<rt>からだ</rt></ruby>を<ruby>動<rt>うご</rt></ruby>かすことが<ruby>大切<rt>たいせつ</rt></ruby>です。',
+questions:[
+{q:'この文章で勧めていることは何ですか？',opts:['毎日ジムに通う','日常生活の中で体を動かす','朝早く起きる','食事制限をする'],answer:1,explain:'【根拠】「日常生活の中で少しずつ体を動かすことが大切」がまとめの文。ジムや食事制限には言及なし。'},
+{q:'朝の散歩にはどんな効果がありますか？',opts:['痩せる','気分がよくなる','筋肉がつく','よく眠れる'],answer:1,explain:'【根拠】「朝の散歩は、気分をよくする効果があります」と明記。'}
+]},
+{id:9,title:'学校の連絡',text:'<ruby>保護者<rt>ほごしゃ</rt></ruby>の<ruby>皆様<rt>みなさま</rt></ruby>へ<br><ruby>来週<rt>らいしゅう</rt></ruby>の<ruby>水曜日<rt>すいようび</rt></ruby>に<ruby>遠足<rt>えんそく</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>います。<ruby>場所<rt>ばしょ</rt></ruby>は<ruby>上野<rt>うえの</rt></ruby><ruby>動物園<rt>どうぶつえん</rt></ruby>です。お<ruby>弁当<rt>べんとう</rt></ruby>と<ruby>水筒<rt>すいとう</rt></ruby>を<ruby>持<rt>も</rt></ruby>たせてください。<ruby>雨<rt>あめ</rt></ruby>の<ruby>場合<rt>ばあい</rt></ruby>は<ruby>木曜日<rt>もくようび</rt></ruby>に<ruby>延期<rt>えんき</rt></ruby>します。<ruby>集合<rt>しゅうごう</rt></ruby><ruby>時間<rt>じかん</rt></ruby>はいつもより30<ruby>分<rt>ぷん</rt></ruby><ruby>早<rt>はや</rt></ruby>い<ruby>午前<rt>ごぜん</rt></ruby>8<ruby>時<rt>じ</rt></ruby>です。<ruby>遅<rt>おく</rt></ruby>れないようにしてください。',
+questions:[
+{q:'雨が降ったらどうなりますか？',opts:['中止になる','水曜日にそのまま行く','木曜日に延期する','金曜日に延期する'],answer:2,explain:'【根拠】「雨の場合は木曜日に延期します」と明記。中止ではなく延期。'},
+{q:'集合時間について正しいのはどれですか？',opts:['いつもと同じ','いつもより30分早い','いつもより30分遅い','午前9時'],answer:1,explain:'【根拠】「集合時間はいつもより30分早い午前8時」。普段は8時30分と推測できる。'}
+]},
+{id:10,title:'料理のレシピ',text:'<ruby>簡単<rt>かんたん</rt></ruby>カレーの<ruby>作<rt>つく</rt></ruby>り<ruby>方<rt>かた</rt></ruby>：まず、<ruby>玉<rt>たま</rt></ruby>ねぎと<ruby>人参<rt>にんじん</rt></ruby>と<ruby>じゃがいも<rt></rt></ruby>を<ruby>切<rt>き</rt></ruby>ります。<ruby>次<rt>つぎ</rt></ruby>に、<ruby>鍋<rt>なべ</rt></ruby>に<ruby>油<rt>あぶら</rt></ruby>を<ruby>入<rt>い</rt></ruby>れて、<ruby>肉<rt>にく</rt></ruby>を<ruby>炒<rt>いた</rt></ruby>めます。<ruby>肉<rt>にく</rt></ruby>の<ruby>色<rt>いろ</rt></ruby>が<ruby>変<rt>か</rt></ruby>わったら、<ruby>野菜<rt>やさい</rt></ruby>を<ruby>入<rt>い</rt></ruby>れて<ruby>一緒<rt>いっしょ</rt></ruby>に<ruby>炒<rt>いた</rt></ruby>めます。<ruby>水<rt>みず</rt></ruby>を<ruby>入<rt>い</rt></ruby>れて20<ruby>分<rt>ぷん</rt></ruby><ruby>煮<rt>に</rt></ruby>たら、カレールーを<ruby>入<rt>い</rt></ruby>れて<ruby>混<rt>ま</rt></ruby>ぜます。',
+questions:[
+{q:'最初に何をしますか？',opts:['肉を炒める','野菜を切る','水を入れる','カレールーを入れる'],answer:1,explain:'【根拠】「まず、玉ねぎと人参とじゃがいもを切ります」。肉を炒めるのは「次に」。'},
+{q:'水を入れてからどのくらい煮ますか？',opts:['10分','15分','20分','30分'],answer:2,explain:'【根拠】「水を入れて20分煮たら」と明記。'}
+]},
+{id:11,title:'バスの案内',text:'<ruby>市内<rt>しない</rt></ruby>バスのご<ruby>案内<rt>あんない</rt></ruby>です。4<ruby>月<rt>がつ</rt></ruby>1<ruby>日<rt>にち</rt></ruby>から<ruby>時刻表<rt>じこくひょう</rt></ruby>が<ruby>変<rt>か</rt></ruby>わります。<ruby>朝<rt>あさ</rt></ruby>の<ruby>便<rt>びん</rt></ruby>が2<ruby>本<rt>ほん</rt></ruby><ruby>増<rt>ふ</rt></ruby>えて、7<ruby>時<rt>じ</rt></ruby>15<ruby>分<rt>ふん</rt></ruby>と7<ruby>時<rt>じ</rt></ruby>45<ruby>分<rt>ふん</rt></ruby>の<ruby>便<rt>びん</rt></ruby>が<ruby>新<rt>あたら</rt></ruby>しくできます。<ruby>夜<rt>よる</rt></ruby>の<ruby>最終<rt>さいしゅう</rt></ruby>バスは<ruby>午後<rt>ごご</rt></ruby>11<ruby>時<rt>じ</rt></ruby>から<ruby>午後<rt>ごご</rt></ruby>11<ruby>時<rt>じ</rt></ruby>30<ruby>分<rt>ぷん</rt></ruby>に<ruby>変更<rt>へんこう</rt></ruby>になります。<ruby>料金<rt>りょうきん</rt></ruby>は<ruby>変<rt>か</rt></ruby>わりません。',
+questions:[
+{q:'4月1日から何が変わりますか？',opts:['料金','バスの色','時刻表','運転手'],answer:2,explain:'【根拠】「4月1日から時刻表が変わります」。料金は「変わりません」と明記。'},
+{q:'最終バスはどう変わりますか？',opts:['なくなる','30分早くなる','30分遅くなる','1時間遅くなる'],answer:2,explain:'【根拠】「午後11時から午後11時30分に変更」→30分遅くなる。'}
+]},
+{id:12,title:'趣味の話',text:'<ruby>私<rt>わたし</rt></ruby>の<ruby>趣味<rt>しゅみ</rt></ruby>は<ruby>写真<rt>しゃしん</rt></ruby>を<ruby>撮<rt>と</rt></ruby>ることです。<ruby>特<rt>とく</rt></ruby>に<ruby>花<rt>はな</rt></ruby>の<ruby>写真<rt>しゃしん</rt></ruby>が<ruby>好<rt>す</rt></ruby>きです。<ruby>毎週末<rt>まいしゅうまつ</rt></ruby>、<ruby>公園<rt>こうえん</rt></ruby>に<ruby>行<rt>い</rt></ruby>って<ruby>季節<rt>きせつ</rt></ruby>の<ruby>花<rt>はな</rt></ruby>を<ruby>撮<rt>と</rt></ruby>っています。<ruby>去年<rt>きょねん</rt></ruby>からインスタグラムに<ruby>写真<rt>しゃしん</rt></ruby>を<ruby>載<rt>の</rt></ruby>せるようにしています。フォロワーが<ruby>少<rt>すこ</rt></ruby>しずつ<ruby>増<rt>ふ</rt></ruby>えてきて、うれしいです。いつか<ruby>写真<rt>しゃしん</rt></ruby><ruby>展<rt>てん</rt></ruby>を<ruby>開<rt>ひら</rt></ruby>きたいと<ruby>思<rt>おも</rt></ruby>っています。',
+questions:[
+{q:'筆者が特に好きなのはどんな写真ですか？',opts:['風景の写真','動物の写真','花の写真','人物の写真'],answer:2,explain:'【根拠】「特に花の写真が好きです」と明記。'},
+{q:'筆者の将来の夢は何ですか？',opts:['プロカメラマンになる','写真展を開く','世界旅行をする','花屋を開く'],answer:1,explain:'【根拠】「いつか写真展を開きたいと思っています」。'}
+]},
+{id:13,title:'マンションの掲示板',text:'<ruby>住民<rt>じゅうみん</rt></ruby>の<ruby>皆様<rt>みなさま</rt></ruby>へ<br><ruby>来月<rt>らいげつ</rt></ruby>の10<ruby>日<rt>にち</rt></ruby>（<ruby>土<rt>ど</rt></ruby>）に<ruby>駐車場<rt>ちゅうしゃじょう</rt></ruby>の<ruby>工事<rt>こうじ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>います。<ruby>当日<rt>とうじつ</rt></ruby>は<ruby>駐車場<rt>ちゅうしゃじょう</rt></ruby>が<ruby>使<rt>つか</rt></ruby>えません。<ruby>車<rt>くるま</rt></ruby>をお<ruby>持<rt>も</rt></ruby>ちの<ruby>方<rt>かた</rt></ruby>は、<ruby>近<rt>ちか</rt></ruby>くの<ruby>コインパーキング<rt></rt></ruby>をご<ruby>利用<rt>りよう</rt></ruby>ください。<ruby>工事<rt>こうじ</rt></ruby>は<ruby>一日<rt>いちにち</rt></ruby>で<ruby>終<rt>お</rt></ruby>わる<ruby>予定<rt>よてい</rt></ruby>です。ご<ruby>不便<rt>ふべん</rt></ruby>をおかけしますが、ご<ruby>理解<rt>りかい</rt></ruby>をお<ruby>願<rt>ねが</rt></ruby>いします。',
+questions:[
+{q:'工事の日、車をどうすればいいですか？',opts:['そのまま置いておく','近くのコインパーキングに停める','工事が終わるまで待つ','管理人に預ける'],answer:1,explain:'【根拠】「近くのコインパーキングをご利用ください」と案内。駐車場は使えない。'},
+{q:'工事はどのくらいかかりますか？',opts:['半日','一日','二日','一週間'],answer:1,explain:'【根拠】「工事は一日で終わる予定」と明記。'}
+]},
+{id:14,title:'映画の感想',text:'<ruby>昨日<rt>きのう</rt></ruby>、<ruby>友達<rt>ともだち</rt></ruby>と<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>に<ruby>行<rt>い</rt></ruby>きました。ロボットが<ruby>主人公<rt>しゅじんこう</rt></ruby>の<ruby>映画<rt>えいが</rt></ruby>で、<ruby>最初<rt>さいしょ</rt></ruby>はつまらないと<ruby>思<rt>おも</rt></ruby>いましたが、<ruby>途中<rt>とちゅう</rt></ruby>からとても<ruby>面白<rt>おもしろ</rt></ruby>くなりました。<ruby>特<rt>とく</rt></ruby>に<ruby>最後<rt>さいご</rt></ruby>のシーンは<ruby>感動<rt>かんどう</rt></ruby>して<ruby>泣<rt>な</rt></ruby>いてしまいました。<ruby>友達<rt>ともだち</rt></ruby>も<ruby>同<rt>おな</rt></ruby>じように<ruby>泣<rt>な</rt></ruby>いていたので、<ruby>二人<rt>ふたり</rt></ruby>で<ruby>笑<rt>わら</rt></ruby>いました。',
+questions:[
+{q:'映画の最初の印象はどうでしたか？',opts:['とても面白かった','つまらないと思った','怖かった','難しかった'],answer:1,explain:'【根拠】「最初はつまらないと思いましたが」。「が」の後で印象が変わった。'},
+{q:'最後のシーンで二人はどうなりましたか？',opts:['怒った','寝てしまった','泣いた後に笑った','帰った'],answer:2,explain:'【根拠】「感動して泣いてしまいました」→「友達も同じように泣いていたので、二人で笑いました」。泣いた→笑った。'}
+]},
+{id:15,title:'引っ越しの挨拶',text:'<ruby>隣<rt>となり</rt></ruby>に<ruby>引<rt>ひ</rt></ruby>っ<ruby>越<rt>こ</rt></ruby>してきた<ruby>田中<rt>たなか</rt></ruby>と<ruby>申<rt>もう</rt></ruby>します。<ruby>妻<rt>つま</rt></ruby>と<ruby>小学生<rt>しょうがくせい</rt></ruby>の<ruby>息子<rt>むすこ</rt></ruby>の3<ruby>人<rt>にん</rt></ruby><ruby>家族<rt>かぞく</rt></ruby>です。<ruby>前<rt>まえ</rt></ruby>は<ruby>横浜<rt>よこはま</rt></ruby>に<ruby>住<rt>す</rt></ruby>んでいました。<ruby>息子<rt>むすこ</rt></ruby>は<ruby>元気<rt>げんき</rt></ruby>がよくて、<ruby>少<rt>すこ</rt></ruby>しうるさいかもしれませんが、ご<ruby>迷惑<rt>めいわく</rt></ruby>をおかけしないように<ruby>気<rt>き</rt></ruby>をつけます。よろしくお<ruby>願<rt>ねが</rt></ruby>いいたします。',
+questions:[
+{q:'田中さんの家族は何人ですか？',opts:['2人','3人','4人','5人'],answer:1,explain:'【根拠】「妻と小学生の息子の3人家族」と明記。田中さん本人＋妻＋息子＝3人。'},
+{q:'田中さんが心配していることは何ですか？',opts:['家賃が高いこと','息子がうるさいかもしれないこと','仕事が忙しいこと','学校が遠いこと'],answer:1,explain:'【根拠】「息子は元気がよくて、少しうるさいかもしれませんが、ご迷惑をおかけしないように気をつけます」。'}
+]}
+];
+
+var st = JSON.parse(localStorage.getItem('n3_reading_state') || '{}');
+if (!st.correct) st.correct = 0;
+if (!st.wrong) st.wrong = 0;
+if (!st.done) st.done = {};
+function saveSt() { localStorage.setItem('n3_reading_state', JSON.stringify(st)); }
+
+var app = document.getElementById('app');
+var timerInterval = null;
+var timerSeconds = 0;
+
+function renderHome() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  var doneCount = Object.keys(st.done).length;
+  var total = st.correct + st.wrong;
+  var rate = total ? Math.round(st.correct/total*100) : 0;
+  var html = '<div class="card"><h2>📊 <ruby>学習<rt>がくしゅう</rt></ruby>データ</h2>'+
+    '<div class="stats-bar"><div class="stat"><div class="stat-num">'+st.correct+'</div><div class="stat-label">正解</div></div>'+
+    '<div class="stat"><div class="stat-num">'+st.wrong+'</div><div class="stat-label">不正解</div></div>'+
+    '<div class="stat"><div class="stat-num">'+rate+'%</div><div class="stat-label">正答率</div></div>'+
+    '<div class="stat"><div class="stat-num">'+doneCount+'/15</div><div class="stat-label">完了</div></div></div>'+
+    '<div class="progress-bar"><div class="progress-fill" style="width:'+Math.round(doneCount/15*100)+'%"></div></div></div>';
+  html += '<div class="card"><h2>📄 <ruby>文章<rt>ぶんしょう</rt></ruby>リスト</h2>';
+  PASSAGES.forEach(function(p){
+    var done = st.done[p.id];
+    html += '<div class="list-item'+(done?' done':'')+'" onclick="startPassage('+p.id+')">'+
+      '<div style="display:flex;justify-content:space-between"><strong>'+p.id+'. '+p.title+'</strong>'+(done?'<span style="color:#06d6a0">✅</span>':'')+'</div></div>';
+  });
+  html += '</div>';
+  app.innerHTML = html;
+}
+
+var currentPassage = null;
+var currentQIdx = 0;
+var qAnswered = false;
+
+function startPassage(id) {
+  currentPassage = PASSAGES.find(function(p){return p.id===id;});
+  currentQIdx = 0;
+  qAnswered = false;
+  timerSeconds = 0;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function(){
+    timerSeconds++;
+    var el = document.getElementById('timer');
+    if (el) el.textContent = formatTime(timerSeconds);
+  }, 1000);
+  renderPassageQ();
+}
+
+function formatTime(s) {
+  var m = Math.floor(s/60);
+  var sec = s%60;
+  return (m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+}
+
+function renderPassageQ() {
+  qAnswered = false;
+  var p = currentPassage;
+  var q = p.questions[currentQIdx];
+  var html = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center">'+
+    '<button class="btn btn-secondary" onclick="renderHome()" style="padding:6px 12px;font-size:.8rem">← 戻る</button>'+
+    '<div class="timer" id="timer">'+formatTime(timerSeconds)+'</div></div>'+
+    '<h2 style="margin-top:8px">'+p.id+'. '+p.title+'</h2>'+
+    '<div class="passage">'+p.text+'</div>'+
+    '<p style="font-size:.8rem;color:#888;margin-bottom:4px">問題 '+(currentQIdx+1)+' / '+p.questions.length+'</p>'+
+    '<p style="font-size:1rem;font-weight:600;margin:8px 0">'+q.q+'</p>';
+  html += '<div id="options">';
+  q.opts.forEach(function(o,i){
+    html += '<button class="option-btn" onclick="checkReading('+i+','+q.answer+')" data-idx="'+i+'">'+String.fromCharCode(65+i)+'．'+o+'</button>';
+  });
+  html += '</div><div id="result"></div></div>';
+  app.innerHTML = html;
+}
+
+function checkReading(sel, correct) {
+  if (qAnswered) return;
+  qAnswered = true;
+  var btns = document.querySelectorAll('#options .option-btn');
+  btns[correct].classList.add('correct');
+  if (sel !== correct) btns[sel].classList.add('wrong');
+  var isCorrect = sel === correct;
+  if (isCorrect) st.correct++; else st.wrong++;
+  saveSt();
+  var q = currentPassage.questions[currentQIdx];
+  var html = '<div class="'+(isCorrect?'result-correct':'result-wrong')+'">'+
+    (isCorrect?'✅ 正解！':'❌ 不正解…')+'</div>'+
+    '<div class="explanation">'+q.explain+'</div>';
+  if (currentQIdx < currentPassage.questions.length - 1) {
+    html += '<button class="btn btn-primary btn-block" onclick="currentQIdx++;renderPassageQ()" style="margin-top:12px">次の問題 →</button>';
+  } else {
+    st.done[currentPassage.id] = true;
+    saveSt();
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    html += '<div style="text-align:center;margin-top:12px;color:#06d6a0;font-weight:700">🎉 この文章を完了しました！（'+formatTime(timerSeconds)+'）</div>';
+    html += '<button class="btn btn-primary btn-block" onclick="renderHome()" style="margin-top:12px">文章リストへ →</button>';
+  }
+  document.getElementById('result').innerHTML = html;
+}
+
+renderHome();
+</script>
+</body>
+</html>

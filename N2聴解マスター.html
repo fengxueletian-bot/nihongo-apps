@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta name="google" content="notranslate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N2聴解マスター</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 16px; }
+.header { text-align: center; padding: 20px 0; }
+.header h1 { font-size: 24px; color: #1a1a2e; }
+.header .sub { color: #666; margin-top: 8px; font-size: 14px; }
+.stats { display: flex; justify-content: space-around; background: white; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.stat { text-align: center; }
+.stat .num { font-size: 24px; font-weight: bold; color: #4361ee; }
+.stat .label { font-size: 12px; color: #666; margin-top: 4px; }
+.tabs { display: flex; gap: 8px; margin: 16px 0; overflow-x: auto; padding-bottom: 4px; }
+.tab { padding: 10px 14px; border-radius: 20px; border: none; background: white; color: #333; font-size: 13px; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: all 0.2s; }
+.tab.active { background: #4361ee; color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin: 16px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.progress-bar { height: 6px; background: #e9ecef; border-radius: 3px; margin: 12px 0; }
+.progress-bar .fill { height: 100%; background: #4361ee; border-radius: 3px; transition: width 0.3s; }
+.btn { padding: 12px 24px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: #4361ee; color: white; }
+.btn-primary:hover { background: #3651d4; }
+.btn-success { background: #2ec4b6; color: white; }
+.btn-danger { background: #e63946; color: white; }
+.btn-outline { background: white; border: 2px solid #4361ee; color: #4361ee; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.quiz-option { padding: 14px 18px; border: 2px solid #e9ecef; border-radius: 10px; cursor: pointer; text-align: left; font-size: 15px; transition: all 0.2s; line-height: 1.6; }
+.quiz-option:hover { border-color: #4361ee; background: #f0f3ff; }
+.quiz-option.correct { border-color: #2ec4b6; background: #e8faf8; }
+.quiz-option.wrong { border-color: #e63946; background: #fde8ea; }
+.quiz-option.disabled { pointer-events: none; }
+.hidden { display: none; }
+.explain { margin-top: 16px; padding: 14px; background: #f8f9fa; border-radius: 10px; font-size: 14px; line-height: 1.8; border-left: 4px solid #4361ee; }
+.counter { text-align: center; font-size: 13px; color: #666; margin: 8px 0; }
+.result-banner { text-align: center; padding: 16px; border-radius: 10px; margin: 12px 0; }
+.result-banner.good { background: #e8faf8; color: #2ec4b6; }
+.result-banner.bad { background: #fde8ea; color: #e63946; }
+ruby rt { font-size: 0.6em; color: #4361ee; }
+.player-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px; background: #f8f9fa; border-radius: 12px; margin: 12px 0; }
+.play-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: #4361ee; color: white; font-size: 24px; cursor: pointer; transition: all 0.2s; }
+.play-btn:hover { background: #3651d4; }
+.play-btn:disabled { background: #ccc; cursor: not-allowed; }
+.speed-control { display: flex; align-items: center; gap: 8px; justify-content: center; margin: 8px 0; }
+.speed-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 12px; cursor: pointer; }
+.speed-btn.active { background: #4361ee; color: white; border-color: #4361ee; }
+.listen-count { text-align: center; font-size: 13px; color: #e63946; margin: 8px 0; }
+.transcript { margin-top: 16px; padding: 14px; background: #f0f3ff; border-radius: 10px; font-size: 14px; line-height: 2; }
+.scene-tag { display: inline-block; padding: 4px 10px; background: #fff3e0; color: #e65100; border-radius: 4px; font-size: 12px; margin: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+<h1>🎧 N2聴解マスター</h1>
+<div class="sub">ブラウザTTSで聴解トレーニング</div>
+</div>
+
+<div class="stats">
+<div class="stat"><div class="num" id="statTotal">0</div><div class="label">回答数</div></div>
+<div class="stat"><div class="num" id="statCorrect">0</div><div class="label">正解</div></div>
+<div class="stat"><div class="num" id="statAcc">0%</div><div class="label">正解率</div></div>
+<div class="stat"><div class="num" id="statStreak">0</div><div class="label">連続</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab active" onclick="switchMode('keyword')">🔑 关键词</button>
+<button class="tab" onclick="switchMode('turn')">🔄 转折词</button>
+<button class="tab" onclick="switchMode('point')">📌 要点</button>
+<button class="tab" onclick="switchMode('response')">💬 即時応答</button>
+<button class="tab" onclick="switchMode('speed')">⚡ 倍速</button>
+</div>
+
+<div id="content"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'n2_listening_master';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || {
+  totalAnswered: 0, totalCorrect: 0, streak: 0
+};
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+// TTS
+let synth = window.speechSynthesis;
+let currentUtterance = null;
+let playCount = 0;
+let maxPlays = 2;
+let currentRate = 1.0;
+
+function speak(text, rate, onEnd) {
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP';
+  u.rate = rate || currentRate;
+  u.pitch = 1.0;
+  // Try to find a Japanese voice
+  const voices = synth.getVoices();
+  const jaVoice = voices.find(v => v.lang.startsWith('ja'));
+  if (jaVoice) u.voice = jaVoice;
+  if (onEnd) u.onend = onEnd;
+  currentUtterance = u;
+  synth.speak(u);
+}
+
+function stopSpeech() { synth.cancel(); }
+
+// === Listening Data (30+ items) ===
+const listeningData = {
+  keyword: [
+    { id:1, scene:'日常', text:'田中さんは来週の月曜日に東京駅で山田さんと会う約束をしました。時間は午前10時です。', questions:[
+      { q:'誰と会いますか？', options:['田中さん','山田さん','鈴木さん','佐藤さん'], answer:1 },
+      { q:'いつですか？', options:['今週の月曜','来週の月曜','来週の火曜','今週の金曜'], answer:1 },
+      { q:'どこで？', options:['新宿駅','渋谷駅','東京駅','品川駅'], answer:2 }
+    ]},
+    { id:2, scene:'職場', text:'部長、明日の会議の件ですが、午後3時から5階の第二会議室に変更になりました。資料は私が準備しておきます。', questions:[
+      { q:'何時から？', options:['午前10時','午後1時','午後3時','午後5時'], answer:2 },
+      { q:'場所は？', options:['3階第一会議室','5階第二会議室','2階ホール','4階会議室'], answer:1 }
+    ]},
+    { id:3, scene:'学校', text:'先生、すみません。来週の水曜日のゼミですが、就職の面接があるので欠席させていただきたいのですが。', questions:[
+      { q:'いつ欠席？', options:['今週の水曜','来週の月曜','来週の水曜','来週の金曜'], answer:2 },
+      { q:'理由は？', options:['病気','旅行','就職の面接','家族の用事'], answer:2 }
+    ]},
+    { id:4, scene:'日常', text:'すみません、この電車は横浜方面に行きますか？あ、これは逆方向ですね。向かいのホームから乗ればいいんですか。ありがとうございます。', questions:[
+      { q:'どこに行きたい？', options:['東京','横浜','大阪','名古屋'], answer:1 },
+      { q:'どうすればいい？', options:['この電車に乗る','次の電車を待つ','向かいのホームから乗る','バスに乗り換える'], answer:2 }
+    ]},
+    { id:5, scene:'公共', text:'本日は当店にお越しいただきありがとうございます。ただいまより閉店の準備をさせていただきます。お会計はレジカウンターまでお願いいたします。なお、本日のタイムセール商品は明日も同じ価格でご提供いたします。', questions:[
+      { q:'今何をしている？', options:['開店準備','閉店準備','セール開始','休憩'], answer:1 },
+      { q:'タイムセール商品は？', options:['今日だけ','明日も同じ価格','明日は値上げ','売り切れ'], answer:1 }
+    ]},
+    { id:6, scene:'職場', text:'鈴木さん、今度のプロジェクトの締め切りが金曜日から水曜日に早まったそうです。間に合いますか？必要なら、手伝いましょうか。', questions:[
+      { q:'締め切りはいつに変更？', options:['月曜','水曜','金曜','来週'], answer:1 },
+      { q:'話し手は何を申し出た？', options:['延期を提案','手伝いを申し出た','休みを取ることを提案','上司に相談することを提案'], answer:1 }
+    ]},
+  ],
+  turn: [
+    { id:1, scene:'日常', text:'昨日のパーティーは楽しかったよ。料理もおいしかったし。でも、帰りの電車がなくてタクシーで帰ったんだ。結構お金がかかったよ。', turnWord:'でも', keyPoint:'帰りの電車がなくてタクシー代がかかった', questions:[
+      { q:'「でも」の後の内容は？', options:['パーティーが楽しかった','料理がおいしかった','帰りにお金がかかった','友達に会えた'], answer:2 }
+    ]},
+    { id:2, scene:'職場', text:'新しいシステムは便利になると聞いていました。ところが、実際に使ってみると操作が複雑で、逆に時間がかかるようになってしまいました。', turnWord:'ところが', keyPoint:'実際は操作が複雑で時間がかかる', questions:[
+      { q:'「ところが」の後で分かることは？', options:['システムは便利だ','予想通り良かった','実際は操作が複雑で時間がかかる','みんな喜んでいる'], answer:2 }
+    ]},
+    { id:3, scene:'日常', text:'あの映画、評判がいいから見に行ったんだ。実は、途中で寝ちゃったんだよね。ストーリーが難しくて。', turnWord:'実は', keyPoint:'途中で寝てしまった', questions:[
+      { q:'「実は」の後の本音は？', options:['映画が面白かった','途中で寝てしまった','もう一回見たい','感動した'], answer:1 }
+    ]},
+    { id:4, scene:'職場', text:'この企画、アイデアはとてもいいと思います。けど、予算が足りないんですよね。もう少し規模を小さくできませんか。', turnWord:'けど', keyPoint:'予算が足りないので規模を小さくしてほしい', questions:[
+      { q:'「けど」の後の問題は？', options:['アイデアが悪い','人が足りない','予算不足','時間がない'], answer:2 }
+    ]},
+    { id:5, scene:'日常', text:'今日は天気予報で晴れだったから傘を持ってこなかったの。ところが、急に雨が降ってきて、びしょ濡れになっちゃった。', turnWord:'ところが', keyPoint:'予想に反して雨が降った', questions:[
+      { q:'結果どうなった？', options:['晴れて楽しかった','雨に濡れた','傘を借りた','タクシーに乗った'], answer:1 }
+    ]},
+    { id:6, scene:'学校', text:'このレポート、もう少しで終わりそうなんです。でも、参考文献が一つ見つからなくて、図書館に行かなきゃいけないんです。', turnWord:'でも', keyPoint:'参考文献が見つからない', questions:[
+      { q:'問題は何？', options:['レポートが書けない','時間がない','参考文献が見つからない','パソコンが壊れた'], answer:2 }
+    ]},
+  ],
+  point: [
+    { id:1, scene:'公共', text:'明日の天気予報です。関東地方は朝から曇りで、午後から雨になるでしょう。気温は最高18度、最低12度の予想です。お出かけの際は折りたたみ傘をお忘れなく。', questions:[
+      { q:'要点は？', options:['一日中雨','朝晴れ、午後雨','朝曇り、午後雨','一日中曇り'], answer:2 }
+    ]},
+    { id:2, scene:'職場', text:'来月から社内のペーパーレス化を進めます。会議資料はすべてタブレットで共有し、印刷は原則禁止とします。ただし、外部向けの資料は例外とします。', questions:[
+      { q:'要点は？', options:['全ての印刷禁止','社内資料のペーパーレス化（外部向けは例外）','タブレットの購入','会議の廃止'], answer:1 }
+    ]},
+    { id:3, scene:'学校', text:'図書館の利用についてお知らせします。来週月曜日から金曜日まで、蔵書整理のため3階は利用できません。1階と2階は通常通りご利用いただけます。', questions:[
+      { q:'正しいのは？', options:['図書館全体が閉館','3階だけ利用不可','1階が工事中','来月から閉館'], answer:1 }
+    ]},
+    { id:4, scene:'日常', text:'お客様にお知らせいたします。本日午後2時より、地下1階の食品売り場でタイムセールを実施いたします。お肉、お魚、お野菜が全品3割引きとなります。数に限りがございますので、お早めにお越しください。', questions:[
+      { q:'セールの内容は？', options:['全商品半額','食品全品3割引','肉だけ3割引','2階で実施'], answer:1 }
+    ]},
+    { id:5, scene:'職場', text:'今月の売り上げは前月比15パーセント増加しました。特にオンライン販売が好調で、全体の40パーセントを占めています。来月はさらにウェブ広告を強化する予定です。', questions:[
+      { q:'来月の計画は？', options:['店舗を増やす','値下げする','ウェブ広告を強化する','社員を増やす'], answer:2 }
+    ]},
+    { id:6, scene:'公共', text:'このバスは桜台駅前を経由して、市民病院まで参ります。次は中央公園前です。市民病院へお越しの方は終点までご乗車ください。なお、本日は道路工事のため、到着が5分ほど遅れる見込みです。', questions:[
+      { q:'市民病院に行くにはどうする？', options:['次で降りる','乗り換える','終点まで乗る','バスを変える'], answer:2 }
+    ]},
+  ],
+  response: [
+    { id:1, scene:'日常', text:'すみません、この席、空いていますか？', questions:[
+      { q:'最も適切な応答は？', options:['はい、どうぞ。','いいえ、空いていません。','すみません、分かりません。','ありがとうございます。'], answer:0 }
+    ]},
+    { id:2, scene:'職場', text:'コピー機の使い方、教えていただけませんか？', questions:[
+      { q:'最も適切な応答は？', options:['はい、いいですよ。こちらです。','いいえ、使えません。','コピー機は高いです。','明日にしてください。'], answer:0 }
+    ]},
+    { id:3, scene:'日常', text:'昨日のテスト、どうだった？', questions:[
+      { q:'最も適切な応答は？', options:['まあまあかな。ちょっと難しかった。','テストは来週です。','先生に聞いてください。','テストが好きです。'], answer:0 }
+    ]},
+    { id:4, scene:'職場', text:'申し訳ありませんが、明日の会議に出られなくなってしまいまして...', questions:[
+      { q:'最も適切な応答は？', options:['そうですか。では資料を後でお送りしますね。','会議は楽しいですよ。','分かりました。会議は中止します。','どうして嫌いなんですか。'], answer:0 }
+    ]},
+    { id:5, scene:'日常', text:'ちょっと手伝ってもらえる？この荷物、重くて。', questions:[
+      { q:'最も適切な応答は？', options:['いいよ。どこに運ぶの？','荷物は自分で持ってください。','重いですね、かわいそう。','いくらですか？'], answer:0 }
+    ]},
+    { id:6, scene:'日常', text:'今度の日曜日、映画でも見に行かない？', questions:[
+      { q:'最も適切な応答は？', options:['いいね！何が見たい？','映画は嫌いです。','日曜日は7日です。','映画館は駅の近くです。'], answer:0 }
+    ]},
+    { id:7, scene:'職場', text:'この書類、部長に渡していただけますか？', questions:[
+      { q:'最も適切な応答は？', options:['はい、承知しました。','部長は忙しいです。','書類はどこですか？','私は新人です。'], answer:0 }
+    ]},
+    { id:8, scene:'公共', text:'あのう、この辺りにATMはありますか？', questions:[
+      { q:'最も適切な応答は？', options:['あそこのコンビニの中にありますよ。','ATMはお金を出す機械です。','銀行は月曜から金曜です。','お金がないんですか？'], answer:0 }
+    ]},
+  ],
+  speed: [
+    { id:1, scene:'日常', text:'今日の午後、友達と新宿で待ち合わせをしています。3時に東口の改札前で会う予定です。その後、一緒に買い物をして、夕方6時頃に晩ご飯を食べる予定です。', questions:[
+      { q:'待ち合わせの場所は？', options:['西口','東口の改札前','南口','中央改札'], answer:1 },
+      { q:'晩ご飯は何時頃？', options:['5時','6時頃','7時','8時'], answer:1 }
+    ]},
+    { id:2, scene:'職場', text:'来週の出張の件ですが、月曜日に大阪、火曜日に名古屋、水曜日に東京に戻ります。大阪ではA社、名古屋ではB社を訪問する予定です。ホテルはもう予約してあります。', questions:[
+      { q:'名古屋は何曜日？', options:['月曜','火曜','水曜','木曜'], answer:1 },
+      { q:'名古屋で何をする？', options:['A社訪問','B社訪問','ホテル予約','東京に戻る'], answer:1 }
+    ]},
+    { id:3, scene:'学校', text:'来学期の授業登録について説明します。登録期間は4月1日から4月7日までです。一人最大6科目まで登録できます。変更は4月14日まで可能です。', questions:[
+      { q:'最大何科目？', options:['4科目','5科目','6科目','7科目'], answer:2 },
+      { q:'変更はいつまで？', options:['4月7日','4月10日','4月14日','4月末'], answer:2 }
+    ]},
+    { id:4, scene:'公共', text:'台風12号の影響により、本日午後3時以降、東海道新幹線は東京・名古屋間で運転を見合わせます。名古屋・大阪間は通常運転の予定です。最新情報はホームページでご確認ください。', questions:[
+      { q:'運転見合わせの区間は？', options:['東京・大阪','東京・名古屋','名古屋・大阪','全区間'], answer:1 }
+    ]},
+  ]
+};
+
+let currentMode = 'keyword';
+let currentQ = 0;
+let answered = {};
+
+function switchMode(mode) {
+  currentMode = mode;
+  currentQ = 0;
+  answered = {};
+  playCount = 0;
+  stopSpeech();
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const modes = ['keyword','turn','point','response','speed'];
+    t.classList.toggle('active', modes[i] === mode);
+  });
+  render();
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = state.totalAnswered;
+  document.getElementById('statCorrect').textContent = state.totalCorrect;
+  document.getElementById('statAcc').textContent = state.totalAnswered ? Math.round(state.totalCorrect/state.totalAnswered*100)+'%' : '0%';
+  document.getElementById('statStreak').textContent = state.streak;
+}
+
+function getList() { return listeningData[currentMode] || []; }
+
+function render() {
+  updateStats();
+  const el = document.getElementById('content');
+  const list = getList();
+  if (currentQ >= list.length) {
+    el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 全部完了！</h2><p>正解率: '+( state.totalAnswered ? Math.round(state.totalCorrect/state.totalAnswered*100) : 0)+'%</p></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">最初から</button></div></div>';
+    return;
+  }
+  playCount = 0;
+  answered = {};
+  const item = list[currentQ];
+  const isSpeed = currentMode === 'speed';
+  el.innerHTML = `
+    <div class="card">
+      <div class="counter">${currentQ+1} / ${list.length} <span class="scene-tag">${item.scene}</span></div>
+      <div class="progress-bar"><div class="fill" style="width:${(currentQ/list.length)*100}%"></div></div>
+      <div class="player-controls">
+        <button class="play-btn" id="playBtn" onclick="playAudio()">▶</button>
+      </div>
+      <div class="speed-control">
+        ${[0.8,1.0,1.2,1.5].map(s => `<button class="speed-btn ${s===currentRate?'active':''}" onclick="setSpeed(${s})">${s}x</button>`).join('')}
+      </div>
+      <div class="listen-count" id="listenCount">再生回数: 0/2</div>
+      ${isSpeed ? '<p style="font-size:13px;color:#666;text-align:center;">まず1.2xで聴いてから、原速で確認しましょう</p>' : ''}
+      ${currentMode === 'turn' ? `<p style="margin:8px 0;font-size:14px;">転折語: <strong style="color:#e63946;">${item.turnWord}</strong></p>` : ''}
+      <div id="questionArea" class="hidden"></div>
+      <div id="resultArea" class="hidden"></div>
+    </div>`;
+}
+
+function setSpeed(s) {
+  currentRate = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.toggle('active', parseFloat(b.textContent) === s));
+}
+
+function playAudio() {
+  const list = getList();
+  const item = list[currentQ];
+  if (playCount >= maxPlays) return;
+  playCount++;
+  document.getElementById('listenCount').textContent = `再生回数: ${playCount}/${maxPlays}`;
+  const btn = document.getElementById('playBtn');
+  btn.disabled = true;
+  btn.textContent = '⏸';
+
+  const rate = (currentMode === 'speed' && playCount === 1) ? 1.2 : currentRate;
+  speak(item.text, rate, () => {
+    btn.disabled = playCount >= maxPlays;
+    btn.textContent = playCount >= maxPlays ? '✗' : '▶';
+    // Show questions after first play
+    if (playCount >= 1) {
+      document.getElementById('questionArea').classList.remove('hidden');
+      renderItemQuestions(item);
+    }
+  });
+}
+
+function renderItemQuestions(item) {
+  const qEl = document.getElementById('questionArea');
+  if (qEl.innerHTML) return; // already rendered
+  qEl.innerHTML = item.questions.map((q,qi) => `
+    <div style="margin-top:12px;">
+      <p style="font-size:14px;font-weight:bold;line-height:1.6;">${q.q}</p>
+      <div class="quiz-options" id="lqOpts${qi}">
+        ${q.options.map((o,oi) => `<div class="quiz-option" onclick="answerListening(${qi},${oi})">${o}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function answerListening(qi, oi) {
+  if (answered[qi] !== undefined) return;
+  const list = getList();
+  const item = list[currentQ];
+  const q = item.questions[qi];
+  answered[qi] = oi;
+  const opts = document.querySelectorAll(`#lqOpts${qi} .quiz-option`);
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[q.answer].classList.add('correct');
+  const correct = oi === q.answer;
+  if (!correct) opts[oi].classList.add('wrong');
+  state.totalAnswered++;
+  if (correct) { state.totalCorrect++; state.streak++; } else { state.streak = 0; }
+  saveState();
+  updateStats();
+  // All questions answered?
+  if (Object.keys(answered).length === item.questions.length) {
+    const resEl = document.getElementById('resultArea');
+    resEl.classList.remove('hidden');
+    const allCorrect = item.questions.every((q,i) => answered[i] === q.answer);
+    let extra = '';
+    if (currentMode === 'turn') extra = `<p style="margin-top:8px;font-size:14px;">ポイント: ${item.keyPoint}</p>`;
+    resEl.innerHTML = `
+      <div class="result-banner ${allCorrect?'good':'bad'}">${allCorrect?'✅ 正解！':'❌ 惜しい！'}</div>
+      <div class="transcript"><strong>原文：</strong><br>${item.text}</div>
+      ${extra}
+      <div class="btn-group"><button class="btn btn-primary" onclick="currentQ++;render()">次へ →</button></div>`;
+  }
+}
+
+// Init voices
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = () => {};
+render();
+</script>
+</body>
+</html>

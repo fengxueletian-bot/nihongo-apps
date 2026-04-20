@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta name="google" content="notranslate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N2単語マスター</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 16px; }
+.header { text-align: center; padding: 20px 0; }
+.header h1 { font-size: 24px; color: #1a1a2e; }
+.header .day-info { color: #666; margin-top: 8px; font-size: 14px; }
+.stats { display: flex; justify-content: space-around; background: white; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.stat { text-align: center; }
+.stat .num { font-size: 24px; font-weight: bold; color: #4361ee; }
+.stat .label { font-size: 12px; color: #666; margin-top: 4px; }
+.tabs { display: flex; gap: 8px; margin: 16px 0; overflow-x: auto; padding-bottom: 4px; }
+.tab { padding: 10px 14px; border-radius: 20px; border: none; background: white; color: #333; font-size: 13px; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.tab.active { background: #4361ee; color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin: 16px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.word-display { text-align: center; padding: 20px 0; }
+.word-display .word { font-size: 36px; font-weight: bold; color: #1a1a2e; }
+.word-display .reading { font-size: 18px; color: #4361ee; margin-top: 8px; }
+.word-display .meaning { font-size: 16px; color: #666; margin-top: 12px; }
+.word-display .example { font-size: 14px; color: #444; margin-top: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: left; line-height: 1.8; }
+.word-display .collocation { font-size: 13px; color: #e63946; margin-top: 8px; font-weight: 500; }
+.ruby-text { font-size: inherit; }
+.ruby-text rt { font-size: 0.6em; color: #4361ee; }
+.btn { padding: 12px 24px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: #4361ee; color: white; }
+.btn-primary:hover { background: #3651d4; }
+.btn-success { background: #2ec4b6; color: white; }
+.btn-danger { background: #e63946; color: white; }
+.btn-outline { background: white; border: 2px solid #4361ee; color: #4361ee; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.progress-bar { height: 6px; background: #e9ecef; border-radius: 3px; margin: 12px 0; }
+.progress-bar .fill { height: 100%; background: #4361ee; border-radius: 3px; transition: width 0.3s; }
+.quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.quiz-option { padding: 14px 18px; border: 2px solid #e9ecef; border-radius: 10px; cursor: pointer; text-align: left; font-size: 15px; transition: all 0.2s; }
+.quiz-option:hover { border-color: #4361ee; background: #f0f3ff; }
+.quiz-option.correct { border-color: #2ec4b6; background: #e8faf8; }
+.quiz-option.wrong { border-color: #e63946; background: #fde8ea; }
+.input-area { margin-top: 16px; }
+.input-area input { width: 100%; padding: 14px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 16px; outline: none; }
+.input-area input:focus { border-color: #4361ee; }
+.recording-area { text-align: center; margin-top: 20px; }
+.record-btn { width: 72px; height: 72px; border-radius: 50%; border: none; background: #e63946; color: white; font-size: 24px; cursor: pointer; transition: all 0.2s; }
+.record-btn.recording { background: #333; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+.score-display { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; }
+.score-good { background: #e8faf8; color: #2ec4b6; }
+.score-ok { background: #fff3cd; color: #856404; }
+.score-bad { background: #fde8ea; color: #e63946; }
+.review-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+.review-item .word-info .jp { font-size: 16px; font-weight: 500; }
+.review-item .word-info .cn { font-size: 13px; color: #666; }
+.review-item .status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+.status-new { background: #e3f2fd; color: #1565c0; }
+.status-learning { background: #fff3e0; color: #e65100; }
+.status-review { background: #e8f5e9; color: #2e7d32; }
+.hidden { display: none; }
+.nav-arrows { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+.nav-arrows .counter { font-size: 14px; color: #666; }
+.speaker-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 8px; }
+.speaker-btn-sm { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px 8px; }
+.chapter-select { width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; margin: 8px 0; }
+.shadow-target { margin: 12px 0; padding: 16px; background: #f8f9fa; border-radius: 10px; text-align: center; }
+.shadow-target .main-text { font-size: 20px; line-height: 1.8; }
+.shadow-target .sub-text { font-size: 13px; color: #666; margin-top: 8px; }
+.mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+.mode-toggle .toggle-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: #f8f9fa; font-size: 13px; cursor: pointer; }
+.mode-toggle .toggle-btn.active { background: #4361ee; color: white; border-color: #4361ee; }
+.score-detail { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.6; }
+.jlpt-question { padding: 16px; background: #f8f9fa; border-radius: 10px; margin: 12px 0; }
+.jlpt-question .q-text { font-size: 15px; line-height: 1.8; }
+.jlpt-question .q-num { font-size: 12px; color: #4361ee; font-weight: bold; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>📚 N2単語マスター</h1>
+    <div class="day-info" id="dayInfo">Day 1 - 1章1課 親類・友人・知人</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="statTotal">0</div><div class="label">总词数</div></div>
+    <div class="stat"><div class="num" id="statLearned">0</div><div class="label">已学</div></div>
+    <div class="stat"><div class="num" id="statMastered">0</div><div class="label">已掌握</div></div>
+    <div class="stat"><div class="num" id="statReview">0</div><div class="label">待复习</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchMode('learn')">📖 学习</button>
+    <button class="tab" onclick="switchMode('quiz')">📝 测试</button>
+    <button class="tab" onclick="switchMode('spell')">✍️ 拼写</button>
+    <button class="tab" onclick="switchMode('shadow')">🎤 跟读</button>
+    <button class="tab" onclick="switchMode('jlpt')">🎯 真题</button>
+    <button class="tab" onclick="switchMode('review')">🔄 复习</button>
+    <button class="tab" onclick="switchMode('cloze')">🧠 填空</button>
+    <button class="tab" onclick="switchMode('errors')">❌ 错题</button>
+  </div>
+
+  <!-- ============ 学习模式 ============ -->
+  <div id="mode-learn" class="card">
+    <select class="chapter-select" id="chapterSelect" onchange="changeChapter()">
+      <option value="1-1">1章1課 親類・友人・知人</option>
+      <option value="1-2">1章2課 人の性格・特徴</option>
+      <option value="1-3">1章3課 人に対する感情・行動</option>
+      <option value="2-1">2章1課 食生活</option>
+      <option value="2-2">2章2課 家事</option>
+      <option value="2-3">2章3課 健康</option>
+    </select>
+    <div class="progress-bar"><div class="fill" id="learnProgress" style="width:0%"></div></div>
+    <div class="word-display">
+      <div class="word" id="learnWord"></div>
+      <div class="reading" id="learnReading"></div>
+      <div class="collocation" id="learnCollocation"></div>
+      <div class="meaning" id="learnMeaning"></div>
+      <div class="example" id="learnExample"></div>
+    </div>
+    <div class="btn-group" style="margin-top:12px">
+      <button class="btn btn-outline btn-sm" onclick="speakWord()">🔊 单词</button>
+      <button class="btn btn-outline btn-sm" onclick="speakExample()">🔊 例句</button>
+    </div>
+    <div class="nav-arrows">
+      <button class="btn btn-outline" onclick="prevWord()">← 上一个</button>
+      <span class="counter" id="learnCounter">1 / 30</span>
+      <button class="btn btn-primary" onclick="nextWord()">下一个 →</button>
+    </div>
+    <div style="text-align:center;margin-top:8px"><button class="btn btn-outline btn-sm" onclick="restartLearn()">🔄 从头开始</button></div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-success" onclick="markWord('known')">✓ 认识</button>
+      <button class="btn btn-danger" onclick="markWord('unknown')">✗ 不认识</button>
+    </div>
+  </div>
+
+  <!-- ============ 测试模式 ============ -->
+  <div id="mode-quiz" class="card hidden">
+    <div class="progress-bar"><div class="fill" id="quizProgress" style="width:0%"></div></div>
+    <div class="word-display">
+      <button class="speaker-btn" onclick="speakQuizWord()">🔊</button>
+      <div class="word" id="quizWord"></div>
+      <div class="reading" id="quizReading" style="visibility:hidden"></div>
+    </div>
+    <div class="quiz-options" id="quizOptions"></div>
+    <div class="nav-arrows">
+      <span class="counter" id="quizCounter">1 / 10</span>
+      <span id="quizScore" style="color:#4361ee;font-weight:bold"></span>
+    </div>
+  </div>
+
+  <!-- ============ 拼写模式 ============ -->
+  <div id="mode-spell" class="card hidden">
+    <div class="progress-bar"><div class="fill" id="spellProgress" style="width:0%"></div></div>
+    <div class="word-display">
+      <div class="meaning" style="font-size:20px" id="spellMeaning"></div>
+      <div class="collocation" id="spellHint"></div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="kanaInput" placeholder="请输入假名..." onkeydown="handleKanaKey(event)">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="checkKana()">确认</button>
+        <button class="btn btn-outline btn-sm" onclick="speakSpellWord()">🔊 朗读</button>
+        <button class="btn btn-outline btn-sm" onclick="showKanaHint()">💡 提示</button>
+      </div>
+      <div id="kanaResult" style="margin-top:12px;text-align:center;font-size:15px"></div>
+      <div id="kanaNext" class="hidden" style="margin-top:12px;text-align:center">
+        <span style="color:#999;font-size:13px">按回车进入下一题 →</span>
+      </div>
+    </div>
+    <div class="nav-arrows">
+      <span class="counter" id="spellCounter">1 / 10</span>
+      <span id="spellScore" style="color:#4361ee;font-weight:bold"></span>
+    </div>
+  </div>
+
+  <!-- ============ 跟读模式 ============ -->
+  <div id="mode-shadow" class="card hidden">
+    <div class="mode-toggle">
+      <button class="toggle-btn active" id="shadowModeWord" onclick="setShadowMode('word')">单词跟读</button>
+      <button class="toggle-btn" id="shadowModeSentence" onclick="setShadowMode('sentence')">例句跟读</button>
+    </div>
+    <div class="shadow-target">
+      <div class="main-text" id="shadowMainText"></div>
+      <div class="sub-text" id="shadowSubText"></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-outline btn-sm" onclick="playShadowTarget()">🔊 播放</button>
+    </div>
+    <div class="recording-area">
+      <p style="margin-bottom:12px;color:#666;font-size:13px">点击录音，跟读上方内容<br><span style="font-size:11px;color:#999">⚠️ 当前为浏览器合成语音，仅供参考发音。语调训练建议配合真人音频。</span></p>
+      <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤</button>
+      <div id="shadowResult" class="score-display hidden"></div>
+      <div id="shadowDetail" class="score-detail hidden"></div>
+      <div id="recognizedText" style="margin-top:8px;font-size:14px;color:#666"></div>
+    </div>
+    <div class="nav-arrows">
+      <button class="btn btn-outline" onclick="prevShadow()">←</button>
+      <span class="counter" id="shadowCounter">1 / 30</span>
+      <button class="btn btn-primary" onclick="nextShadow()">下一个 →</button>
+    </div>
+  </div>
+
+  <!-- ============ 真题训练 ============ -->
+  <div id="mode-jlpt" class="card hidden">
+    <h3 style="margin-bottom:12px">🎯 真题训练</h3>
+    <p style="font-size:13px;color:#666;margin-bottom:16px">根据今日学习内容，精选N2真题高频考点</p>
+    <div class="progress-bar"><div class="fill" id="jlptProgress" style="width:0%"></div></div>
+    <div class="jlpt-question" id="jlptQuestion"></div>
+    <div class="quiz-options" id="jlptOptions"></div>
+    <div id="jlptExplanation" class="hidden" style="margin-top:12px;padding:12px;background:#f0f3ff;border-radius:8px;font-size:14px;line-height:1.8"></div>
+    <div class="nav-arrows">
+      <button class="btn btn-outline btn-sm" onclick="prevJlpt()">← 上一题</button>
+      <span class="counter" id="jlptCounter">1 / 10</span>
+      <button class="btn btn-primary btn-sm" id="jlptNextBtn" onclick="nextJlptManual()" style="display:none">下一题 →</button>
+    </div>
+    <div style="text-align:center;margin-top:8px"><span id="jlptScore" style="color:#4361ee;font-weight:bold"></span></div>
+  </div>
+
+  <!-- ============ 填空回忆模式 ============ -->
+  <div id="mode-cloze" class="card hidden">
+    <h3 style="margin-bottom:8px">🧠 填空回忆</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:16px">看例句猜单词，主动回忆比选择题记忆效果强3-5倍</p>
+    <div class="progress-bar"><div class="fill" id="clozeProgress" style="width:0%"></div></div>
+    <div class="word-display">
+      <div class="example" id="clozeSentence" style="font-size:18px;line-height:2;text-align:center"></div>
+      <div id="clozeHintArea" style="margin-top:12px;text-align:center;color:#666;font-size:13px"></div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="clozeInput" placeholder="输入答案（假名或汉字）..." onkeydown="handleClozeKey(event)">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="checkCloze()">确认</button>
+        <button class="btn btn-outline btn-sm" onclick="clozeMeaning()">💡 看意思</button>
+        <button class="btn btn-outline btn-sm" onclick="clozeReveal()">👁 揭示答案</button>
+      </div>
+      <div id="clozeResult" style="margin-top:12px;text-align:center;font-size:15px"></div>
+    </div>
+    <div class="nav-arrows">
+      <button class="btn btn-outline" onclick="prevCloze()">←</button>
+      <span class="counter" id="clozeCounter">1 / 30</span>
+      <button class="btn btn-primary" onclick="nextCloze()">下一题 →</button>
+    </div>
+    <div style="text-align:center;margin-top:8px"><span id="clozeScore" style="color:#4361ee;font-weight:bold"></span></div>
+  </div>
+
+  <!-- ============ 复习模式 ============ -->
+  <div id="mode-review" class="card hidden">
+    <h3 style="margin-bottom:16px">📅 今日复习（艾宾浩斯）</h3>
+    <div style="font-size:13px;color:#666;margin-bottom:12px">
+      复习间隔：20分→1小时→1天→2天→4天→7天→15天
+    </div>
+    <div id="reviewList"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startReview()">开始复习</button>
+    </div>
+  </div>
+
+  <!-- ============ 错题本 ============ -->
+  <div id="mode-errors" class="card hidden">
+    <h3 style="margin-bottom:16px">❌ 错题本</h3>
+    <div id="errorList"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="practiceErrors()">练习错题</button>
+      <button class="btn btn-outline" onclick="clearErrors()">清空</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ 词库数据（每课30词）============
+const VOCABULARY = {
+  "1-1": { title: "1章1課 親類・友人・知人", words: [
+    {word:"親戚",reading:"しんせき",meaning:"亲戚",collocation:"親戚の家",example:"お正月（しょうがつ）に親戚（しんせき）の家（いえ）を訪（たず）ねた。",exampleCn:"正月去了亲戚家。"},
+    {word:"親類",reading:"しんるい",meaning:"亲属",collocation:"親類が集まる",example:"お盆（ぼん）に親類（しんるい）が集（あつ）まった。",exampleCn:"盂兰盆节亲属们聚在了一起。"},
+    {word:"身内",reading:"みうち",meaning:"家人、至亲",collocation:"身内だけの式",example:"結婚式（けっこんしき）は身内（みうち）だけで行（おこな）った。",exampleCn:"婚礼只有至亲参加。"},
+    {word:"一人っ子",reading:"ひとりっこ",meaning:"独生子女",collocation:"一人っ子政策",example:"私（わたし）は一人（ひとり）っ子（こ）です。",exampleCn:"我是独生子女。"},
+    {word:"長男",reading:"ちょうなん",meaning:"长子",collocation:"長男として",example:"長男（ちょうなん）として家（いえ）を継（つ）いだ。",exampleCn:"作为长子继承了家业。"},
+    {word:"末っ子",reading:"すえっこ",meaning:"最小的孩子",collocation:"末っ子だから",example:"末（すえ）っ子（こ）はみんなに甘（あま）やかされた。",exampleCn:"因为是最小的，被大家宠爱。"},
+    {word:"幼なじみ",reading:"おさななじみ",meaning:"青梅竹马",collocation:"幼なじみと再会する",example:"幼（おさな）なじみと20年（ねん）ぶりに再会（さいかい）した。",exampleCn:"和青梅竹马时隔20年重逢。"},
+    {word:"知人",reading:"ちじん",meaning:"熟人",collocation:"知人の紹介で",example:"知人（ちじん）の紹介（しょうかい）で仕事（しごと）を見（み）つけた。",exampleCn:"通过熟人介绍找到了工作。"},
+    {word:"知り合い",reading:"しりあい",meaning:"认识的人",collocation:"知り合いになる",example:"パーティーで彼（かれ）と知（し）り合（あ）いになった。",exampleCn:"在派对上认识了他。"},
+    {word:"仲間",reading:"なかま",meaning:"伙伴",collocation:"仲間に入る",example:"サークルの仲間（なかま）と旅行（りょこう）した。",exampleCn:"和社团的伙伴一起旅行了。"},
+    {word:"相手",reading:"あいて",meaning:"对方",collocation:"相手の気持ち",example:"相手（あいて）の気持（きも）ちを考（かんが）えることが大切（たいせつ）だ。",exampleCn:"考虑对方的心情很重要。"},
+    {word:"付き合う",reading:"つきあう",meaning:"交往",collocation:"友達と付き合う",example:"3年間（ねんかん）付（つ）き合（あ）って結婚（けっこん）した。",exampleCn:"交往了3年后结婚了。"},
+    {word:"交際",reading:"こうさい",meaning:"交际",collocation:"交際を始める",example:"二人（ふたり）は交際中（こうさいちゅう）だ。",exampleCn:"两人正在交往。"},
+    {word:"片思い",reading:"かたおもい",meaning:"单相思",collocation:"片思いの相手",example:"高校（こうこう）時代（じだい）はずっと片思（かたおも）いだった。",exampleCn:"高中时代一直是单相思。"},
+    {word:"振る",reading:"ふる",meaning:"甩（恋人）",collocation:"彼女に振られる",example:"告白（こくはく）したが、振（ふ）られてしまった。",exampleCn:"告白了但被甩了。"},
+    {word:"見合い",reading:"みあい",meaning:"相亲",collocation:"お見合いをする",example:"親（おや）の勧（すす）めでお見合（みあ）いをした。",exampleCn:"在父母的建议下去相亲了。"},
+    {word:"世話",reading:"せわ",meaning:"照顾",collocation:"世話になる/世話をする",example:"留学中（りゅうがくちゅう）は先生（せんせい）に大変（たいへん）お世話（せわ）になった。",exampleCn:"留学期间承蒙老师多方照顾。"},
+    {word:"頼る",reading:"たよる",meaning:"依靠",collocation:"人に頼る",example:"いつまでも親（おや）に頼（たよ）ってはいけない。",exampleCn:"不能一直依靠父母。"},
+    {word:"甘える",reading:"あまえる",meaning:"撒娇、依赖",collocation:"親に甘える",example:"子供（こども）が母親（ははおや）に甘（あま）えている。",exampleCn:"孩子在向妈妈撒娇。"},
+    {word:"絆",reading:"きずな",meaning:"纽带、羁绊",collocation:"家族の絆",example:"災害（さいがい）を通（つう）じて家族（かぞく）の絆（きずな）が強（つよ）くなった。",exampleCn:"通过灾害家人间的纽带更强了。"},
+    {word:"恋人",reading:"こいびと",meaning:"恋人",collocation:"恋人と別れる",example:"恋人（こいびと）と別（わか）れるのはつらい。",exampleCn:"和恋人分手很痛苦。"},
+    {word:"夫婦",reading:"ふうふ",meaning:"夫妻",collocation:"夫婦で旅行する",example:"あの夫婦（ふうふ）はいつも仲（なか）がいい。",exampleCn:"那对夫妻总是很恩爱。"},
+    {word:"嫁",reading:"よめ",meaning:"媳妇、新娘",collocation:"嫁に行く",example:"娘（むすめ）がやっと嫁（よめ）に行（い）った。",exampleCn:"女儿终于嫁人了。"},
+    {word:"婿",reading:"むこ",meaning:"女婿",collocation:"婿を取る",example:"この家（いえ）は婿（むこ）を取（と）った。",exampleCn:"这家招了上门女婿。"},
+    {word:"義理",reading:"ぎり",meaning:"义理、人情",collocation:"義理の母",example:"義理（ぎり）の母（はは）との関係（かんけい）に悩（なや）んでいる。",exampleCn:"为和婆婆的关系烦恼。"},
+    {word:"先輩",reading:"せんぱい",meaning:"前辈",collocation:"先輩に相談する",example:"就職（しゅうしょく）について先輩（せんぱい）に相談（そうだん）した。",exampleCn:"关于就业向前辈请教了。"},
+    {word:"後輩",reading:"こうはい",meaning:"后辈",collocation:"後輩の面倒を見る",example:"後輩（こうはい）の面倒（めんどう）を見（み）るのは当然（とうぜん）だ。",exampleCn:"照顾后辈是理所当然的。"},
+    {word:"恩人",reading:"おんじん",meaning:"恩人",collocation:"命の恩人",example:"あの方（かた）は私（わたし）の命（いのち）の恩人（おんじん）だ。",exampleCn:"那位是我的救命恩人。"},
+    {word:"連れ",reading:"つれ",meaning:"同伴",collocation:"連れがいる",example:"今日（きょう）は連（つ）れがいるので遠慮（えんりょ）します。",exampleCn:"今天有同伴所以就不了。"},
+    {word:"独身",reading:"どくしん",meaning:"单身",collocation:"独身生活",example:"独身（どくしん）生活（せいかつ）を楽（たの）しんでいる。",exampleCn:"享受着单身生活。"},
+  ]},
+  "1-2": { title: "1章2課 人の性格・特徴", words: [
+    {word:"素直",reading:"すなお",meaning:"坦率、老实",collocation:"素直に謝る",example:"素直（すなお）に自分（じぶん）の間違（まちが）いを認（みと）めた。",exampleCn:"坦率地承认了自己的错误。"},
+    {word:"真剣",reading:"しんけん",meaning:"认真",collocation:"真剣に取り組む",example:"真剣（しんけん）に勉強（べんきょう）すれば合格（ごうかく）できる。",exampleCn:"认真学习的话就能合格。"},
+    {word:"慎重",reading:"しんちょう",meaning:"慎重",collocation:"慎重に判断する",example:"慎重（しんちょう）に計画（けいかく）を立（た）てたほうがいい。",exampleCn:"最好慎重地制定计划。"},
+    {word:"大胆",reading:"だいたん",meaning:"大胆",collocation:"大胆な行動",example:"彼女（かのじょ）は大胆（だいたん）な決断（けつだん）をした。",exampleCn:"她做出了大胆的决定。"},
+    {word:"謙虚",reading:"けんきょ",meaning:"谦虚",collocation:"謙虚な態度",example:"成功（せいこう）しても謙虚（けんきょ）でいることが大切（たいせつ）だ。",exampleCn:"即使成功了保持谦虚也很重要。"},
+    {word:"傲慢",reading:"ごうまん",meaning:"傲慢",collocation:"傲慢な態度",example:"傲慢（ごうまん）な態度（たいど）は人（ひと）に嫌（きら）われる。",exampleCn:"傲慢的态度会被人讨厌。"},
+    {word:"頑固",reading:"がんこ",meaning:"固执",collocation:"頑固な人",example:"祖父（そふ）は頑固（がんこ）で人（ひと）の話（はなし）を聞（き）かない。",exampleCn:"爷爷很固执不听别人的话。"},
+    {word:"温厚",reading:"おんこう",meaning:"温厚、宽厚",collocation:"温厚な性格",example:"彼（かれ）は温厚（おんこう）な性格（せいかく）で誰（だれ）からも好（す）かれている。",exampleCn:"他性格温厚被所有人喜欢。"},
+    {word:"勤勉",reading:"きんべん",meaning:"勤奋",collocation:"勤勉な学生",example:"勤勉（きんべん）に働（はたら）いて信頼（しんらい）を得（え）た。",exampleCn:"勤奋工作获得了信任。"},
+    {word:"怠ける",reading:"なまける",meaning:"偷懒",collocation:"仕事を怠ける",example:"怠（なま）けていると成績（せいせき）が下（さ）がる。",exampleCn:"偷懒的话成绩会下降。"},
+    {word:"わがまま",reading:"わがまま",meaning:"任性",collocation:"わがままを言う",example:"子供（こども）のわがままに困（こま）っている。",exampleCn:"被孩子的任性搞得很为难。"},
+    {word:"のんびり",reading:"のんびり",meaning:"悠闲",collocation:"のんびり過ごす",example:"休日（きゅうじつ）はのんびり過（す）ごしたい。",exampleCn:"休息日想悠闲地度过。"},
+    {word:"てきぱき",reading:"てきぱき",meaning:"麻利",collocation:"てきぱき片付ける",example:"彼女（かのじょ）はてきぱきと仕事（しごと）をこなす。",exampleCn:"她麻利地完成工作。"},
+    {word:"几帳面",reading:"きちょうめん",meaning:"一丝不苟",collocation:"几帳面な性格",example:"彼（かれ）は几帳面（きちょうめん）で約束（やくそく）を守（まも）る人（ひと）だ。",exampleCn:"他一丝不苟是个守约的人。"},
+    {word:"そそっかしい",reading:"そそっかしい",meaning:"冒失、粗心",collocation:"そそっかしい人",example:"そそっかしくて忘（わす）れ物（もの）が多（おお）い。",exampleCn:"冒冒失失经常忘东西。"},
+    {word:"ずうずうしい",reading:"ずうずうしい",meaning:"厚脸皮",collocation:"ずうずうしいお願い",example:"ずうずうしいお願（ねが）いで申（もう）し訳（わけ）ない。",exampleCn:"提出厚脸皮的请求很抱歉。"},
+    {word:"だらしない",reading:"だらしない",meaning:"邋遢、散漫",collocation:"だらしない格好",example:"だらしない格好（かっこう）で出（で）かけるな。",exampleCn:"不要穿得邋遢出门。"},
+    {word:"意地悪",reading:"いじわる",meaning:"坏心眼",collocation:"意地悪をする",example:"弟（おとうと）に意地悪（いじわる）をして怒（おこ）られた。",exampleCn:"欺负弟弟被骂了。"},
+    {word:"生意気",reading:"なまいき",meaning:"自大、傲慢（年轻人）",collocation:"生意気な態度",example:"あの子（こ）は生意気（なまいき）で先生（せんせい）に嫌（きら）われている。",exampleCn:"那孩子自大被老师讨厌。"},
+    {word:"地味",reading:"じみ",meaning:"朴素、低调",collocation:"地味な服",example:"派手（はで）より地味（じみ）な服（ふく）が好（す）きだ。",exampleCn:"比起花哨更喜欢朴素的衣服。"},
+    {word:"派手",reading:"はで",meaning:"花哨、高调",collocation:"派手な色",example:"派手（はで）な服（ふく）は目立（めだ）つ。",exampleCn:"花哨的衣服很显眼。"},
+    {word:"おっとり",reading:"おっとり",meaning:"温柔从容",collocation:"おっとりした人",example:"彼女（かのじょ）はおっとりした性格（せいかく）だ。",exampleCn:"她性格温柔从容。"},
+    {word:"せっかち",reading:"せっかち",meaning:"性急",collocation:"せっかちな人",example:"父（ちち）はせっかちで待（ま）つのが嫌（きら）いだ。",exampleCn:"爸爸性急，讨厌等待。"},
+    {word:"器用",reading:"きよう",meaning:"心灵手巧",collocation:"手先が器用",example:"彼（かれ）は器用（きよう）で何（なん）でも作（つく）れる。",exampleCn:"他心灵手巧什么都能做。"},
+    {word:"不器用",reading:"ぶきよう",meaning:"笨拙",collocation:"不器用な人",example:"不器用（ぶきよう）だけど一生懸命（いっしょうけんめい）やる。",exampleCn:"虽然笨拙但拼命努力。"},
+    {word:"図々しい",reading:"ずうずうしい",meaning:"厚颜无耻",collocation:"図々しい態度",example:"人（ひと）の物（もの）を勝手（かって）に使（つか）うなんて図々（ずうずう）しい。",exampleCn:"擅自用别人的东西太厚颜无耻了。"},
+    {word:"頼もしい",reading:"たのもしい",meaning:"可靠",collocation:"頼もしい存在",example:"彼（かれ）は頼（たの）もしいリーダーだ。",exampleCn:"他是可靠的领导。"},
+    {word:"情けない",reading:"なさけない",meaning:"可悲、丢人",collocation:"自分が情けない",example:"こんな失敗（しっぱい）をして情（なさ）けない。",exampleCn:"犯了这种错误太丢人了。"},
+    {word:"たくましい",reading:"たくましい",meaning:"强壮、坚强",collocation:"たくましい体",example:"子供（こども）はたくましく育（そだ）ってほしい。",exampleCn:"希望孩子坚强地成长。"},
+    {word:"人見知り",reading:"ひとみしり",meaning:"怕生",collocation:"人見知りする",example:"うちの子（こ）は人見知（ひとみし）りが激（はげ）しい。",exampleCn:"我家孩子很怕生。"},
+  ]},
+  "1-3": { title: "1章3課 人に対する感情・行動", words: [
+    {word:"感動",reading:"かんどう",meaning:"感动",collocation:"感動を与える/受ける",example:"彼（かれ）のスピーチに感動（かんどう）した。",exampleCn:"被他的演讲感动了。"},
+    {word:"不安",reading:"ふあん",meaning:"不安",collocation:"不安を感じる/抱く",example:"将来（しょうらい）に対（たい）する不安（ふあん）が大（おお）きい。",exampleCn:"对未来的不安很大。"},
+    {word:"不満",reading:"ふまん",meaning:"不满",collocation:"不満を持つ/言う",example:"給料（きゅうりょう）に不満（ふまん）を感（かん）じている。",exampleCn:"对工资感到不满。"},
+    {word:"満足",reading:"まんぞく",meaning:"满足",collocation:"結果に満足する",example:"今（いま）の生活（せいかつ）に満足（まんぞく）している。",exampleCn:"对现在的生活很满足。"},
+    {word:"退屈",reading:"たいくつ",meaning:"无聊",collocation:"退屈な授業",example:"退屈（たいくつ）な授業（じゅぎょう）で眠（ねむ）くなった。",exampleCn:"无聊的课上犯困了。"},
+    {word:"感謝",reading:"かんしゃ",meaning:"感谢",collocation:"心から感謝する",example:"皆様（みなさま）のご協力（きょうりょく）に感謝（かんしゃ）します。",exampleCn:"感谢各位的合作。"},
+    {word:"後悔",reading:"こうかい",meaning:"后悔",collocation:"後悔しても遅い",example:"もっと勉強（べんきょう）すればよかったと後悔（こうかい）している。",exampleCn:"后悔当初应该更努力学习。"},
+    {word:"同情",reading:"どうじょう",meaning:"同情",collocation:"同情を寄せる",example:"被災者（ひさいしゃ）に同情（どうじょう）を寄（よ）せる。",exampleCn:"向灾民表示同情。"},
+    {word:"緊張",reading:"きんちょう",meaning:"紧张",collocation:"緊張をほぐす",example:"面接（めんせつ）の前（まえ）は緊張（きんちょう）する。",exampleCn:"面试前会紧张。"},
+    {word:"興奮",reading:"こうふん",meaning:"兴奋",collocation:"興奮が冷める",example:"試合（しあい）に勝（か）って興奮（こうふん）している。",exampleCn:"赢了比赛很兴奋。"},
+    {word:"がっかり",reading:"がっかり",meaning:"失望",collocation:"結果にがっかりする",example:"試験（しけん）の結果（けっか）にがっかりした。",exampleCn:"对考试结果很失望。"},
+    {word:"うんざり",reading:"うんざり",meaning:"厌烦",collocation:"同じ話にうんざりする",example:"毎日（まいにち）の満員電車（まんいんでんしゃ）にうんざりだ。",exampleCn:"对每天的拥挤电车感到厌烦。"},
+    {word:"いらいら",reading:"いらいら",meaning:"烦躁",collocation:"渋滞でいらいらする",example:"電車（でんしゃ）が遅（おく）れていらいらした。",exampleCn:"电车晚点很烦躁。"},
+    {word:"わくわく",reading:"わくわく",meaning:"兴奋期待",collocation:"旅行前にわくわくする",example:"旅行（りょこう）の前日（ぜんじつ）はわくわくして眠（ねむ）れない。",exampleCn:"旅行前一天兴奋得睡不着。"},
+    {word:"悔しい",reading:"くやしい",meaning:"不甘心",collocation:"負けて悔しい",example:"あと一点（いってん）で不合格（ふごうかく）になって悔（くや）しい。",exampleCn:"差一分不合格太不甘心了。"},
+    {word:"切ない",reading:"せつない",meaning:"心酸",collocation:"切ない気持ち",example:"遠距離恋愛（えんきょりれんあい）は切（せつ）ない。",exampleCn:"异地恋让人心酸。"},
+    {word:"情けない",reading:"なさけない",meaning:"可悲、丢人",collocation:"自分が情けない",example:"こんな簡単（かんたん）な問題（もんだい）も解（と）けなくて情（なさ）けない。",exampleCn:"连这么简单的题都不会太丢人了。"},
+    {word:"虚しい",reading:"むなしい",meaning:"空虚",collocation:"虚しい気持ち",example:"一人（ひとり）で食（た）べる食事（しょくじ）は虚（むな）しい。",exampleCn:"一个人吃饭感觉很空虚。"},
+    {word:"尊敬",reading:"そんけい",meaning:"尊敬",collocation:"先生を尊敬する",example:"恩師（おんし）を深（ふか）く尊敬（そんけい）している。",exampleCn:"深深尊敬恩师。"},
+    {word:"軽蔑",reading:"けいべつ",meaning:"蔑视、看不起",collocation:"軽蔑の目で見る",example:"嘘（うそ）をつく人（ひと）を軽蔑（けいべつ）する。",exampleCn:"看不起说谎的人。"},
+    {word:"羨ましい",reading:"うらやましい",meaning:"羡慕",collocation:"羨ましく思う",example:"海外旅行（かいがいりょこう）に行（い）けるなんて羨（うらや）ましい。",exampleCn:"能去海外旅行真让人羡慕。"},
+    {word:"嫉妬",reading:"しっと",meaning:"嫉妒",collocation:"嫉妬する",example:"彼（かれ）の成功（せいこう）に嫉妬（しっと）している。",exampleCn:"嫉妒他的成功。"},
+    {word:"恨む",reading:"うらむ",meaning:"怨恨",collocation:"人を恨む",example:"彼（かれ）のことを恨（うら）んではいない。",exampleCn:"并不怨恨他。"},
+    {word:"憧れる",reading:"あこがれる",meaning:"憧憬、向往",collocation:"海外に憧れる",example:"子供（こども）の頃（ころ）から宇宙飛行士（うちゅうひこうし）に憧（あこが）れている。",exampleCn:"从小就向往成为宇航员。"},
+    {word:"呆れる",reading:"あきれる",meaning:"吃惊、无语",collocation:"呆れてものが言えない",example:"彼（かれ）の無責任（むせきにん）さに呆（あき）れた。",exampleCn:"对他的不负责任感到无语。"},
+    {word:"怒鳴る",reading:"どなる",meaning:"大声吼",collocation:"部下に怒鳴る",example:"上司（じょうし）に怒鳴（どな）られた。",exampleCn:"被上司大声吼了。"},
+    {word:"愚痴",reading:"ぐち",meaning:"牢骚",collocation:"愚痴をこぼす",example:"仕事（しごと）の愚痴（ぐち）を友達（ともだち）に言（い）った。",exampleCn:"向朋友发了工作的牢骚。"},
+    {word:"慰める",reading:"なぐさめる",meaning:"安慰",collocation:"友人を慰める",example:"失恋（しつれん）した友達（ともだち）を慰（なぐさ）めた。",exampleCn:"安慰了失恋的朋友。"},
+    {word:"励ます",reading:"はげます",meaning:"鼓励",collocation:"友達を励ます",example:"落（お）ち込（こ）んでいる彼（かれ）を励（はげ）ました。",exampleCn:"鼓励了消沉的他。"},
+    {word:"見下す",reading:"みくだす",meaning:"看不起",collocation:"人を見下す",example:"人（ひと）を見下（みくだ）すような態度（たいど）はよくない。",exampleCn:"看不起人的态度不好。"},
+  ]},
+  "2-1": { title: "2章1課 食生活", words: [
+    {word:"栄養",reading:"えいよう",meaning:"营养",collocation:"栄養のバランス",example:"栄養（えいよう）のバランスを考（かんが）えて食事（しょくじ）をする。",exampleCn:"考虑营养均衡来吃饭。"},
+    {word:"食欲",reading:"しょくよく",meaning:"食欲",collocation:"食欲がない/ある",example:"夏（なつ）バテで食欲（しょくよく）がない。",exampleCn:"苦夏没有食欲。"},
+    {word:"消化",reading:"しょうか",meaning:"消化",collocation:"消化が良い/悪い",example:"よく噛（か）むと消化（しょうか）が良（よ）くなる。",exampleCn:"多嚼有助于消化。"},
+    {word:"調理",reading:"ちょうり",meaning:"烹饪",collocation:"調理する/調理法",example:"調理（ちょうり）の仕方（しかた）で味（あじ）が変（か）わる。",exampleCn:"烹饪方法不同味道也不同。"},
+    {word:"食材",reading:"しょくざい",meaning:"食材",collocation:"新鮮な食材",example:"新鮮（しんせん）な食材（しょくざい）を選（えら）ぶことが大切（たいせつ）だ。",exampleCn:"选择新鲜食材很重要。"},
+    {word:"食品",reading:"しょくひん",meaning:"食品",collocation:"加工食品/冷凍食品",example:"加工（かこう）食品（しょくひん）は添加物（てんかぶつ）が多（おお）い。",exampleCn:"加工食品添加剂多。"},
+    {word:"味わう",reading:"あじわう",meaning:"品尝、品味",collocation:"料理を味わう",example:"地元（じもと）の料理（りょうり）をゆっくり味（あじ）わった。",exampleCn:"慢慢品尝了当地的料理。"},
+    {word:"濃い",reading:"こい",meaning:"浓（味道/颜色）",collocation:"味が濃い",example:"この味噌汁（みそしる）は味（あじ）が濃（こ）い。",exampleCn:"这个味噌汤味道太浓了。"},
+    {word:"薄い",reading:"うすい",meaning:"淡、薄",collocation:"味が薄い",example:"味（あじ）が薄（うす）いのでもう少（すこ）し塩（しお）を入（い）れよう。",exampleCn:"味道太淡了再加点盐吧。"},
+    {word:"炒める",reading:"いためる",meaning:"炒",collocation:"野菜を炒める",example:"強火（つよび）で野菜（やさい）を炒（いた）める。",exampleCn:"大火炒蔬菜。"},
+    {word:"煮る",reading:"にる",meaning:"煮、炖",collocation:"弱火で煮る",example:"肉（にく）じゃがを弱火（よわび）でじっくり煮（に）る。",exampleCn:"用小火慢慢炖肉炖土豆。"},
+    {word:"蒸す",reading:"むす",meaning:"蒸",collocation:"野菜を蒸す",example:"蒸（む）した野菜（やさい）は栄養（えいよう）が残（のこ）りやすい。",exampleCn:"蒸的蔬菜容易保留营养。"},
+    {word:"揚げる",reading:"あげる",meaning:"炸",collocation:"天ぷらを揚げる",example:"からっと揚（あ）げるのが難（むずか）しい。",exampleCn:"炸得酥脆很难。"},
+    {word:"漬ける",reading:"つける",meaning:"腌",collocation:"漬物を漬ける",example:"自家製（じかせい）の漬物（つけもの）を漬（つ）けている。",exampleCn:"在腌自制的咸菜。"},
+    {word:"添加物",reading:"てんかぶつ",meaning:"添加剂",collocation:"食品添加物",example:"添加物（てんかぶつ）の少（すく）ない食品（しょくひん）を選（えら）ぶ。",exampleCn:"选择添加剂少的食品。"},
+    {word:"賞味期限",reading:"しょうみきげん",meaning:"赏味期限",collocation:"賞味期限が切れる",example:"賞味期限（しょうみきげん）が切（き）れた牛乳（ぎゅうにゅう）は捨（す）てた。",exampleCn:"把过了赏味期限的牛奶扔了。"},
+    {word:"偏食",reading:"へんしょく",meaning:"偏食",collocation:"偏食をする",example:"子供（こども）の偏食（へんしょく）に悩（なや）んでいる。",exampleCn:"为孩子的偏食烦恼。"},
+    {word:"間食",reading:"かんしょく",meaning:"零食、加餐",collocation:"間食を控える",example:"ダイエット中（ちゅう）は間食（かんしょく）を控（ひか）えている。",exampleCn:"减肥中控制吃零食。"},
+    {word:"外食",reading:"がいしょく",meaning:"在外吃饭",collocation:"外食が多い",example:"一人暮（ひとりぐ）らしだと外食（がいしょく）が増（ふ）える。",exampleCn:"一个人住的话在外吃饭会增多。"},
+    {word:"自炊",reading:"じすい",meaning:"自己做饭",collocation:"自炊する",example:"節約（せつやく）のために自炊（じすい）を始（はじ）めた。",exampleCn:"为了省钱开始自己做饭。"},
+    {word:"焼く",reading:"やく",meaning:"烤、烧",collocation:"魚を焼く",example:"魚（さかな）を焼（や）くいい匂（にお）いがする。",exampleCn:"有烤鱼的好闻味道。"},
+    {word:"茹でる",reading:"ゆでる",meaning:"煮（水煮）",collocation:"卵を茹でる",example:"パスタを茹（ゆ）でるのに8分（ぷん）かかる。",exampleCn:"煮意面需要8分钟。"},
+    {word:"和食",reading:"わしょく",meaning:"日本料理",collocation:"和食を作る",example:"和食（わしょく）はユネスコ無形文化遺産（むけいぶんかいさん）だ。",exampleCn:"日本料理是联合国教科文组织非物质文化遗产。"},
+    {word:"洋食",reading:"ようしょく",meaning:"西餐",collocation:"洋食のレストラン",example:"今日（きょう）は洋食（ようしょく）にしよう。",exampleCn:"今天吃西餐吧。"},
+    {word:"献立",reading:"こんだて",meaning:"菜单、食谱",collocation:"献立を考える",example:"毎日（まいにち）の献立（こんだて）を考（かんが）えるのが大変（たいへん）だ。",exampleCn:"每天想食谱很辛苦。"},
+    {word:"食物繊維",reading:"しょくもつせんい",meaning:"食物纤维",collocation:"食物繊維が豊富",example:"野菜（やさい）は食物繊維（しょくもつせんい）が豊富（ほうふ）だ。",exampleCn:"蔬菜食物纤维丰富。"},
+    {word:"塩分",reading:"えんぶん",meaning:"盐分",collocation:"塩分を控える",example:"塩分（えんぶん）の取（と）りすぎに注意（ちゅうい）しよう。",exampleCn:"注意不要摄入过多盐分。"},
+    {word:"糖分",reading:"とうぶん",meaning:"糖分",collocation:"糖分を減らす",example:"糖分（とうぶん）を減（へ）らすダイエットが流行（りゅうこう）している。",exampleCn:"减糖饮食很流行。"},
+    {word:"脂肪",reading:"しぼう",meaning:"脂肪",collocation:"脂肪が多い",example:"揚（あ）げ物（もの）は脂肪（しぼう）が多（おお）い。",exampleCn:"油炸食品脂肪多。"},
+    {word:"生ゴミ",reading:"なまゴミ",meaning:"厨余垃圾",collocation:"生ゴミを捨てる",example:"生（なま）ゴミの匂（にお）いが気（き）になる。",exampleCn:"在意厨余垃圾的味道。"},
+  ]},
+  "2-2": { title: "2章2課 家事", words: [
+    {word:"家事",reading:"かじ",meaning:"家务",collocation:"家事を分担する",example:"夫婦（ふうふ）で家事（かじ）を分担（ぶんたん）している。",exampleCn:"夫妻分担家务。"},
+    {word:"掃除",reading:"そうじ",meaning:"打扫",collocation:"部屋を掃除する",example:"週末（しゅうまつ）に大掃除（おおそうじ）をした。",exampleCn:"周末做了大扫除。"},
+    {word:"洗濯",reading:"せんたく",meaning:"洗衣服",collocation:"洗濯物を干す",example:"天気（てんき）がいいから洗濯物（せんたくもの）がよく乾（かわ）く。",exampleCn:"天气好所以衣服干得快。"},
+    {word:"干す",reading:"ほす",meaning:"晾、晒",collocation:"布団を干す",example:"布団（ふとん）を外（そと）に干（ほ）した。",exampleCn:"把被子晒在外面了。"},
+    {word:"畳む",reading:"たたむ",meaning:"叠",collocation:"洗濯物を畳む",example:"洗濯物（せんたくもの）を畳（たた）んでタンスにしまった。",exampleCn:"把衣服叠好放进衣柜。"},
+    {word:"片付ける",reading:"かたづける",meaning:"收拾",collocation:"部屋を片付ける",example:"散（ち）らかった部屋（へや）を片付（かたづ）けた。",exampleCn:"收拾了乱七八糟的房间。"},
+    {word:"散らかる",reading:"ちらかる",meaning:"凌乱",collocation:"部屋が散らかる",example:"子供（こども）の部屋（へや）はいつも散（ち）らかっている。",exampleCn:"孩子的房间总是很乱。"},
+    {word:"磨く",reading:"みがく",meaning:"刷、磨",collocation:"歯を磨く/靴を磨く",example:"毎日（まいにち）歯（は）を磨（みが）くのは大切（たいせつ）だ。",exampleCn:"每天刷牙很重要。"},
+    {word:"拭く",reading:"ふく",meaning:"擦",collocation:"テーブルを拭く",example:"テーブルを拭（ふ）いてから食事（しょくじ）にしよう。",exampleCn:"擦完桌子再吃饭吧。"},
+    {word:"ゴミ",reading:"ゴミ",meaning:"垃圾",collocation:"ゴミを出す/ゴミ箱",example:"明日（あした）は燃（も）えるゴミの日（ひ）だ。",exampleCn:"明天是可燃垃圾日。"},
+    {word:"分別",reading:"ぶんべつ",meaning:"分类",collocation:"ゴミの分別",example:"ゴミの分別（ぶんべつ）は地域（ちいき）によって違（ちが）う。",exampleCn:"垃圾分类因地区而异。"},
+    {word:"修理",reading:"しゅうり",meaning:"修理",collocation:"修理に出す",example:"壊（こわ）れたエアコンを修理（しゅうり）に出（だ）した。",exampleCn:"把坏了的空调送去修理了。"},
+    {word:"故障",reading:"こしょう",meaning:"故障",collocation:"故障する/故障中",example:"洗濯機（せんたくき）が故障（こしょう）して困（こま）っている。",exampleCn:"洗衣机故障了很困扰。"},
+    {word:"取り替える",reading:"とりかえる",meaning:"更换",collocation:"電球を取り替える",example:"切（き）れた電球（でんきゅう）を取（と）り替（か）えた。",exampleCn:"换了烧掉的灯泡。"},
+    {word:"整理",reading:"せいり",meaning:"整理",collocation:"書類を整理する",example:"引（ひ）っ越（こ）し前（まえ）に荷物（にもつ）を整理（せいり）した。",exampleCn:"搬家前整理了行李。"},
+    {word:"整頓",reading:"せいとん",meaning:"整顿",collocation:"整理整頓",example:"デスクの整理整頓（せいりせいとん）を心（こころ）がけている。",exampleCn:"注意保持桌面整洁。"},
+    {word:"汚れる",reading:"よごれる",meaning:"脏",collocation:"服が汚れる",example:"子供（こども）はすぐ服（ふく）が汚（よご）れる。",exampleCn:"孩子的衣服很快就脏了。"},
+    {word:"乾かす",reading:"かわかす",meaning:"弄干",collocation:"髪を乾かす",example:"ドライヤーで髪（かみ）を乾（かわ）かした。",exampleCn:"用吹风机吹干了头发。"},
+    {word:"節約",reading:"せつやく",meaning:"节约",collocation:"電気を節約する",example:"電気代（でんきだい）を節約（せつやく）するためにLEDにした。",exampleCn:"为了省电费换成了LED。"},
+    {word:"リフォーム",reading:"リフォーム",meaning:"装修",collocation:"家をリフォームする",example:"古（ふる）い家（いえ）をリフォームして住（す）んでいる。",exampleCn:"装修了旧房子住着。"},
+    {word:"水道",reading:"すいどう",meaning:"水管、自来水",collocation:"水道代",example:"水道（すいどう）の水（みず）が止（と）まらない。",exampleCn:"水管的水停不了。"},
+    {word:"電気代",reading:"でんきだい",meaning:"电费",collocation:"電気代を払う",example:"夏（なつ）は電気代（でんきだい）が高（たか）くなる。",exampleCn:"夏天电费会变高。"},
+    {word:"掃除機",reading:"そうじき",meaning:"吸尘器",collocation:"掃除機をかける",example:"毎日（まいにち）掃除機（そうじき）をかけている。",exampleCn:"每天用吸尘器打扫。"},
+    {word:"洗剤",reading:"せんざい",meaning:"洗涤剂",collocation:"食器用洗剤",example:"環境（かんきょう）に優（やさ）しい洗剤（せんざい）を使（つか）っている。",exampleCn:"用对环境友好的洗涤剂。"},
+    {word:"詰まる",reading:"つまる",meaning:"堵塞",collocation:"排水口が詰まる",example:"排水口（はいすいこう）が詰（つ）まってしまった。",exampleCn:"排水口堵了。"},
+    {word:"漏れる",reading:"もれる",meaning:"漏",collocation:"水が漏れる",example:"天井（てんじょう）から水（みず）が漏（も）れている。",exampleCn:"天花板在漏水。"},
+    {word:"光熱費",reading:"こうねつひ",meaning:"水电煤气费",collocation:"光熱費を抑える",example:"光熱費（こうねつひ）を抑（おさ）えるために節約（せつやく）する。",exampleCn:"为了控制水电煤气费而节约。"},
+    {word:"粗大ゴミ",reading:"そだいゴミ",meaning:"大型垃圾",collocation:"粗大ゴミを出す",example:"粗大（そだい）ゴミは予約（よやく）が必要（ひつよう）だ。",exampleCn:"大型垃圾需要预约。"},
+    {word:"収納",reading:"しゅうのう",meaning:"收纳",collocation:"収納スペース",example:"収納（しゅうのう）スペースが足（た）りない。",exampleCn:"收纳空间不够。"},
+    {word:"家賃",reading:"やちん",meaning:"房租",collocation:"家賃を払う",example:"東京（とうきょう）の家賃（やちん）は高（たか）い。",exampleCn:"东京的房租很贵。"},
+  ]},
+  "2-3": { title: "2章3課 健康", words: [
+    {word:"体調",reading:"たいちょう",meaning:"身体状况",collocation:"体調を崩す",example:"最近（さいきん）体調（たいちょう）を崩（くず）して休（やす）んでいる。",exampleCn:"最近身体不好在休息。"},
+    {word:"症状",reading:"しょうじょう",meaning:"症状",collocation:"症状が出る",example:"風邪（かぜ）の症状（しょうじょう）が出（で）ている。",exampleCn:"出现了感冒的症状。"},
+    {word:"診察",reading:"しんさつ",meaning:"诊察",collocation:"診察を受ける",example:"医者（いしゃ）の診察（しんさつ）を受（う）けた。",exampleCn:"接受了医生的诊察。"},
+    {word:"治療",reading:"ちりょう",meaning:"治疗",collocation:"治療を受ける",example:"早期（そうき）に治療（ちりょう）すれば治（なお）る。",exampleCn:"早期治疗就能治好。"},
+    {word:"手術",reading:"しゅじゅつ",meaning:"手术",collocation:"手術を受ける",example:"来週（らいしゅう）手術（しゅじゅつ）を受（う）ける予定（よてい）だ。",exampleCn:"计划下周接受手术。"},
+    {word:"回復",reading:"かいふく",meaning:"恢复",collocation:"体力が回復する",example:"入院後（にゅういんご）、順調（じゅんちょう）に回復（かいふく）している。",exampleCn:"住院后顺利恢复中。"},
+    {word:"予防",reading:"よぼう",meaning:"预防",collocation:"病気を予防する",example:"予防接種（よぼうせっしゅ）を受（う）けた。",exampleCn:"接种了预防针。"},
+    {word:"免疫",reading:"めんえき",meaning:"免疫",collocation:"免疫力を高める",example:"睡眠不足（すいみんぶそく）は免疫力（めんえきりょく）を下（さ）げる。",exampleCn:"睡眠不足会降低免疫力。"},
+    {word:"過労",reading:"かろう",meaning:"过劳",collocation:"過労で倒れる",example:"過労（かろう）で入院（にゅういん）した同僚（どうりょう）がいる。",exampleCn:"有同事因为过劳住院了。"},
+    {word:"ストレス",reading:"ストレス",meaning:"压力",collocation:"ストレスがたまる",example:"仕事（しごと）のストレスで眠（ねむ）れない。",exampleCn:"因为工作压力睡不着。"},
+    {word:"不眠",reading:"ふみん",meaning:"失眠",collocation:"不眠に悩む",example:"不眠症（ふみんしょう）で病院（びょういん）に通（かよ）っている。",exampleCn:"因为失眠症在去医院看。"},
+    {word:"処方",reading:"しょほう",meaning:"处方",collocation:"薬を処方する",example:"医者（いしゃ）に薬（くすり）を処方（しょほう）してもらった。",exampleCn:"医生开了药。"},
+    {word:"副作用",reading:"ふくさよう",meaning:"副作用",collocation:"薬の副作用",example:"この薬（くすり）には眠（ねむ）くなる副作用（ふくさよう）がある。",exampleCn:"这个药有犯困的副作用。"},
+    {word:"通院",reading:"つういん",meaning:"去医院看病",collocation:"通院する",example:"月（つき）に一度（いちど）通院（つういん）している。",exampleCn:"每月去一次医院。"},
+    {word:"入院",reading:"にゅういん",meaning:"住院",collocation:"入院する",example:"骨折（こっせつ）して一週間（いっしゅうかん）入院（にゅういん）した。",exampleCn:"骨折住了一周院。"},
+    {word:"退院",reading:"たいいん",meaning:"出院",collocation:"退院する",example:"来週（らいしゅう）退院（たいいん）できるそうだ。",exampleCn:"听说下周能出院。"},
+    {word:"健康診断",reading:"けんこうしんだん",meaning:"体检",collocation:"健康診断を受ける",example:"年（ねん）に一度（いちど）健康診断（けんこうしんだん）を受（う）けている。",exampleCn:"每年做一次体检。"},
+    {word:"生活習慣",reading:"せいかつしゅうかん",meaning:"生活习惯",collocation:"生活習慣病",example:"生活習慣（せいかつしゅうかん）を見直（みなお）すべきだ。",exampleCn:"应该重新审视生活习惯。"},
+    {word:"肥満",reading:"ひまん",meaning:"肥胖",collocation:"肥満を防ぐ",example:"肥満（ひまん）は様々（さまざま）な病気（びょうき）の原因（げんいん）になる。",exampleCn:"肥胖会成为各种疾病的原因。"},
+    {word:"血圧",reading:"けつあつ",meaning:"血压",collocation:"血圧が高い",example:"塩分（えんぶん）の取（と）りすぎは血圧（けつあつ）を上（あ）げる。",exampleCn:"摄入过多盐分会升高血压。"},
+    {word:"糖尿病",reading:"とうにょうびょう",meaning:"糖尿病",collocation:"糖尿病になる",example:"糖尿病（とうにょうびょう）の予防（よぼう）には運動（うんどう）が大切（たいせつ）だ。",exampleCn:"预防糖尿病运动很重要。"},
+    {word:"アレルギー",reading:"アレルギー",meaning:"过敏",collocation:"花粉アレルギー",example:"花粉（かふん）アレルギーで毎年（まいとし）つらい。",exampleCn:"花粉过敏每年都很难受。"},
+    {word:"食中毒",reading:"しょくちゅうどく",meaning:"食物中毒",collocation:"食中毒になる",example:"夏（なつ）は食中毒（しょくちゅうどく）に注意（ちゅうい）が必要（ひつよう）だ。",exampleCn:"夏天需要注意食物中毒。"},
+    {word:"熱中症",reading:"ねっちゅうしょう",meaning:"中暑",collocation:"熱中症対策",example:"水分（すいぶん）を取（と）って熱中症（ねっちゅうしょう）を防（ふせ）ごう。",exampleCn:"补充水分预防中暑。"},
+    {word:"筋肉",reading:"きんにく",meaning:"肌肉",collocation:"筋肉を鍛える",example:"筋肉（きんにく）を鍛（きた）えるためにジムに通（かよ）っている。",exampleCn:"为了锻炼肌肉去健身房。"},
+    {word:"骨",reading:"ほね",meaning:"骨头",collocation:"骨が折れる",example:"転（ころ）んで骨（ほね）を折（お）った。",exampleCn:"摔倒骨折了。"},
+    {word:"内臓",reading:"ないぞう",meaning:"内脏",collocation:"内臓脂肪",example:"内臓（ないぞう）脂肪（しぼう）が多（おお）いと危険（きけん）だ。",exampleCn:"内脏脂肪多的话很危险。"},
+    {word:"疲労",reading:"ひろう",meaning:"疲劳",collocation:"疲労が溜まる",example:"疲労（ひろう）が溜（た）まると体調（たいちょう）を崩（くず）す。",exampleCn:"疲劳累积的话会身体不好。"},
+    {word:"睡眠",reading:"すいみん",meaning:"睡眠",collocation:"十分な睡眠",example:"十分（じゅうぶん）な睡眠（すいみん）は健康（けんこう）の基本（きほん）だ。",exampleCn:"充足的睡眠是健康的基础。"},
+    {word:"栄養素",reading:"えいようそ",meaning:"营养素",collocation:"必要な栄養素",example:"五大（ごだい）栄養素（えいようそ）をバランスよく取（と）ろう。",exampleCn:"均衡摄取五大营养素。"},
+  ]},
+};
+
+// ============ 混淆选项库（用于测试出更难的选项）============
+const CONFUSING_OPTIONS = {
+  "亲戚": ["亲属","家人","朋友","邻居"],
+  "亲属": ["亲戚","同事","朋友","家人"],
+  "家人、至亲": ["亲戚","朋友","邻居","同伴"],
+  "独生子女": ["长子","最小的孩子","双胞胎","养子"],
+  "长子": ["次子","独生子女","末子","长女"],
+  "最小的孩子": ["长子","独生子女","中间的孩子","末女"],
+  "青梅竹马": ["初恋","同学","邻居","笔友"],
+  "熟人": ["朋友","认识的人","亲戚","陌生人"],
+  "认识的人": ["熟人","朋友","伙伴","邻居"],
+  "伙伴": ["同事","朋友","认识的人","对手"],
+  "对方": ["伙伴","自己","同伴","旁人"],
+  "交往": ["约会","结婚","分手","认识"],
+  "交际": ["交往","社交","联系","约会"],
+  "单相思": ["两情相悦","暗恋","失恋","初恋"],
+  "甩（恋人）": ["抛弃","拒绝","分手","告白"],
+  "相亲": ["约会","介绍","交往","结婚"],
+  "照顾": ["帮助","依靠","安慰","鼓励"],
+  "依靠": ["照顾","撒娇","独立","信赖"],
+  "撒娇、依赖": ["依靠","任性","温柔","固执"],
+  "纽带、羁绊": ["关系","联系","友情","缘分"],
+  "坦率、老实": ["诚实","慎重","谦虚","正直"],
+  "认真": ["慎重","努力","拼命","严肃"],
+  "慎重": ["认真","谨慎","胆小","犹豫"],
+  "大胆": ["勇敢","鲁莽","慎重","冒失"],
+  "谦虚": ["低调","朴素","内敛","坦率"],
+  "傲慢": ["自大","固执","高傲","任性"],
+  "固执": ["倔强","傲慢","认真","坚定"],
+  "温厚、宽厚": ["温柔","善良","老实","慷慨"],
+  "勤奋": ["努力","认真","拼命","刻苦"],
+  "偷懒": ["休息","放松","懈怠","逃避"],
+  "感动": ["感激","兴奋","同情","满足"],
+  "不安": ["担心","紧张","恐惧","烦躁"],
+  "不满": ["抱怨","生气","厌烦","失望"],
+  "满足": ["开心","感谢","充实","幸福"],
+  "无聊": ["空虚","疲倦","厌烦","寂寞"],
+  "感谢": ["感动","回报","感激","尊敬"],
+  "后悔": ["遗憾","自责","反省","懊恼"],
+  "紧张": ["不安","害怕","兴奋","焦虑"],
+  "兴奋": ["激动","紧张","开心","期待"],
+  "失望": ["沮丧","不满","放弃","后悔"],
+  "营养": ["健康","热量","维生素","食物"],
+  "食欲": ["胃口","食量","饥饿","美味"],
+  "消化": ["吸收","代谢","分解","排泄"],
+  "家务": ["打扫","洗衣","做饭","整理"],
+  "打扫": ["清洁","整理","收拾","擦拭"],
+  "身体状况": ["健康","体质","心情","精神"],
+};
+
+// ============ 真题题库 ============
+const JLPT_QUESTIONS = {
+  "1-1": [
+    {question:"田中さんは＿＿の紹介で今の会社に入った。",options:["知人","恋人","仲間","相手"],answer:0,explanation:"「知人（ちじん）の紹介（しょうかい）で」= 通过熟人介绍。这是N2词汇题高频搭配。"},
+    {question:"あの二人は子供の頃からの＿＿で、とても仲がいい。",options:["幼なじみ","見合い","片思い","知り合い"],answer:0,explanation:"「幼（おさな）なじみ」= 从小一起长大的朋友（青梅竹马）。注意与「知り合い」（认识的人）的区别。"},
+    {question:"結婚式は＿＿だけで静かに行いました。",options:["身内","知人","仲間","相手"],answer:0,explanation:"「身内（みうち）だけで」= 只有至亲。身内 = 血缘关系最近的人。"},
+    {question:"いつまでも親に＿＿てはいけない。自立しなさい。",options:["頼っ","世話し","甘え","付き合っ"],answer:0,explanation:"「親（おや）に頼（たよ）る」= 依靠父母。常与「いつまでも」搭配表示「不能一直…」。"},
+    {question:"子供が母親に＿＿ている姿は微笑ましい。",options:["甘え","頼っ","付き合っ","振ら"],answer:0,explanation:"「母親（ははおや）に甘（あま）える」= 向妈妈撒娇。「甘える」常用于小孩对大人的行为。"},
+  ],
+  "1-2": [
+    {question:"彼は＿＿な性格で、自分の間違いをすぐ認める。",options:["素直","慎重","頑固","傲慢"],answer:0,explanation:"「素直（すなお）」= 坦率、老实。能认错说明性格坦率。"},
+    {question:"この仕事は失敗が許されないので、＿＿に進めてください。",options:["慎重","大胆","素直","勤勉"],answer:0,explanation:"「慎重（しんちょう）に」= 慎重地。不允许失败时需要慎重行动。"},
+    {question:"成功しても＿＿な態度を忘れないことが大切だ。",options:["謙虚","傲慢","大胆","素直"],answer:0,explanation:"「謙虚（けんきょ）な態度（たいど）」= 谦虚的态度。即使成功也要保持谦虚。"},
+    {question:"彼女は＿＿で、いつも仕事が速い。",options:["てきぱき","のんびり","だらしない","そそっかしい"],answer:0,explanation:"「てきぱき」= 麻利、干脆。工作快的人用てきぱき形容。"},
+    {question:"うちの祖父は＿＿で、一度決めたら絶対に変えない。",options:["頑固","慎重","温厚","謙虚"],answer:0,explanation:"「頑固（がんこ）」= 固执。一旦决定就不改变 = 固执。"},
+  ],
+  "1-3": [
+    {question:"試験に落ちて本当に＿＿。あと少しだったのに。",options:["悔しい","虚しい","切ない","情けない"],answer:0,explanation:"「悔（くや）しい」= 不甘心。差一点就能合格 → 不甘心。"},
+    {question:"毎日同じ仕事の繰り返しで＿＿している。",options:["うんざり","わくわく","いらいら","がっかり"],answer:0,explanation:"「うんざり」= 厌烦。每天重复同样的工作 → 厌烦。"},
+    {question:"旅行の前日は＿＿して眠れなかった。",options:["わくわく","いらいら","うんざり","がっかり"],answer:0,explanation:"「わくわく」= 兴奋期待。旅行前一天兴奋得睡不着。"},
+    {question:"彼の無責任な行動に＿＿た。",options:["呆れ","憧れ","恨ん","慰め"],answer:0,explanation:"「呆（あき）れる」= 吃惊到无语。对不负责任的行为感到无语。"},
+    {question:"失恋した友達を＿＿た。",options:["慰め","励まし","見下し","怒鳴っ"],answer:0,explanation:"「慰（なぐさ）める」= 安慰。安慰失恋的朋友。也可以用「励（はげ）ます」（鼓励）。"},
+  ],
+  "2-1": [
+    {question:"＿＿のバランスを考えて食事をしましょう。",options:["栄養","食欲","塩分","脂肪"],answer:0,explanation:"「栄養（えいよう）のバランス」= 营养均衡。这是N2高频搭配。"},
+    {question:"この料理は味が＿＿ので、水を飲みたくなる。",options:["濃い","薄い","甘い","辛い"],answer:0,explanation:"「味（あじ）が濃（こ）い」= 味道浓。喝水 → 说明太咸/太浓。"},
+    {question:"＿＿が切れた食品は食べないほうがいい。",options:["賞味期限","消化","添加物","食材"],answer:0,explanation:"「賞味期限（しょうみきげん）が切（き）れる」= 过了赏味期限。高频搭配。"},
+    {question:"節約のために＿＿を始めた。",options:["自炊","外食","間食","偏食"],answer:0,explanation:"「自炊（じすい）」= 自己做饭。为了省钱所以自己做饭。"},
+    {question:"よく噛んで食べると＿＿がよくなる。",options:["消化","栄養","食欲","調理"],answer:0,explanation:"「消化（しょうか）がよくなる」= 消化变好。多嚼有助于消化。"},
+  ],
+  "2-2": [
+    {question:"子供の部屋はいつも＿＿ている。",options:["散らかっ","片付け","汚れ","磨い"],answer:0,explanation:"「散（ち）らかっている」= 很凌乱。孩子的房间总是乱七八糟。"},
+    {question:"洗濯物を＿＿んでタンスにしまった。",options:["畳","干","拭","磨"],answer:0,explanation:"「畳（たた）む」= 叠衣服。叠好后放进衣柜。"},
+    {question:"エアコンが＿＿して、暑くて大変だ。",options:["故障","修理","節約","整理"],answer:0,explanation:"「故障（こしょう）する」= 故障。空调坏了所以很热。"},
+    {question:"夫婦で家事を＿＿している。",options:["分担","節約","修理","整理"],answer:0,explanation:"「家事（かじ）を分担（ぶんたん）する」= 分担家务。高频搭配。"},
+    {question:"引っ越し前に荷物を＿＿した。",options:["整理","掃除","修理","節約"],answer:0,explanation:"「荷物（にもつ）を整理（せいり）する」= 整理行李。搬家前整理东西。"},
+  ],
+  "2-3": [
+    {question:"最近＿＿を崩して会社を休んでいる。",options:["体調","症状","気分","健康"],answer:0,explanation:"「体調（たいちょう）を崩（くず）す」= 身体变差。N2超高频搭配！"},
+    {question:"この薬には眠くなる＿＿がある。",options:["副作用","症状","効果","処方"],answer:0,explanation:"「副作用（ふくさよう）」= 副作用。犯困是药的副作用。"},
+    {question:"年に一度＿＿を受けることが大切だ。",options:["健康診断","手術","治療","入院"],answer:0,explanation:"「健康診断（けんこうしんだん）を受（う）ける」= 做体检。每年一次体检。"},
+    {question:"＿＿が溜まると体調を崩しやすい。",options:["疲労","睡眠","栄養","血圧"],answer:0,explanation:"「疲労（ひろう）が溜（た）まる」= 疲劳累积。疲劳累积 → 身体变差。"},
+    {question:"夏は水分を取って＿＿を防ごう。",options:["熱中症","食中毒","過労","肥満"],answer:0,explanation:"「熱中症（ねっちゅうしょう）を防（ふせ）ぐ」= 预防中暑。夏天补水防中暑。"},
+  ],
+};
+
+// ============ 状态管理 ============
+let state = JSON.parse(localStorage.getItem('n2vocab_v2') || 'null') || {
+  currentChapter: "1-1",
+  currentIndex: 0,
+  wordStatus: {},
+  errors: [],
+};
+function saveState() { localStorage.setItem('n2vocab_v2', JSON.stringify(state)); }
+
+// ============ TTS ============
+function speak(text, rate=0.8) {
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP'; u.rate = rate;
+    const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('ja'));
+    if (voices.length) u.voice = voices[0];
+    speechSynthesis.speak(u);
+  }
+}
+function speakWord() { const w = getCurrentWord(); speak(w.word); }
+function speakExample() { const w = getCurrentWord(); speak(w.example.replace(/（[^）]*）/g, ''), 0.7); }
+function getCurrentWord() { return VOCABULARY[state.currentChapter].words[state.currentIndex]; }
+
+// ============ 学习模式 ============
+function updateLearnView() {
+  const words = VOCABULARY[state.currentChapter].words;
+  const w = words[state.currentIndex];
+  document.getElementById('learnWord').innerHTML = addRuby(w.word, w.reading);
+  document.getElementById('learnReading').textContent = w.reading;
+  document.getElementById('learnMeaning').textContent = w.meaning;
+  document.getElementById('learnCollocation').textContent = '【' + w.collocation + '】';
+  document.getElementById('learnExample').innerHTML = `<div>${w.example}</div><div style="color:#666;margin-top:4px">${w.exampleCn}</div>`;
+  document.getElementById('learnCounter').textContent = `${state.currentIndex + 1} / ${words.length}`;
+  document.getElementById('learnProgress').style.width = ((state.currentIndex + 1) / words.length * 100) + '%';
+  document.getElementById('dayInfo').textContent = VOCABULARY[state.currentChapter].title;
+  // Update daily progress
+  const todayKey = new Date().toDateString();
+  const todayLearned = Object.entries(state.wordStatus).filter(([k,v]) => new Date(v.learnedAt).toDateString() === todayKey).length;
+  const reviewCount = getReviewWords().length;
+  document.getElementById('dayInfo').textContent = VOCABULARY[state.currentChapter].title + ' | 今日已学:' + todayLearned + '/30' + (reviewCount ? ' | 待复习:'+reviewCount : '');
+}
+
+function addRuby(word, reading) {
+  if (word === reading) return word;
+  return `<ruby>${word}<rt>${reading}</rt></ruby>`;
+}
+
+function nextWord() {
+  const words = VOCABULARY[state.currentChapter].words;
+  if (state.currentIndex >= words.length - 1) {
+    if (confirm('🎉 本课30词学完！要进入测试吗？')) { switchMode('quiz'); return; }
+  }
+  state.currentIndex = Math.min(state.currentIndex + 1, words.length - 1);
+  updateLearnView(); saveState();
+  speakWord(); // Auto-speak new word
+}
+function prevWord() {
+  state.currentIndex = Math.max(state.currentIndex - 1, 0);
+  updateLearnView(); saveState();
+}
+function markWord(status) {
+  const key = state.currentChapter + '-' + state.currentIndex;
+  if (!state.wordStatus[key]) state.wordStatus[key] = {};
+  state.wordStatus[key].learnedAt = state.wordStatus[key].learnedAt || Date.now();
+  state.wordStatus[key].status = status;
+  sm2(state.wordStatus[key], status==='known' ? 4 : 1);
+  if (status === 'unknown') {
+    const w = getCurrentWord();
+    const existingE = state.errors.find(e => e.word === w.word);
+    if (existingE) { existingE.count=(existingE.count||1)+1; }
+    else {
+      state.errors.push({word:w.word, reading:w.reading, meaning:w.meaning, wrongAt:Date.now(), type:'learn'});
+    }
+  }
+  nextWord(); updateStats(); saveState();
+}
+function restartLearn() {
+  state.currentIndex = 0;
+  updateLearnView(); saveState();
+}
+function changeChapter() {
+  state.currentChapter = document.getElementById('chapterSelect').value;
+  state.currentIndex = 0;
+  updateLearnView(); saveState();
+}
+
+// ============ 测试模式（日中混合）============
+let quizWords=[], quizIdx=0, quizScore=0;
+function startQuiz() {
+  if (!window._reviewMode) {
+    const words = [...VOCABULARY[state.currentChapter].words];
+    quizWords = words.sort(() => Math.random()-0.5).slice(0,30);
+  }
+  window._reviewMode = false;
+  quizIdx = 0; quizScore = 0;
+  showQuizQuestion();
+}
+function showQuizQuestion() {
+  if (quizIdx >= quizWords.length) {
+    document.getElementById('quizOptions').innerHTML = `<div style="text-align:center;padding:20px"><h3>完成！${quizScore}/${quizWords.length}</h3><button class="btn btn-primary" onclick="startQuiz()">再来一轮</button></div>`;
+    return;
+  }
+  const w = quizWords[quizIdx];
+  // 50% 日→中, 50% 中→日
+  const isJpToCn = Math.random() > 0.4;
+  
+  if (isJpToCn) {
+    // Don't show reading together with kanji - prevent cheating
+    if (w.word !== w.reading) {
+      document.getElementById('quizWord').textContent = w.word;
+      document.getElementById('quizReading').style.visibility = 'hidden';
+    } else {
+      document.getElementById('quizWord').textContent = w.reading;
+      document.getElementById('quizReading').style.visibility = 'hidden';
+    }
+    let options = [w.meaning];
+    // 用混淆选项
+    const confuse = CONFUSING_OPTIONS[w.meaning];
+    if (confuse) {
+      options = options.concat(confuse.sort(() => Math.random()-0.5).slice(0,3));
+    } else {
+      const allW = VOCABULARY[state.currentChapter].words;
+      while (options.length < 4) {
+        const r = allW[Math.floor(Math.random()*allW.length)].meaning;
+        if (!options.includes(r)) options.push(r);
+      }
+    }
+    options = options.slice(0,4).sort(() => Math.random()-0.5);
+    window._quizCorrect = w.meaning;
+    document.getElementById('quizOptions').innerHTML = options.map((o,i) =>
+      `<div class="quiz-option" onclick="handleQuizClick(this)">${o}</div>`
+    ).join('');
+  } else {
+    document.getElementById('quizWord').textContent = w.meaning;
+    document.getElementById('quizReading').textContent = '选择对应的日语';
+    document.getElementById('quizReading').style.visibility = 'visible';
+    const allW = VOCABULARY[state.currentChapter].words;
+    let options = [`${w.word}（${w.reading}）`];
+    while (options.length < 4) {
+      const r = allW[Math.floor(Math.random()*allW.length)];
+      const opt = `${r.word}（${r.reading}）`;
+      if (!options.includes(opt)) options.push(opt);
+    }
+    options.sort(() => Math.random()-0.5);
+    const correct = `${w.word}（${w.reading}）`;
+    window._quizCorrect = correct;
+    document.getElementById('quizOptions').innerHTML = options.map((o,i) =>
+      `<div class="quiz-option" onclick="handleQuizClick(this)">${o}</div>`
+    ).join('');
+  }
+  document.getElementById('quizCounter').textContent = `${quizIdx+1} / ${quizWords.length}`;
+  document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
+  document.getElementById('quizProgress').style.width = (quizIdx/quizWords.length*100)+'%';
+  // No auto-speak, user clicks 🔊 if needed
+}
+function handleQuizClick(el) {
+  const selected = el.textContent;
+  const correct = window._quizCorrect;
+  document.querySelectorAll('#quizOptions .quiz-option').forEach(o => o.style.pointerEvents='none');
+  if (selected === correct) {
+    el.classList.add('correct'); quizScore++;
+    const qw = quizWords[quizIdx];
+    const qkey = state.currentChapter+'-'+VOCABULARY[state.currentChapter].words.indexOf(qw);
+    updateSM2(qkey, true);
+  } else {
+    el.classList.add('wrong');
+    document.querySelectorAll('#quizOptions .quiz-option').forEach(o => { if (o.textContent===correct) o.classList.add('correct'); });
+    const w = quizWords[quizIdx];
+    const wkey = state.currentChapter+'-'+VOCABULARY[state.currentChapter].words.indexOf(w);
+    updateSM2(wkey, false);
+    const existQ = state.errors.find(e=>e.word===w.word);
+    if (existQ) { existQ.count=(existQ.count||1)+1; existQ.wrongAt=Date.now(); }
+    else state.errors.push({word:w.word,reading:w.reading,meaning:w.meaning,wrongAt:Date.now(),type:'quiz',count:1});
+  }
+  document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
+  setTimeout(() => { quizIdx++; showQuizQuestion(); saveState(); }, 1500);
+}
+function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].word); }
+
+// ============ 拼写模式 ============
+let spellWords=[], spellIdx=0, spellScoreVal=0, spellWaiting=false;
+function startSpell() {
+  const words = [...VOCABULARY[state.currentChapter].words];
+  spellWords = words.sort(()=>Math.random()-0.5).slice(0,30);
+  spellIdx=0; spellScoreVal=0; spellWaiting=false; spellComposing=false;
+  showSpellQ();
+  spellRetry = [];
+  // IME composition tracking
+  const input = document.getElementById('kanaInput');
+  input.addEventListener('compositionstart', () => { spellComposing=true; });
+  input.addEventListener('compositionend', () => { spellComposing=false; });
+}
+function showSpellQ() {
+  if (spellIdx >= spellWords.length) {
+    // Check if there are retry words
+    if (spellRetry && spellRetry.length > 0) {
+      const retryCount = spellRetry.length;
+      document.getElementById('spellMeaning').innerHTML = `<div style="margin-bottom:12px">第一轮完成！还有 <strong>${retryCount}</strong> 个错词需要重练</div><button class="btn btn-primary" onclick="startSpellRetry()">重练错词</button> <button class="btn btn-outline" onclick="skipSpellRetry()">跳过</button>`;
+      document.getElementById('kanaInput').classList.add('hidden');
+      document.querySelector('#mode-spell .btn-group').classList.add('hidden');
+      document.getElementById('kanaNext').classList.add('hidden');
+      return;
+    }
+    document.getElementById('spellMeaning').innerHTML = `<h3>🎉 全部正确！${spellScoreVal}/${spellWords.length}</h3><button class="btn btn-primary" onclick="startSpell()">再来</button>`;
+    document.getElementById('kanaInput').classList.add('hidden');
+    document.querySelector('#mode-spell .btn-group').classList.add('hidden');
+    document.getElementById('kanaNext').classList.add('hidden');
+    return;
+  }
+  const w = spellWords[spellIdx];
+  document.getElementById('spellMeaning').textContent = w.meaning;
+  document.getElementById('spellHint').textContent = '搭配：' + w.collocation;
+  document.getElementById('kanaInput').value = '';
+  document.getElementById('kanaInput').classList.remove('hidden');
+  document.querySelector('#mode-spell .btn-group').classList.remove('hidden');
+  document.getElementById('kanaResult').textContent = '';
+  document.getElementById('kanaNext').classList.add('hidden');
+  document.getElementById('spellCounter').textContent = `${spellIdx+1}/${spellWords.length}`;
+  document.getElementById('spellScore').textContent = `✓ ${spellScoreVal}`;
+  document.getElementById('spellProgress').style.width = (spellIdx/spellWords.length*100)+'%';
+  spellWaiting = false;
+}
+function startSpellRetry() {
+  spellWords = [...spellRetry];
+  spellRetry = [];
+  spellIdx = 0;
+  showSpellQ();
+  document.getElementById('kanaInput').classList.remove('hidden');
+  document.querySelector('#mode-spell .btn-group').classList.remove('hidden');
+}
+function skipSpellRetry() {
+  spellRetry = [];
+  document.getElementById('spellMeaning').innerHTML = `<h3>完成！</h3><button class="btn btn-primary" onclick="startSpell()">重新开始</button>`;
+}
+function handleKanaKey(e) {
+  if (e.key === 'Enter') {
+    if (spellComposing) return; // IME still composing, ignore
+    if (spellWaiting) { spellIdx++; showSpellQ(); saveState(); }
+    else if (document.getElementById('kanaInput').value.trim()) { checkKana(); }
+  }
+}
+function checkKana() {
+  if (spellWaiting) return;
+  const w = spellWords[spellIdx];
+  const input = document.getElementById('kanaInput').value.trim();
+  const resultEl = document.getElementById('kanaResult');
+  if (input === w.reading || input === w.word) {
+    resultEl.innerHTML = `<span style="color:#2ec4b6">✅ 正解！${w.word}（${w.reading}）</span>`;
+    spellScoreVal++;
+    document.getElementById('kanaNext').classList.remove('hidden');
+    spellWaiting = true;
+  } else {
+    resultEl.innerHTML = `<span style="color:#e63946">❌ 正解：${w.word}（${w.reading}）</span>`;
+    const existingS = state.errors.find(e=>e.word===w.word);
+    if (existingS) { existingS.count=(existingS.count||1)+1; existingS.wrongAt=Date.now(); }
+    else state.errors.push({word:w.word,reading:w.reading,meaning:w.meaning,wrongAt:Date.now(),type:'spell',count:1});
+    // Add to retry queue
+    if (!spellRetry) spellRetry = [];
+    if (!spellRetry.find(r=>r.word===w.word)) spellRetry.push(w);
+    document.getElementById('kanaNext').classList.remove('hidden');
+    document.getElementById('kanaNext').innerHTML = '<span style="color:#999;font-size:13px">回车继续（错题稍后重复）</span>';
+    spellWaiting = true;
+  }
+  document.getElementById('spellScore').textContent = `✓ ${spellScoreVal}`;
+  saveState();
+}
+function speakSpellWord() { if(spellWords[spellIdx]) speak(spellWords[spellIdx].word); }
+function showKanaHint() {
+  const w = spellWords[spellIdx];
+  document.getElementById('kanaResult').textContent = '提示：' + w.reading.charAt(0) + '○'.repeat(w.reading.length-1);
+  // Track hint usage
+  if (!state.hintUsed) state.hintUsed = {};
+  state.hintUsed[w.word] = (state.hintUsed[w.word]||0) + 1;
+  saveState();
+}
+
+// ============ 跟读模式 ============
+let shadowIdx=0, shadowMode='word', isRecording=false, recognition=null;
+function setShadowMode(mode) {
+  shadowMode = mode;
+  document.getElementById('shadowModeWord').classList.toggle('active', mode==='word');
+  document.getElementById('shadowModeSentence').classList.toggle('active', mode==='sentence');
+  updateShadowView();
+}
+function updateShadowView() {
+  const words = VOCABULARY[state.currentChapter].words;
+  const w = words[shadowIdx];
+  if (shadowMode === 'word') {
+    document.getElementById('shadowMainText').innerHTML = `<ruby>${w.word}<rt>${w.reading}</rt></ruby>`;
+    document.getElementById('shadowSubText').textContent = w.meaning;
+  } else {
+    document.getElementById('shadowMainText').innerHTML = w.example;
+    document.getElementById('shadowSubText').textContent = w.exampleCn;
+  }
+  document.getElementById('shadowCounter').textContent = `${shadowIdx+1} / ${words.length}`;
+  document.getElementById('shadowResult').classList.add('hidden');
+  document.getElementById('shadowDetail').classList.add('hidden');
+  document.getElementById('recognizedText').textContent = '';
+}
+function playShadowTarget() {
+  const w = VOCABULARY[state.currentChapter].words[shadowIdx];
+  if (shadowMode==='word') speak(w.word, 0.7);
+  else speak(w.example.replace(/（[^）]*）/g,''), 0.65);
+}
+function nextShadow() {
+  const words = VOCABULARY[state.currentChapter].words;
+  shadowIdx = Math.min(shadowIdx+1, words.length-1);
+  updateShadowView();
+}
+function prevShadow() { shadowIdx = Math.max(shadowIdx-1, 0); updateShadowView(); }
+
+function toggleRecording() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('请使用Chrome浏览器以支持语音识别'); return;
+  }
+  const btn = document.getElementById('recordBtn');
+  if (!isRecording) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'ja-JP'; recognition.continuous = false; recognition.interimResults = false;
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      const confidence = Math.round(e.results[0][0].confidence * 100);
+      document.getElementById('recognizedText').textContent = '你说的：' + transcript;
+      const w = VOCABULARY[state.currentChapter].words[shadowIdx];
+      const expected = shadowMode==='word' ? w.reading : w.example.replace(/（[^）]*）/g,'').replace(/[。、！？]/g,'');
+      const similarity = calcSim(transcript.replace(/[。、！？\s]/g,''), expected.replace(/[。、！？\s]/g,''));
+      const score = Math.round((similarity * 0.6 + confidence * 0.4));
+      
+      const resultEl = document.getElementById('shadowResult');
+      const detailEl = document.getElementById('shadowDetail');
+      resultEl.classList.remove('hidden','score-good','score-ok','score-bad');
+      detailEl.classList.remove('hidden');
+      
+      if (score >= 80) { resultEl.textContent = `🎉 优秀！${score}分`; resultEl.classList.add('score-good'); }
+      else if (score >= 55) { resultEl.textContent = `👍 不错 ${score}分`; resultEl.classList.add('score-ok'); }
+      else { resultEl.textContent = `💪 再试试 ${score}分`; resultEl.classList.add('score-bad'); }
+      detailEl.innerHTML = `发音准确度：${confidence}%<br>内容匹配度：${similarity}%`;
+    };
+    recognition.onend = () => { btn.classList.remove('recording'); btn.textContent='🎤'; isRecording=false; };
+    // Clear previous results
+    document.getElementById('shadowResult').classList.add('hidden');
+    document.getElementById('shadowDetail').classList.add('hidden');
+    document.getElementById('recognizedText').textContent = '';
+    recognition.start(); btn.classList.add('recording'); btn.textContent='⏹'; isRecording=true;
+  } else {
+    recognition.stop(); btn.classList.remove('recording'); btn.textContent='🎤'; isRecording=false;
+  }
+}
+function calcSim(a, b) {
+  if (!a || !b) return 0;
+  let m = 0;
+  const shorter = a.length < b.length ? a : b;
+  const longer = a.length >= b.length ? a : b;
+  for (let i=0; i<shorter.length; i++) { if (longer.includes(shorter[i])) m++; }
+  return Math.round(m / longer.length * 100);
+}
+
+// ============ 真题训练 ============
+let jlptQs=[], jlptIdx=0, jlptScoreVal=0;
+function generateExtraJlpt(chapter) {
+  // Generate vocab-based questions from current chapter words
+  const words = VOCABULARY[chapter].words;
+  const extra = [];
+  const shuffled = [...words].sort(() => Math.random()-0.5);
+  for (let i=0; i<15 && i<shuffled.length; i++) {
+    const w = shuffled[i];
+    const others = words.filter(x => x.word !== w.word).sort(() => Math.random()-0.5).slice(0,3);
+    extra.push({
+      question: `「${w.word}」の読み方は？`,
+      options: [w.reading, ...others.map(o=>o.reading)].sort(()=>Math.random()-0.5),
+      get answer() { return this.options.indexOf(w.reading); },
+      explanation: `${w.word}（${w.reading}）= ${w.meaning}。搭配：${w.collocation}`
+    });
+  }
+  return extra;
+}
+function startJlpt() {
+  jlptQs = [...(JLPT_QUESTIONS[state.currentChapter] || [])];
+  // Add reading questions
+  const extraQs = generateExtraJlpt(state.currentChapter);
+  jlptQs = jlptQs.concat(extraQs);
+  if (!jlptQs.length) { document.getElementById('jlptQuestion').innerHTML = '<p>暂无该课真题</p>'; return; }
+  jlptIdx=0; jlptScoreVal=0;
+  showJlptQ();
+}
+function showJlptQ() {
+  if (jlptIdx >= jlptQs.length) {
+    document.getElementById('jlptQuestion').innerHTML = `<div style="text-align:center"><h3>完成！${jlptScoreVal}/${jlptQs.length}</h3><button class="btn btn-primary" onclick="startJlpt()">再来</button></div>`;
+    document.getElementById('jlptOptions').innerHTML = '';
+    document.getElementById('jlptExplanation').classList.add('hidden');
+    return;
+  }
+  const q = jlptQs[jlptIdx];
+  document.getElementById('jlptQuestion').innerHTML = `<div class="q-num">問題 ${jlptIdx+1}</div><div class="q-text">${q.question}</div>`;
+  document.getElementById('jlptOptions').innerHTML = q.options.map((o,i) =>
+    `<div class="quiz-option" onclick="selectJlpt(this,${i},${q.answer})">${i+1}. ${o}</div>`
+  ).join('');
+  document.getElementById('jlptExplanation').classList.add('hidden');
+  document.getElementById('jlptCounter').textContent = `${jlptIdx+1}/${jlptQs.length}`;
+  document.getElementById('jlptScore').textContent = `✓ ${jlptScoreVal}`;
+  document.getElementById('jlptProgress').style.width = (jlptIdx/jlptQs.length*100)+'%';
+}
+function selectJlpt(el, selected, correct) {
+  document.querySelectorAll('#jlptOptions .quiz-option').forEach(o => o.style.pointerEvents='none');
+  if (selected === correct) { el.classList.add('correct'); jlptScoreVal++; }
+  else {
+    el.classList.add('wrong');
+    document.querySelectorAll('#jlptOptions .quiz-option')[correct].classList.add('correct');
+  }
+  const q = jlptQs[jlptIdx];
+  const expEl = document.getElementById('jlptExplanation');
+  expEl.innerHTML = `<strong>${selected===correct?'✅ 正解':'❌ 答错了'}！</strong><br>${q.explanation}`;
+  expEl.classList.remove('hidden');
+  document.getElementById('jlptScore').textContent = `✓ ${jlptScoreVal}`;
+  document.getElementById('jlptNextBtn').style.display = 'inline-block';
+}
+function nextJlptManual() {
+  document.getElementById('jlptNextBtn').style.display = 'none';
+  jlptIdx++; showJlptQ();
+}
+function prevJlpt() {
+  if (jlptIdx > 0) { jlptIdx--; showJlptQ(); }
+}
+
+// ============ 复习 & 错题 ============
+function getReviewWords() {
+  const now = Date.now(); const results = [];
+  for (const [key, info] of Object.entries(state.wordStatus)) {
+    if (info.nextReview && info.nextReview <= now) {
+      const parts = key.match(/^(.+)-(\d+)$/);
+      if (parts && VOCABULARY[parts[1]]) {
+        const w = VOCABULARY[parts[1]].words[parseInt(parts[2])];
+        if (w) results.push({...w, key, level: info.reviewLevel||0});
+      }
+    }
+  }
+  return results;
+}
+function updateReviewList() {
+  const rw = getReviewWords();
+  const el = document.getElementById('reviewList');
+  if (!rw.length) { el.innerHTML = '<p style="color:#2ec4b6;text-align:center;padding:16px">✅ 暂无需要复习的词</p>'; return; }
+  el.innerHTML = rw.slice(0,20).map(w => `<div class="review-item"><div class="word-info"><div class="jp">${w.word}（${w.reading}）</div><div class="cn">${w.meaning}</div></div><div class="status status-review">间隔${w.interval}天</div></div>`).join('');
+}
+function startReview() {
+  const rw = getReviewWords();
+  if (!rw.length) { alert('暂无需要复习的词！'); return; }
+  // Switch to quiz mode with review words
+  window._reviewMode = true;
+  quizWords = rw.slice(0,10);
+  quizIdx = 0; quizScore = 0;
+  switchMode('quiz');
+}
+function updateErrorList() {
+  const el = document.getElementById('errorList');
+  if (!state.errors.length) { el.innerHTML = '<p style="color:#666;text-align:center;padding:20px">🎉 没有错题！</p>'; return; }
+  el.innerHTML = state.errors.sort((a,b)=>(b.count||1)-(a.count||1)).map(e => `<div class="review-item"><div class="word-info"><div class="jp">${e.word}（${e.reading}）</div><div class="cn">${e.meaning}</div></div><div class="status status-learning">${e.type} ×${e.count||1}</div></div>`).join('');
+  // Also show hint-used words
+  if (state.hintUsed && Object.keys(state.hintUsed).length) {
+    el.innerHTML += '<h4 style="margin-top:16px;color:#856404">💡 使用过提示的词</h4>';
+    el.innerHTML += Object.entries(state.hintUsed).sort((a,b)=>b[1]-a[1]).map(([w,c]) => 
+      `<div class="review-item"><div class="word-info"><div class="jp">${w}</div></div><div class="status status-new">提示×${c}</div></div>`
+    ).join('');
+  }
+}
+function practiceErrors() {
+  if (!state.errors.length) { alert('没有错题！'); return; }
+  window._reviewMode = true;
+  quizWords = state.errors.slice(0,10);
+  quizIdx = 0; quizScore = 0;
+  switchMode('quiz');
+}
+function clearErrors() { if (confirm('清空？')) { state.errors=[]; saveState(); updateErrorList(); } }
+
+// ============ 统计 ============
+function updateStats() {
+  const total = Object.values(VOCABULARY).reduce((s,ch) => s+ch.words.length, 0);
+  const learned = Object.keys(state.wordStatus).length;
+  const mastered = Object.values(state.wordStatus).filter(s => s.reviewLevel>=5).length;
+  const review = getReviewWords().length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statLearned').textContent = learned;
+  document.getElementById('statMastered').textContent = mastered;
+  document.getElementById('statReview').textContent = review;
+}
+
+// ============ 模式切换 ============
+// ============ SM-2 间隔重复算法 ============
+function sm2(item, quality) {
+  // quality: 0-5 (0-2=fail, 3=hard, 4=good, 5=easy)
+  if (!item.easeFactor) item.easeFactor = 2.5;
+  if (!item.interval) item.interval = 0;
+  if (!item.repetitions) item.repetitions = 0;
+  
+  if (quality >= 3) {
+    if (item.repetitions === 0) item.interval = 1;
+    else if (item.repetitions === 1) item.interval = 6;
+    else item.interval = Math.round(item.interval * item.easeFactor);
+    item.repetitions++;
+  } else {
+    item.repetitions = 0;
+    item.interval = 1; // Reset
+  }
+  item.easeFactor = Math.max(1.3, item.easeFactor + (0.1 - (5-quality)*(0.08+(5-quality)*0.02)));
+  item.nextReview = Date.now() + item.interval * 24*60*60*1000;
+  return item;
+}
+
+// Update markWord to use SM-2
+function updateSM2(wordKey, correct) {
+  if (!state.wordStatus[wordKey]) state.wordStatus[wordKey] = {};
+  const item = state.wordStatus[wordKey];
+  item.learnedAt = item.learnedAt || Date.now();
+  sm2(item, correct ? 4 : 1);
+  saveState();
+}
+
+// Override getReviewWords to use SM-2 intervals
+function getReviewWords() {
+  const now = Date.now(); const results = [];
+  for (const [key, info] of Object.entries(state.wordStatus)) {
+    if (info.nextReview && info.nextReview <= now) {
+      const parts = key.match(/^(.+)-(\d+)$/);
+      if (parts && VOCABULARY[parts[1]]) {
+        const w = VOCABULARY[parts[1]].words[parseInt(parts[2])];
+        if (w) results.push({...w, key, interval: info.interval||0, ef: info.easeFactor||2.5});
+      }
+    }
+  }
+  return results.sort((a,b) => a.interval - b.interval); // Weakest first
+}
+
+// ============ 填空回忆模式 ============
+var clozeWords=[], clozeIdx=0, clozeScoreVal=0, clozeRevealed=false, clozeComposing=false;
+function startCloze() {
+  const words = [...VOCABULARY[state.currentChapter].words];
+  clozeWords = words.sort(()=>Math.random()-0.5);
+  clozeIdx=0; clozeScoreVal=0;
+  showClozeQ();
+  const input = document.getElementById('clozeInput');
+  input.addEventListener('compositionstart', () => { clozeComposing=true; });
+  input.addEventListener('compositionend', () => { clozeComposing=false; });
+}
+function showClozeQ() {
+  if (clozeIdx >= clozeWords.length) {
+    document.getElementById('clozeSentence').innerHTML = '<h3>完成！' + clozeScoreVal + '/' + clozeWords.length + '</h3><button class="btn btn-primary" onclick="startCloze()">再来</button>';
+    document.getElementById('clozeInput').style.display='none';
+    return;
+  }
+  const w = clozeWords[clozeIdx];
+  // Create cloze sentence: replace the word with ＿＿
+  let sentence = w.example;
+  // Remove furigana brackets for display
+  const cleanWord = w.word;
+  const blank = '＿'.repeat(Math.max(2, cleanWord.length));
+  sentence = sentence.replace(cleanWord, '<span style="color:#e63946;font-weight:bold;border-bottom:2px dashed #e63946;padding:0 4px">' + blank + '</span>');
+  // Also try replacing with reading
+  if (!sentence.includes('＿')) {
+    sentence = w.example.replace(w.reading, '<span style="color:#e63946;font-weight:bold;border-bottom:2px dashed #e63946;padding:0 4px">' + blank + '</span>');
+  }
+  document.getElementById('clozeSentence').innerHTML = sentence + '<div style="font-size:13px;color:#888;margin-top:8px">' + w.exampleCn + '</div>';
+  document.getElementById('clozeHintArea').textContent = '';
+  document.getElementById('clozeInput').value = '';
+  document.getElementById('clozeInput').style.display = '';
+  document.getElementById('clozeResult').textContent = '';
+  document.getElementById('clozeCounter').textContent = (clozeIdx+1) + ' / ' + clozeWords.length;
+  document.getElementById('clozeScore').textContent = '✓ ' + clozeScoreVal;
+  document.getElementById('clozeProgress').style.width = (clozeIdx/clozeWords.length*100)+'%';
+  clozeRevealed = false;
+}
+function handleClozeKey(e) {
+  if (e.key==='Enter' && !clozeComposing) checkCloze();
+}
+function checkCloze() {
+  if (clozeRevealed) { nextCloze(); return; }
+  const w = clozeWords[clozeIdx];
+  const input = document.getElementById('clozeInput').value.trim();
+  if (!input) return;
+  const correct = (input === w.word || input === w.reading);
+  const resultEl = document.getElementById('clozeResult');
+  if (correct) {
+    resultEl.innerHTML = '<span style="color:#2ec4b6">✅ 正解！<strong>' + w.word + '（' + w.reading + '）</strong></span>';
+    clozeScoreVal++;
+  } else {
+    resultEl.innerHTML = '<span style="color:#e63946">❌ 正解：<strong>' + w.word + '（' + w.reading + '）</strong> = ' + w.meaning + '</span>';
+    const existingC = state.errors.find(e=>e.word===w.word);
+    if (existingC) { existingC.count=(existingC.count||1)+1; }
+    else state.errors.push({word:w.word,reading:w.reading,meaning:w.meaning,wrongAt:Date.now(),type:'cloze',count:1});
+  }
+  // Update SM-2
+  const chKey = state.currentChapter + '-' + VOCABULARY[state.currentChapter].words.indexOf(w);
+  updateSM2(chKey, correct);
+  document.getElementById('clozeScore').textContent = '✓ ' + clozeScoreVal;
+  clozeRevealed = true;
+  saveState();
+}
+function clozeMeaning() {
+  const w = clozeWords[clozeIdx];
+  document.getElementById('clozeHintArea').textContent = '意思：' + w.meaning + ' | 搭配：' + w.collocation;
+}
+function clozeReveal() {
+  const w = clozeWords[clozeIdx];
+  document.getElementById('clozeResult').innerHTML = '<span style="color:#856404">👁 答案：<strong>' + w.word + '（' + w.reading + '）</strong></span>';
+  clozeRevealed = true;
+  // Count as fail for SM-2
+  const chKey = state.currentChapter + '-' + VOCABULARY[state.currentChapter].words.indexOf(w);
+  updateSM2(chKey, false);
+}
+function nextCloze() { clozeIdx++; showClozeQ(); }
+function prevCloze() { if(clozeIdx>0){clozeIdx--; showClozeQ();} }
+
+// ============ 模式切换 ============
+function switchMode(mode) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => { if(t.getAttribute('onclick').includes(mode)) t.classList.add('active'); });
+  ['learn','quiz','spell','shadow','jlpt','cloze','review','errors'].forEach(m => document.getElementById('mode-'+m).classList.add('hidden'));
+  document.getElementById('mode-'+mode).classList.remove('hidden');
+  if (mode==='quiz') startQuiz();
+  if (mode==='spell') startSpell();
+  if (mode==='shadow') { shadowIdx=0; updateShadowView(); }
+  if (mode==='jlpt') startJlpt();
+  if (mode==='cloze') startCloze();
+  if (mode==='review') updateReviewList();
+  if (mode==='errors') updateErrorList();
+}
+
+// ============ 初始化 ============
+window.onload = function() {
+  document.getElementById('chapterSelect').value = state.currentChapter;
+  updateLearnView(); updateStats();
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+};
+</script>
+</body>
+</html>
