@@ -604,38 +604,38 @@ function showSyncMsg(m){var el=document.getElementById('syncMsg');el.textContent
 /* ========== Auto-detect completion from sub-apps ========== */
 function autoDetectTasks() {
   var today = TODAY;
-  // Verb conjugation: check for today's auto_time or conjugation data
-  var conjKey = 'conjugation_' + today;
-  var conjData = localStorage.getItem(conjKey);
-  var autoTime = parseInt(localStorage.getItem('auto_time_' + today) || '0');
-  // Check verb_mastery or similar
-  var verbDone = !!localStorage.getItem(conjKey) || (getJSON('verb_practice_log',{})[today]);
+  var todayTasks = getJSON(TASKS_KEY, {});
   
-  // N2 vocab: check n2vocab_v2 for today's learned words
-  var vocabState = getJSON('n2vocab_v2', {wordStatus:{}});
-  var todayVocab = Object.values(vocabState.wordStatus || {}).filter(function(v) {
-    return v.learnedAt && new Date(v.learnedAt).toISOString().slice(0,10) === today;
-  }).length;
-  var vocabDone = todayVocab >= 5; // at least 5 words learned today
-  
-  // N2 grammar: check daily_review_v1 or n2_grammar_battle
-  var dailyReview = getJSON('daily_review_v1', {totalAttempts:0, questionLog:{}});
-  var gramBattle = getJSON('n2_grammar_battle', {totalAnswered:0});
-  var n2gramDone = dailyReview.totalAttempts > 0 || gramBattle.totalAnswered > 0;
-  
-  // N3 grammar: check n3_grammar related keys
-  var n3Done = false;
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    if (k && (k.indexOf('n3_grammar') >= 0 || k.indexOf('n3grammar') >= 0)) {
-      n3Done = true; break;
-    }
+  // Check task_done_ keys set by sub-apps on completion
+  if (localStorage.getItem('task_done_verb_' + today) === '1' && !todayTasks.verb) {
+    todayTasks.verb = true;
+  }
+  if (localStorage.getItem('task_done_vocab_' + today) === '1' && !todayTasks.vocab) {
+    todayTasks.vocab = true;
+  }
+  if (localStorage.getItem('task_done_n2grammar_' + today) === '1' && !todayTasks.n2grammar) {
+    todayTasks.n2grammar = true;
+  }
+  if (localStorage.getItem('task_done_n3grammar_' + today) === '1' && !todayTasks.n3grammar) {
+    todayTasks.n3grammar = true;
   }
   
-  // Apply auto-detection (don't override manual checks)
-  var todayTasks = getJSON(TASKS_KEY, {});
-  if (vocabDone && !todayTasks.vocab) { todayTasks.vocab = true; }
-  if (n2gramDone && !todayTasks.n2grammar) { todayTasks.n2grammar = true; }
+  // Fallback: also check activity-based detection
+  // N2 vocab: check n2vocab_v2 for today's learned words
+  if (!todayTasks.vocab) {
+    var vocabState = getJSON('n2vocab_v2', {wordStatus:{}});
+    var todayVocab = Object.values(vocabState.wordStatus || {}).filter(function(v) {
+      return v.learnedAt && new Date(v.learnedAt).toISOString().slice(0,10) === today;
+    }).length;
+    if (todayVocab >= 5) todayTasks.vocab = true;
+  }
+  
+  // N2 grammar: check n2_grammar_battle state
+  if (!todayTasks.n2grammar) {
+    var gramBattle = getJSON('n2_grammar_battle', {totalAnswered:0});
+    if (gramBattle.totalAnswered > 0) todayTasks.n2grammar = true;
+  }
+  
   // Note: output (造句) stays manual
   setJSON(TASKS_KEY, todayTasks);
   tasks = todayTasks;

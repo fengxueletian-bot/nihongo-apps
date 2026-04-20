@@ -567,6 +567,8 @@ function startChallengeRound() {
   challengeTimer = setTimeout(function(){
     challengeRunning = false;
     if (challengeCorrect > state.challengeBest) { state.challengeBest = challengeCorrect; saveState(); }
+    var _today = new Date().toISOString().slice(0,10);
+    localStorage.setItem('task_done_verb_' + _today, '1');
     app.innerHTML = '<div class="card"><h2>🏆 結果</h2>'+
       '<div class="timer">'+challengeCorrect+' / '+challengeCount+' 問正解！</div>'+
       (challengeCorrect > state.challengeBest - 1 ? '<p style="text-align:center;color:#06d6a0;font-weight:700">🎉 新記録！</p>' : '')+

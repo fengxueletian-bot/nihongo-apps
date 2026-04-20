@@ -279,8 +279,13 @@ function render() {
 }
 
 // === Battle Mode ===
+function markN2GrammarDone() {
+  var today = new Date().toISOString().slice(0,10);
+  localStorage.setItem('task_done_n2grammar_' + today, '1');
+}
 function renderBattle(el) {
   if (currentQ >= battleQuestions.length) {
+    markN2GrammarDone();
     el.innerHTML = '<div class="card"><div class="result-banner good"><h2>🎉 全部完了！</h2><p>正确率: ' + Math.round(state.totalCorrect/Math.max(1,state.totalAnswered)*100) + '%</p></div><div class="btn-group"><button class="btn btn-primary" onclick="currentQ=0;render()">再挑戦</button></div><div style="text-align:center"><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据到其他设备</button></div></div>';
     return;
   }
@@ -481,12 +486,20 @@ function answerFill(blankId, idx) {
   state.sm2[key] = SM2.review(card, correct ? 4 : 1);
   saveState();
   updateStats();
-  // Show per-blank explanation immediately
+  // Show per-blank explanation with grammar point analysis
   const blankExplEl = document.createElement('div');
   blankExplEl.className = 'explain';
   blankExplEl.style.marginTop = '8px';
   const correctOption = blank.options[blank.answer];
-  blankExplEl.innerHTML = `${correct ? '✅' : '❌'} （${blankId}）正解：<strong>${correctOption}</strong>`;
+  // Find grammar explanation
+  var gramExplain = '';
+  var gp = grammarPoints.find(function(g) { return correctOption.indexOf(g.grammar.replace(/〜/g,'')) >= 0 || g.grammar.replace(/〜/g,'').indexOf(correctOption) >= 0; });
+  if (gp) {
+    gramExplain = '<br><span style="color:#666;font-size:13px">📖 ' + gp.grammar + '（' + gp.meaning + '）接続：' + gp.connection + '</span>';
+  } else if (blank.explain) {
+    gramExplain = '<br><span style="color:#666;font-size:13px">📖 ' + blank.explain + '</span>';
+  }
+  blankExplEl.innerHTML = `${correct ? '✅' : '❌'} （${blankId}）正解：<strong>${correctOption}</strong>${gramExplain}`;
   document.getElementById('fillOpts' + blankId).after(blankExplEl);
 
   // Check if all blanks answered
@@ -525,7 +538,12 @@ function renderReview(el) {
         } else if (parts[0] === 'arrange' && arrangeQuestions[+parts[1]]) {
           label = '\u6392\u5217: ' + arrangeQuestions[+parts[1]].answerText;
         } else if (parts[0] === 'fill') {
-          label = '\u586b\u7a7a\u7b2c' + parts[1] + '\u984c-\u7a7a' + parts[2];
+          label = '\u586b\u7a7a\u7b2c' + (parseInt(parts[1])+1) + '\u984c-\u7a7a' + parts[2];
+        } else {
+          // Fallback: format key nicely instead of showing raw key
+          var modeNames = {battle:'\u30d0\u30c8\u30eb',connect:'\u63a5\u7d9a',arrange:'\u6392\u5217',fill:'\u586b\u7a7a'};
+          var modeName = modeNames[parts[0]] || parts[0];
+          label = modeName + '\u7b2c' + (parseInt(parts[1]||0)+1) + '\u554f';
         }
         return '<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' + label + ' (ease: ' + v.ease.toFixed(2) + ')</div>';
       }).join('')}` : '<p style="color:#2ec4b6;margin-top:12px;">\u2728 \u8584\u5f31\u30dd\u30a4\u30f3\u30c8\u306a\u3057\uff01</p>'}

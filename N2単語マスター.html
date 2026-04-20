@@ -761,6 +761,10 @@ function prevWord() {
   state.currentIndex = Math.max(state.currentIndex - 1, 0);
   updateLearnView(); saveState();
 }
+function markTaskDone() {
+  var today = new Date().toISOString().slice(0,10);
+  localStorage.setItem('task_done_vocab_' + today, '1');
+}
 function markWord(status) {
   const key = state.currentChapter + '-' + state.currentIndex;
   if (!state.wordStatus[key]) state.wordStatus[key] = {};
@@ -803,6 +807,7 @@ function startQuiz() {
 }
 function showQuizQuestion() {
   if (quizIdx >= quizWords.length) {
+    markTaskDone();
     document.getElementById('quizOptions').innerHTML = `<div style="text-align:center;padding:20px"><h3>完成！${quizScore}/${quizWords.length}</h3><button class="btn btn-primary" onclick="startQuiz()">再来一轮</button><br><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据到其他设备</button></div>`;
     return;
   }
@@ -1251,15 +1256,23 @@ function startCloze() {
   input.addEventListener('compositionend', () => { clozeComposing=false; });
 }
 function showClozeQ() {
+  // Skip words whose example can't be made into a cloze
+  while (clozeIdx < clozeWords.length) {
+    var tw = clozeWords[clozeIdx];
+    var ts = tw.example;
+    var tStripped = ts.replace(/（[^）]*）/g, '');
+    if (tStripped.includes(tw.word) || tStripped.includes(tw.reading)) break;
+    clozeIdx++;
+  }
   if (clozeIdx >= clozeWords.length) {
     document.getElementById('clozeSentence').innerHTML = '<h3>完成！' + clozeScoreVal + '/' + clozeWords.length + '</h3><button class="btn btn-primary" onclick="startCloze()">再来</button>';
     document.getElementById('clozeInput').style.display='none';
     return;
   }
   const w = clozeWords[clozeIdx];
-  // Create cloze sentence: replace the word with uniform ＿＿＿
+  // Create cloze sentence: replace the word with uniform ＿＿＿＿
   let sentence = w.example;
-  const blankHtml = '<span style="color:#e63946;font-weight:bold;border-bottom:2px dashed #e63946;padding:0 8px">＿＿＿</span>';
+  const blankHtml = '<span style="color:#e63946;font-weight:bold;border-bottom:2px dashed #e63946;padding:0 8px">＿＿＿＿</span>';
   let replaced = false;
   // Strategy 1: match word with furigana pattern 漢字（かな）
   const furiganaPattern = w.word + '（' + w.reading + '）';
@@ -1267,31 +1280,37 @@ function showClozeQ() {
     sentence = sentence.replace(furiganaPattern, blankHtml);
     replaced = true;
   }
-  // Strategy 2: match word directly
+  // Strategy 2: match reading with furigana pattern
+  if (!replaced) {
+    const readingFurigana = w.reading + '（' + w.reading + '）';
+    if (sentence.includes(readingFurigana)) {
+      sentence = sentence.replace(readingFurigana, blankHtml);
+      replaced = true;
+    }
+  }
+  // Strategy 3: match word directly
   if (!replaced && sentence.includes(w.word)) {
     sentence = sentence.replace(w.word, blankHtml);
     replaced = true;
   }
-  // Strategy 3: match reading directly
+  // Strategy 4: match reading directly
   if (!replaced && sentence.includes(w.reading)) {
     sentence = sentence.replace(w.reading, blankHtml);
     replaced = true;
   }
-  // Strategy 4: strip furigana from sentence then try matching
+  // Strategy 5: strip furigana then try matching word or reading with optional furigana
   if (!replaced) {
-    const stripped = sentence.replace(/（[^）]*）/g, '');
-    if (stripped.includes(w.word)) {
-      // Build regex that matches kanji with optional furigana
-      const escaped = w.word.split('').map(function(c) { return c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:（[^）]*）)?'; }).join('');
+    var stripped = sentence.replace(/（[^）]*）/g, '');
+    var matchTarget = stripped.includes(w.word) ? w.word : (stripped.includes(w.reading) ? w.reading : null);
+    if (matchTarget) {
+      var escaped = matchTarget.split('').map(function(c) { return c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:（[^）]*）)?'; }).join('');
       try { sentence = sentence.replace(new RegExp(escaped), blankHtml); replaced = true; } catch(e) {}
     }
   }
-  // Strategy 5: fallback
+  // Strategy 6: last resort fallback
   if (!replaced) {
     sentence = sentence.replace(/^[^、。]*/, blankHtml);
   }
-  // Remove any remaining furigana hints for the blank area
-  // (keep furigana for other words though)
   document.getElementById('clozeSentence').innerHTML = sentence + '<div style="font-size:13px;color:#888;margin-top:8px">' + w.exampleCn + '</div>';
   document.getElementById('clozeHintArea').textContent = '';
   document.getElementById('clozeInput').value = '';
@@ -1349,6 +1368,18 @@ function switchMode(mode) {
   document.querySelectorAll('.tab').forEach(t => { if(t.getAttribute('onclick').includes(mode)) t.classList.add('active'); });
   ['learn','quiz','spell','shadow','jlpt','cloze','review','errors'].forEach(m => document.getElementById('mode-'+m).classList.add('hidden'));
   document.getElementById('mode-'+mode).classList.remove('hidden');
+  if (mode==='learn') {
+    // Skip to first unlearned word
+    if (!skipToUnlearned()) {
+      document.getElementById('learnWord').textContent = '🎉';
+      document.getElementById('learnReading').textContent = '本課已学完！';
+      document.getElementById('learnMeaning').textContent = '全部单词已学习完毕';
+      document.getElementById('learnCollocation').textContent = '';
+      document.getElementById('learnExample').innerHTML = '<div style="text-align:center"><button class="btn btn-primary" onclick="restartLearn();updateLearnView()">🔄 从头复习</button></div>';
+    } else {
+      updateLearnView();
+    }
+  }
   if (mode==='quiz') startQuiz();
   if (mode==='spell') startSpell();
   if (mode==='shadow') { shadowIdx=0; updateShadowView(); }

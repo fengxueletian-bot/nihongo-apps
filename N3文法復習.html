@@ -238,6 +238,8 @@ function renderHome() {
 
 function renderQuestion() {
   if (currentQ >= qOrder.length) {
+    var _today = new Date().toISOString().slice(0,10);
+    localStorage.setItem('task_done_n3grammar_' + _today, '1');
     app.innerHTML = '<div class="card"><h2>🎉 <ruby>完了<rt>かんりょう</rt></ruby>！</h2><p>全問終わりました！</p>'+
       '<button class="btn btn-primary btn-block" onclick="renderHome()" style="margin-top:12px">ホームへ</button></div>';
     return;
