@@ -53,6 +53,19 @@ ruby rt { font-size: 0.6em; color: #4361ee; }
 .listen-count { text-align: center; font-size: 13px; color: #e63946; margin: 8px 0; }
 .transcript { margin-top: 16px; padding: 14px; background: #f0f3ff; border-radius: 10px; font-size: 14px; line-height: 2; }
 .scene-tag { display: inline-block; padding: 4px 10px; background: #fff3e0; color: #e65100; border-radius: 4px; font-size: 12px; margin: 4px; }
+
+/* Sync modal */
+.sync-btn{position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:#4361ee;color:#fff;border:none;font-size:22px;box-shadow:0 2px 12px rgba(67,97,238,.4);z-index:999;cursor:pointer}
+.sync-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.sync-modal.show{display:flex}
+.sync-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:360px;max-height:80vh;overflow-y:auto}
+.sync-box h3{margin-bottom:16px;font-size:16px}
+.sync-box textarea{width:100%;height:120px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:12px;margin:8px 0}
+.sync-box .btn{display:block;width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin:6px 0}
+.sync-box .btn-export{background:#4361ee;color:#fff}
+.sync-box .btn-import{background:#2ec4b6;color:#fff}
+.sync-box .btn-close{background:#eee;color:#333}
+.sync-msg{text-align:center;padding:8px;font-size:13px;color:#2ec4b6;display:none}
 </style>
 </head>
 <body>
@@ -354,6 +367,38 @@ function answerListening(qi, oi) {
 // Init voices
 if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = () => {};
 render();
+
+// ============ 跨设备同步 ============
+function exportData() {
+  const keys = Object.keys(localStorage);
+  const data = {};
+  keys.forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
+  const json = JSON.stringify(data);
+  const ta = document.getElementById('syncData');
+  ta.value = json;
+  ta.select();
+  try { navigator.clipboard.writeText(json); showSyncMsg('✅ 已复制到剪贴板！粘贴到另一台设备导入即可'); } 
+  catch(e) { showSyncMsg('⬆️ 请手动全选复制上面的文本'); }
+}
+function importData() {
+  const raw = document.getElementById('syncData').value.trim();
+  if (!raw) { showSyncMsg('❌ 请先粘贴数据'); return; }
+  try {
+    const data = JSON.parse(raw);
+    let count = 0;
+    for (const [k, v] of Object.entries(data)) {
+      localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+      count++;
+    }
+    showSyncMsg('✅ 导入成功！共 ' + count + ' 条数据，刷新页面生效');
+    setTimeout(() => location.reload(), 1500);
+  } catch(e) { showSyncMsg('❌ 数据格式错误，请检查'); }
+}
+function showSyncMsg(msg) {
+  const el = document.getElementById('syncMsg');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
 </script>
 </body>
 </html>
