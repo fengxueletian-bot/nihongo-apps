@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="google" content="notranslate">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>毎日復習 - Daily Review</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:linear-gradient(135deg,#4361ee,#3a0ca3);color:#fff;padding:16px 20px;text-align:center}
+.header h1{font-size:20px;margin-bottom:4px}
+.header .sub{font-size:12px;opacity:.8}
+.stats-bar{display:flex;justify-content:space-around;background:#fff;padding:12px;margin:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.stat{text-align:center}
+.stat .num{font-size:22px;font-weight:700;color:#4361ee}
+.stat .label{font-size:11px;color:#888}
+.tabs{display:flex;gap:6px;padding:0 12px;overflow-x:auto;margin-bottom:12px}
+.tab{padding:8px 14px;border-radius:20px;border:1.5px solid #4361ee;background:#fff;color:#4361ee;font-size:13px;white-space:nowrap;cursor:pointer}
+.tab.active{background:#4361ee;color:#fff}
+.card{background:#fff;margin:0 12px 12px;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hidden{display:none!important}
+.day-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.day-chip{padding:6px 12px;border-radius:16px;border:1.5px solid #ddd;font-size:12px;cursor:pointer;background:#fff}
+.day-chip.active{border-color:#4361ee;background:#eef;color:#4361ee;font-weight:600}
+.day-chip .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
+.dot-new{background:#e63946}
+.dot-review{background:#2ec4b6}
+.dot-mastered{background:#a8dadc}
+.grammar-card{border:1px solid #eee;border-radius:10px;padding:14px;margin-bottom:10px}
+.grammar-card h4{font-size:15px;color:#333;margin-bottom:6px}
+.grammar-card .meaning{font-size:13px;color:#666;margin-bottom:8px}
+.grammar-card .example{background:#f8f9fa;padding:10px;border-radius:8px;font-size:14px;line-height:1.8}
+.grammar-card .example-cn{font-size:12px;color:#888;margin-top:4px}
+.grammar-card .tags{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.grammar-card .tag{font-size:10px;padding:2px 8px;border-radius:10px;background:#eef;color:#4361ee}
+.quiz-q{font-size:15px;line-height:1.8;margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:10px}
+.quiz-q .blank{color:#e63946;font-weight:700;border-bottom:2px dashed #e63946;padding:0 4px}
+.quiz-option{padding:12px 16px;border:1.5px solid #ddd;border-radius:10px;margin-bottom:8px;font-size:14px;cursor:pointer;transition:all .2s}
+.quiz-option:active{transform:scale(.98)}
+.quiz-option.correct{border-color:#2ec4b6;background:#e8faf8;color:#2ec4b6}
+.quiz-option.wrong{border-color:#e63946;background:#fef0f0;color:#e63946}
+.explanation{background:#fffde7;border:1px solid #fff9c4;border-radius:10px;padding:14px;margin-top:12px;font-size:13px;line-height:1.7}
+.explanation .point{color:#e63946;font-weight:600}
+.explanation .rule{color:#4361ee}
+.nav-arrows{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;cursor:pointer}
+.btn-primary{background:#4361ee;color:#fff}
+.btn-outline{background:#fff;border:1.5px solid #ddd;color:#333}
+.btn-sm{padding:6px 12px;font-size:12px}
+.counter{font-size:13px;color:#888}
+.progress-bar{height:4px;background:#eee;border-radius:2px;margin-bottom:16px}
+.progress-bar .fill{height:100%;background:#4361ee;border-radius:2px;transition:width .3s}
+.strength-bar{display:flex;gap:2px;margin-top:6px}
+.strength-bar .block{width:16px;height:6px;border-radius:2px;background:#eee}
+.strength-bar .block.filled{background:#2ec4b6}
+.strength-bar .block.weak{background:#e63946}
+.empty-state{text-align:center;padding:40px 20px;color:#888}
+.empty-state .emoji{font-size:48px;margin-bottom:12px}
+.review-summary{text-align:center;padding:20px}
+.review-summary h3{color:#2ec4b6;margin-bottom:8px}
+.review-summary .score{font-size:36px;font-weight:700;color:#4361ee}
+.mastery-list{margin-top:12px}
+.mastery-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.mastery-item .name{font-size:14px}
+.mastery-item .level{font-size:12px;padding:2px 8px;border-radius:10px}
+.level-new{background:#fef0f0;color:#e63946}
+.level-learning{background:#fff3cd;color:#856404}
+.level-good{background:#d4edda;color:#155724}
+.level-mastered{background:#cce5ff;color:#004085}
+/* Sync modal */
+.sync-btn{position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:#4361ee;color:#fff;border:none;font-size:22px;box-shadow:0 2px 12px rgba(67,97,238,.4);z-index:999;cursor:pointer}
+.sync-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.sync-modal.show{display:flex}
+.sync-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:360px;max-height:80vh;overflow-y:auto}
+.sync-box h3{margin-bottom:16px;font-size:16px}
+.sync-box textarea{width:100%;height:120px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:12px;margin:8px 0}
+.sync-box .sbtn{display:block;width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin:6px 0}
+.sync-box .sbtn-export{background:#4361ee;color:#fff}
+.sync-box .sbtn-import{background:#2ec4b6;color:#fff}
+.sync-box .sbtn-close{background:#eee;color:#333}
+.sync-msg{text-align:center;padding:8px;font-size:13px;color:#2ec4b6;display:none}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📅 毎日復習</h1>
+  <div class="sub">每天学的语法，反复练到掌握</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="num" id="totalGrammar">0</div><div class="label">语法点</div></div>
+  <div class="stat"><div class="num" id="totalQuestions">0</div><div class="label">题目</div></div>
+  <div class="stat"><div class="num" id="masteredCount">0</div><div class="label">已掌握</div></div>
+  <div class="stat"><div class="num" id="accuracy">0%</div><div class="label">正确率</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('study')">📖 学习</div>
+  <div class="tab" onclick="switchTab('quiz')">📝 练习</div>
+  <div class="tab" onclick="switchTab('review')">🔄 复习</div>
+  <div class="tab" onclick="switchTab('mastery')">📊 掌握度</div>
+</div>
+
+<!-- 学习 tab -->
+<div id="tab-study" class="card">
+  <div class="day-selector" id="daySelector"></div>
+  <div id="grammarList"></div>
+</div>
+
+<!-- 练习 tab -->
+<div id="tab-quiz" class="card hidden">
+  <div class="day-selector" id="quizDaySelector"></div>
+  <div class="progress-bar"><div class="fill" id="quizProgress" style="width:0%"></div></div>
+  <div id="quizArea"></div>
+  <div class="nav-arrows" id="quizNav" style="display:none">
+    <button class="btn btn-outline" onclick="prevQuiz()">←</button>
+    <span class="counter" id="quizCounter">1/10</span>
+    <button class="btn btn-primary" onclick="nextQuiz()">下一题 →</button>
+  </div>
+</div>
+
+<!-- 复习 tab -->
+<div id="tab-review" class="card hidden">
+  <p style="font-size:13px;color:#666;margin-bottom:12px">SM-2智能复习：优先复习薄弱语法点</p>
+  <div id="reviewArea"></div>
+  <div class="nav-arrows" id="reviewNav" style="display:none">
+    <button class="btn btn-outline" onclick="prevReviewQ()">←</button>
+    <span class="counter" id="reviewCounter">1/10</span>
+    <button class="btn btn-primary" onclick="nextReviewQ()">下一题 →</button>
+  </div>
+</div>
+
+<!-- 掌握度 tab -->
+<div id="tab-mastery" class="card hidden">
+  <div class="mastery-list" id="masteryList"></div>
+</div>
+
+<button class="sync-btn" onclick="document.getElementById('syncModal').classList.add('show')">🔄</button>
+<div class="sync-modal" id="syncModal">
+<div class="sync-box">
+<h3>📱 跨设备同步</h3>
+<button class="sbtn sbtn-export" onclick="exportData()">📤 导出学习数据</button>
+<div class="sync-msg" id="syncMsg"></div>
+<textarea id="syncData" placeholder="粘贴导出的数据到这里..."></textarea>
+<button class="sbtn sbtn-import" onclick="importData()">📥 导入学习数据</button>
+<button class="sbtn sbtn-close" onclick="document.getElementById('syncModal').classList.remove('show')">关闭</button>
+</div>
+</div>
+
+<script>
+// ============ 每日学习数据 ============
+// 每天学完新语法后，我会在这里追加新的day
+const DAILY_DATA = {
+  "Day1": {
+    date: "2026-04-20",
+    title: "第2課 语法",
+    grammar: [
+      {
+        name: "〜うちに",
+        meaning: "趁着...（在某状态还持续的期间内做某事）",
+        structure: "動詞辞書形/ない形/い形/な形+な/名詞+の ＋ うちに",
+        examples: [
+          { jp: "<ruby>暖<rt>あたた</rt></ruby>かいうちに、<ruby>散歩<rt>さんぽ</rt></ruby>に<ruby>行<rt>い</rt></ruby>こう。", cn: "趁暖和，去散步吧。" },
+          { jp: "<ruby>若<rt>わか</rt></ruby>いうちに、いろいろな<ruby>経験<rt>けいけん</rt></ruby>をしたほうがいい。", cn: "趁年轻，最好多积累各种经验。" }
+        ],
+        keyPoint: "强调「趁现在这个状态还没变化之前」，带有紧迫感",
+        confusion: "vs あいだに：あいだに只表示时间段内，うちに强调「趁还来得及」"
+      },
+      {
+        name: "〜つつ（も）",
+        meaning: "一边...一边... / 虽然...但是...",
+        structure: "動詞ます形 ＋ つつ（も）",
+        examples: [
+          { jp: "<ruby>音楽<rt>おんがく</rt></ruby>を<ruby>聴<rt>き</rt></ruby>きつつ、<ruby>勉強<rt>べんきょう</rt></ruby>する。", cn: "一边听音乐一边学习。" },
+          { jp: "<ruby>体<rt>からだ</rt></ruby>に<ruby>悪<rt>わる</rt></ruby>いと<ruby>知<rt>し</rt></ruby>りつつも、タバコをやめられない。", cn: "虽然知道对身体不好，但还是戒不了烟。" }
+        ],
+        keyPoint: "つつ=同时进行（书面语，相当于ながら）；つつも=转折（=ながらも，100%转折）",
+        confusion: "つつ看语境可能是同时也可能是转折；つつも一定是转折"
+      },
+      {
+        name: "〜ばかりだ",
+        meaning: "一直...（消极方向，越来越糟）",
+        structure: "動詞辞書形 ＋ ばかりだ",
+        examples: [
+          { jp: "<ruby>成績<rt>せいせき</rt></ruby>が<ruby>下<rt>さ</rt></ruby>がるばかりだ。", cn: "成绩一直在下降。" },
+          { jp: "<ruby>物価<rt>ぶっか</rt></ruby>は<ruby>上<rt>あ</rt></ruby>がるばかりで、<ruby>生活<rt>せいかつ</rt></ruby>が<ruby>苦<rt>くる</rt></ruby>しい。", cn: "物价一直上涨，生活困难。" }
+        ],
+        keyPoint: "只用于消极、无奈的变化方向",
+        confusion: "vs 一方だ：一方だ中性客观（可好可坏），ばかりだ带有无奈和消极情绪"
+      },
+      {
+        name: "〜一方だ（いっぽうだ）",
+        meaning: "一直...（持续单方向变化，中性客观）",
+        structure: "動詞辞書形 ＋ 一方だ",
+        examples: [
+          { jp: "<ruby>人口<rt>じんこう</rt></ruby>は<ruby>増<rt>ふ</rt></ruby>える<ruby>一方<rt>いっぽう</rt></ruby>だ。", cn: "人口一直在增加。" },
+          { jp: "<ruby>日本語<rt>にほんご</rt></ruby>の<ruby>力<rt>ちから</rt></ruby>が<ruby>伸<rt>の</rt></ruby>びる<ruby>一方<rt>いっぽう</rt></ruby>だ。", cn: "日语能力一直在提升。" }
+        ],
+        keyPoint: "中性客观，不带情绪，只描述持续变化的事实",
+        confusion: "vs ばかりだ：ばかりだ消极无奈，一方だ中性客观"
+      },
+      {
+        name: "〜ようとしたところに",
+        meaning: "正要...的时候（突然发生意外）",
+        structure: "動詞意志形 ＋ としたところに",
+        examples: [
+          { jp: "<ruby>出<rt>で</rt></ruby>かけようとしたところに、<ruby>友達<rt>ともだち</rt></ruby>が<ruby>来<rt>き</rt></ruby>た。", cn: "正要出门的时候，朋友来了。" },
+          { jp: "<ruby>寝<rt>ね</rt></ruby>ようとしたところに、<ruby>電話<rt>でんわ</rt></ruby>が<ruby>鳴<rt>な</rt></ruby>った。", cn: "正要睡觉的时候，电话响了。" }
+        ],
+        keyPoint: "前面必须是意志动词的意志形，后面是意外事件，前后时态一致",
+        confusion: "注意：前后时态必须一致（都用过去或都用非过去）"
+      }
+    ],
+    questions: [
+      { q: "<ruby>暖<rt>あたた</rt></ruby>かい＿＿＿、<ruby>散歩<rt>さんぽ</rt></ruby>に<ruby>行<rt>い</rt></ruby>きましょう。", options: ["あいだに","うちに","ところに","ために"], answer: 1, grammar: "〜うちに", explanation: "【考点】うちに vs あいだに\n【正解】うちに：强调趁暖和还没变冷，有紧迫感\n【易错】あいだに只表示时间段内，不强调「趁现在」的语气" },
+      { q: "<ruby>体<rt>からだ</rt></ruby>に<ruby>悪<rt>わる</rt></ruby>いと<ruby>知<rt>し</rt></ruby>り＿＿＿、お<ruby>酒<rt>さけ</rt></ruby>をやめられない。", options: ["つつも","ながら","うちに","ために"], answer: 0, grammar: "〜つつ（も）", explanation: "【考点】つつも的转折用法\n【正解】つつも：虽然知道不好但还是做了，100%转折\n【易错】ながら也能表转折但口语化，つつも是书面语" },
+      { q: "<ruby>最近<rt>さいきん</rt></ruby>、<ruby>物価<rt>ぶっか</rt></ruby>が<ruby>上<rt>あ</rt></ruby>がる＿＿＿で、<ruby>生活<rt>せいかつ</rt></ruby>が<ruby>大変<rt>たいへん</rt></ruby>だ。", options: ["一方だ","ばかりだ","ようだ","ことだ"], answer: 1, grammar: "〜ばかりだ", explanation: "【考点】ばかりだ vs 一方だ\n【正解】ばかりだ：物价上涨导致生活困难，语气消极无奈\n【易错】一方だ也表持续变化，但中性客观，这里有「大変だ」说明是消极语境" },
+      { q: "<ruby>日本<rt>にほん</rt></ruby>の<ruby>人口<rt>じんこう</rt></ruby>は<ruby>減<rt>へ</rt></ruby>る＿＿＿だ。", options: ["ばかり","一方","つつ","うちに"], answer: 1, grammar: "〜一方だ", explanation: "【考点】一方だ的用法\n【正解】一方だ：客观描述人口持续减少的趋势\n【易错】ばかりだ也可以用但会带有无奈感，这里是客观陈述" },
+      { q: "<ruby>出<rt>で</rt></ruby>かけ＿＿＿としたところに、<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>り<ruby>出<rt>だ</rt></ruby>した。", options: ["よう","たい","ない","る"], answer: 0, grammar: "〜ようとしたところに", explanation: "【考点】ようとしたところに的接续\n【正解】よう：意志形＋としたところに，出かける→出かけよう\n【易错】必须是意志形，不能用たい形或ない形" },
+      { q: "<ruby>子<rt>こ</rt></ruby>どもが<ruby>寝<rt>ね</rt></ruby>ている＿＿＿、<ruby>掃除<rt>そうじ</rt></ruby>をしてしまおう。", options: ["うちに","ところに","ばかりに","一方で"], answer: 0, grammar: "〜うちに", explanation: "【考点】うちに的时机用法\n【正解】うちに：趁孩子还在睡觉（这个状态还持续时），赶紧打扫\n【易错】ところに表示时间点而非时间段" },
+      { q: "<ruby>環境<rt>かんきょう</rt></ruby><ruby>問題<rt>もんだい</rt></ruby>は<ruby>悪化<rt>あっか</rt></ruby>する＿＿＿で、<ruby>解決<rt>かいけつ</rt></ruby>の<ruby>見通<rt>みとお</rt></ruby>しが<ruby>立<rt>た</rt></ruby>たない。", options: ["一方だ","ばかりだ","うちだ","ところだ"], answer: 1, grammar: "〜ばかりだ", explanation: "【考点】ばかりだ的消极用法\n【正解】ばかりだ：环境恶化+看不到解决希望=消极无奈\n【易错】一方だ太客观，这里有无奈的语气更适合ばかりだ" },
+      { q: "ダイエットしようと<ruby>思<rt>おも</rt></ruby>い＿＿＿、つい<ruby>食<rt>た</rt></ruby>べすぎてしまう。", options: ["つつも","ながらも","うちに","ところに"], answer: 0, grammar: "〜つつ（も）", explanation: "【考点】つつも的书面语转折\n【正解】つつも：虽然想减肥但还是吃太多，书面语的转折表达\n【易错】ながらも意思相同但更口语化" },
+      { q: "<ruby>電車<rt>でんしゃ</rt></ruby>に＿＿＿としたところに、ドアが<ruby>閉<rt>し</rt></ruby>まった。", options: ["乗ろう","乗る","乗り","乗って"], answer: 0, grammar: "〜ようとしたところに", explanation: "【考点】意志形+としたところに\n【正解】乗ろう：乗る（一類動詞）的意志形\n【易错】一類動詞意志形：語幹+おう段" },
+      { q: "<ruby>若<rt>わか</rt></ruby>い＿＿＿に、たくさん<ruby>旅行<rt>りょこう</rt></ruby>したい。", options: ["うち","あいだ","ところ","一方"], answer: 0, grammar: "〜うちに", explanation: "【考点】い形容词+うちに\n【正解】うちに：趁年轻（い形容词直接+うちに）\n【易错】あいだに也能用但缺少「趁现在还来得及」的紧迫感" },
+      { q: "テクノロジーの<ruby>進歩<rt>しんぽ</rt></ruby>は<ruby>速<rt>はや</rt></ruby>くなる＿＿＿だ。", options: ["一方","ばかり","ところ","うち"], answer: 0, grammar: "〜一方だ", explanation: "【考点】一方だ的客观描述\n【正解】一方だ：技术进步是中性/积极的事实描述\n【易错】ばかりだ用于消极方向，技术进步不适合" },
+      { q: "<ruby>彼<rt>かれ</rt></ruby>は<ruby>反省<rt>はんせい</rt></ruby>し＿＿＿、<ruby>同<rt>おな</rt></ruby>じミスを<ruby>繰<rt>く</rt></ruby>り<ruby>返<rt>かえ</rt></ruby>す。", options: ["つつも","つつ","うちに","一方で"], answer: 0, grammar: "〜つつ（も）", explanation: "【考点】つつも=虽然...但是...\n【正解】つつも：虽然反省了但还是重复同样的错误\n【易错】つつ（不带も）可以是同时进行的意思，加了も一定是转折" }
+    ]
+  }
+};
+
+// ============ 状态管理 ============
+const STORAGE_KEY = 'daily_review_v1';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+if (!state.grammarStatus) state.grammarStatus = {};
+if (!state.questionLog) state.questionLog = {};
+if (!state.totalCorrect) state.totalCorrect = 0;
+if (!state.totalAttempts) state.totalAttempts = 0;
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+// SM-2
+function sm2(item, quality) {
+  if (!item.ef) item.ef = 2.5;
+  if (!item.interval) item.interval = 0;
+  if (!item.reps) item.reps = 0;
+  if (quality >= 3) {
+    if (item.reps === 0) item.interval = 1;
+    else if (item.reps === 1) item.interval = 6;
+    else item.interval = Math.round(item.interval * item.ef);
+    item.reps++;
+  } else { item.reps = 0; item.interval = 1; }
+  item.ef = Math.max(1.3, item.ef + (0.1 - (5-quality)*(0.08+(5-quality)*0.02)));
+  item.nextReview = Date.now() + item.interval * 24*60*60*1000;
+  return item;
+}
+
+// ============ 初始化 ============
+const days = Object.keys(DAILY_DATA);
+let currentDay = days[days.length - 1];
+let quizQuestions = [], quizIdx = 0, quizScore = 0, quizAnswered = false;
+let reviewQuestions = [], reviewIdx = 0, reviewScore = 0, reviewAnswered = false;
+
+function init() {
+  updateStats();
+  renderDaySelector('daySelector', 'study');
+  renderDaySelector('quizDaySelector', 'quiz');
+  renderGrammarList();
+}
+
+function updateStats() {
+  let totalG = 0, totalQ = 0, mastered = 0;
+  for (const day of days) {
+    totalG += DAILY_DATA[day].grammar.length;
+    totalQ += DAILY_DATA[day].questions.length;
+  }
+  for (const [k, v] of Object.entries(state.grammarStatus)) {
+    if (v.interval >= 6) mastered++;
+  }
+  document.getElementById('totalGrammar').textContent = totalG;
+  document.getElementById('totalQuestions').textContent = totalQ;
+  document.getElementById('masteredCount').textContent = mastered;
+  document.getElementById('accuracy').textContent = state.totalAttempts > 0 ? Math.round(state.totalCorrect/state.totalAttempts*100)+'%' : '0%';
+}
+
+function renderDaySelector(containerId, mode) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = days.map(d => {
+    const data = DAILY_DATA[d];
+    return `<div class="day-chip ${d===currentDay?'active':''}" onclick="selectDay('${d}','${mode}')">${d}<br><span style="font-size:10px;color:#888">${data.title}</span></div>`;
+  }).join('') + `<div class="day-chip" onclick="selectDay('all','${mode}')" style="${currentDay==='all'?'border-color:#4361ee;background:#eef':''}">全部</div>`;
+}
+
+function selectDay(day, mode) {
+  currentDay = day;
+  renderDaySelector('daySelector', 'study');
+  renderDaySelector('quizDaySelector', 'quiz');
+  if (mode === 'study') renderGrammarList();
+  if (mode === 'quiz') startQuiz();
+}
+
+// ============ 学习 tab ============
+function renderGrammarList() {
+  const el = document.getElementById('grammarList');
+  const grammarItems = currentDay === 'all' ? days.flatMap(d => DAILY_DATA[d].grammar) : DAILY_DATA[currentDay].grammar;
+  
+  if (grammarItems.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">📚</div><p>还没有学习内容</p></div>';
+    return;
+  }
+  
+  el.innerHTML = grammarItems.map(g => {
+    const status = state.grammarStatus[g.name] || {};
+    const level = !status.interval ? 'new' : status.interval >= 6 ? 'mastered' : status.interval >= 2 ? 'good' : 'learning';
+    const levelText = {new:'新学',learning:'学习中',good:'熟悉',mastered:'已掌握'}[level];
+    
+    return `<div class="grammar-card">
+      <h4>${g.name} <span class="level level-${level}" style="font-size:11px">${levelText}</span></h4>
+      <div class="meaning">${g.meaning}</div>
+      <div style="font-size:12px;color:#4361ee;margin-bottom:6px">接续：${g.structure}</div>
+      ${g.examples.map(ex => `<div class="example">${ex.jp}<div class="example-cn">${ex.cn}</div></div>`).join('')}
+      <div style="margin-top:8px;font-size:12px"><span style="color:#e63946">⚠ 要点：</span>${g.keyPoint}</div>
+      ${g.confusion ? `<div style="margin-top:4px;font-size:12px"><span style="color:#4361ee">🔀 辨析：</span>${g.confusion}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ============ 练习 tab ============
+function startQuiz() {
+  const qs = currentDay === 'all' ? days.flatMap(d => DAILY_DATA[d].questions) : DAILY_DATA[currentDay].questions;
+  quizQuestions = [...qs].sort(() => Math.random() - 0.5);
+  quizIdx = 0; quizScore = 0;
+  showQuizQ();
+}
+
+function showQuizQ() {
+  const area = document.getElementById('quizArea');
+  const nav = document.getElementById('quizNav');
+  
+  if (quizIdx >= quizQuestions.length) {
+    area.innerHTML = `<div class="review-summary"><h3>练习完成！</h3><div class="score">${quizScore}/${quizQuestions.length}</div><p style="margin-top:8px;color:#888">正确率 ${Math.round(quizScore/quizQuestions.length*100)}%</p><button class="btn btn-primary" style="margin-top:16px" onclick="startQuiz()">再来一轮</button></div>`;
+    nav.style.display = 'none';
+    return;
+  }
+  
+  const q = quizQuestions[quizIdx];
+  area.innerHTML = `<div class="quiz-q">${q.q.replace('＿＿＿', '<span class="blank">＿＿＿</span>')}</div>
+    <div id="quizOptions">${q.options.map((o,i) => `<div class="quiz-option" onclick="answerQuiz(${i})">${o}</div>`).join('')}</div>
+    <div id="quizExplanation"></div>`;
+  
+  nav.style.display = 'flex';
+  document.getElementById('quizCounter').textContent = `${quizIdx+1}/${quizQuestions.length}`;
+  document.getElementById('quizProgress').style.width = (quizIdx/quizQuestions.length*100)+'%';
+  quizAnswered = false;
+}
+
+function answerQuiz(idx) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const q = quizQuestions[quizIdx];
+  const opts = document.querySelectorAll('#quizOptions .quiz-option');
+  opts.forEach((o, i) => {
+    o.style.pointerEvents = 'none';
+    if (i === q.answer) o.classList.add('correct');
+    if (i === idx && idx !== q.answer) o.classList.add('wrong');
+  });
+  
+  const correct = idx === q.answer;
+  if (correct) quizScore++;
+  state.totalAttempts++;
+  if (correct) state.totalCorrect++;
+  
+  // Update SM-2
+  if (!state.grammarStatus[q.grammar]) state.grammarStatus[q.grammar] = {};
+  sm2(state.grammarStatus[q.grammar], correct ? 4 : 1);
+  saveState();
+  updateStats();
+  
+  // Show explanation
+  document.getElementById('quizExplanation').innerHTML = `<div class="explanation">
+    <div style="margin-bottom:6px"><strong>${correct ? '✅ 正解！' : '❌ 答错了'}</strong> → 考查：<span class="point">${q.grammar}</span></div>
+    <div style="white-space:pre-line">${q.explanation}</div>
+  </div>`;
+}
+
+function nextQuiz() { if (quizAnswered || quizIdx >= quizQuestions.length) { quizIdx++; showQuizQ(); } }
+function prevQuiz() { if (quizIdx > 0) { quizIdx--; showQuizQ(); } }
+
+// ============ 复习 tab ============
+function startReview() {
+  const now = Date.now();
+  const needReview = [];
+  
+  for (const day of days) {
+    for (const q of DAILY_DATA[day].questions) {
+      const gs = state.grammarStatus[q.grammar];
+      if (gs && gs.nextReview && gs.nextReview <= now) {
+        needReview.push({...q, urgency: now - gs.nextReview});
+      }
+    }
+  }
+  
+  // Also add questions for grammar never attempted
+  for (const day of days) {
+    for (const q of DAILY_DATA[day].questions) {
+      if (!state.grammarStatus[q.grammar]) {
+        needReview.push({...q, urgency: Infinity});
+      }
+    }
+  }
+  
+  // Deduplicate and sort by urgency
+  const seen = new Set();
+  reviewQuestions = needReview.filter(q => {
+    const key = q.q;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a,b) => b.urgency - a.urgency).slice(0, 20);
+  
+  reviewIdx = 0; reviewScore = 0;
+  showReviewQ();
+}
+
+function showReviewQ() {
+  const area = document.getElementById('reviewArea');
+  const nav = document.getElementById('reviewNav');
+  
+  if (reviewQuestions.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="emoji">🎉</div><p>暂无需要复习的内容！</p><p style="font-size:12px;color:#888;margin-top:8px">继续学习新内容，或明天再来复习</p></div>';
+    nav.style.display = 'none';
+    return;
+  }
+  
+  if (reviewIdx >= reviewQuestions.length) {
+    area.innerHTML = `<div class="review-summary"><h3>复习完成！</h3><div class="score">${reviewScore}/${reviewQuestions.length}</div><button class="btn btn-primary" style="margin-top:16px" onclick="startReview()">继续复习</button></div>`;
+    nav.style.display = 'none';
+    return;
+  }
+  
+  const q = reviewQuestions[reviewIdx];
+  area.innerHTML = `<div class="quiz-q">${q.q.replace('＿＿＿', '<span class="blank">＿＿＿</span>')}</div>
+    <div id="reviewOptions">${q.options.map((o,i) => `<div class="quiz-option" onclick="answerReview(${i})">${o}</div>`).join('')}</div>
+    <div id="reviewExplanation"></div>`;
+  
+  nav.style.display = 'flex';
+  document.getElementById('reviewCounter').textContent = `${reviewIdx+1}/${reviewQuestions.length}`;
+  reviewAnswered = false;
+}
+
+function answerReview(idx) {
+  if (reviewAnswered) return;
+  reviewAnswered = true;
+  const q = reviewQuestions[reviewIdx];
+  const opts = document.querySelectorAll('#reviewOptions .quiz-option');
+  opts.forEach((o, i) => {
+    o.style.pointerEvents = 'none';
+    if (i === q.answer) o.classList.add('correct');
+    if (i === idx && idx !== q.answer) o.classList.add('wrong');
+  });
+  
+  const correct = idx === q.answer;
+  if (correct) reviewScore++;
+  state.totalAttempts++;
+  if (correct) state.totalCorrect++;
+  
+  if (!state.grammarStatus[q.grammar]) state.grammarStatus[q.grammar] = {};
+  sm2(state.grammarStatus[q.grammar], correct ? 4 : 1);
+  saveState();
+  updateStats();
+  
+  document.getElementById('reviewExplanation').innerHTML = `<div class="explanation">
+    <div style="margin-bottom:6px"><strong>${correct ? '✅ 正解！' : '❌ 答错了'}</strong> → <span class="point">${q.grammar}</span></div>
+    <div style="white-space:pre-line">${q.explanation}</div>
+  </div>`;
+}
+
+function nextReviewQ() { if (reviewAnswered || reviewIdx >= reviewQuestions.length) { reviewIdx++; showReviewQ(); } }
+function prevReviewQ() { if (reviewIdx > 0) { reviewIdx--; showReviewQ(); } }
+
+// ============ 掌握度 tab ============
+function renderMastery() {
+  const el = document.getElementById('masteryList');
+  const allGrammar = days.flatMap(d => DAILY_DATA[d].grammar);
+  
+  const items = allGrammar.map(g => {
+    const s = state.grammarStatus[g.name] || {};
+    const level = !s.interval ? 'new' : s.interval >= 6 ? 'mastered' : s.interval >= 2 ? 'good' : 'learning';
+    const levelText = {new:'未练习',learning:'学习中',good:'熟悉',mastered:'已掌握'}[level];
+    return { name: g.name, meaning: g.meaning, level, levelText, interval: s.interval || 0 };
+  });
+  
+  // Sort: weak first
+  items.sort((a,b) => a.interval - b.interval);
+  
+  el.innerHTML = items.map(it => `<div class="mastery-item">
+    <div><div class="name">${it.name}</div><div style="font-size:11px;color:#888">${it.meaning}</div></div>
+    <span class="level level-${it.level}">${it.levelText}</span>
+  </div>`).join('');
+}
+
+// ============ Tab切换 ============
+function switchTab(tab) {
+  ['study','quiz','review','mastery'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['study','quiz','review','mastery'][i] === tab);
+  });
+  if (tab === 'quiz') startQuiz();
+  if (tab === 'review') startReview();
+  if (tab === 'mastery') renderMastery();
+}
+
+// ============ 同步 ============
+function exportData() {
+  const keys = Object.keys(localStorage);
+  const data = {};
+  keys.forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
+  const json = JSON.stringify(data);
+  const ta = document.getElementById('syncData');
+  ta.value = json; ta.select();
+  try { navigator.clipboard.writeText(json); showSyncMsg('✅ 已复制到剪贴板！'); } 
+  catch(e) { showSyncMsg('⬆️ 请手动全选复制'); }
+}
+function importData() {
+  const raw = document.getElementById('syncData').value.trim();
+  if (!raw) { showSyncMsg('❌ 请先粘贴数据'); return; }
+  try {
+    const data = JSON.parse(raw);
+    for (const [k, v] of Object.entries(data)) localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+    showSyncMsg('✅ 导入成功！刷新中...');
+    setTimeout(() => location.reload(), 1500);
+  } catch(e) { showSyncMsg('❌ 数据格式错误'); }
+}
+function showSyncMsg(msg) {
+  const el = document.getElementById('syncMsg');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+init();
+</script>
+</body>
+</html>
