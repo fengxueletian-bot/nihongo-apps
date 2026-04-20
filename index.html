@@ -57,6 +57,17 @@ h1{text-align:center;color:#333;margin:20px 0 8px;font-size:22px}
     <span id="taskProgress" style="font-size:13px;color:#4361ee;font-weight:600">0/6 完成</span>
     <div style="height:4px;background:#eee;border-radius:2px;margin-top:6px"><div id="taskBar" style="height:100%;background:#4361ee;border-radius:2px;width:0%;transition:width .3s"></div></div>
   </div>
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;color:#333">⏱️ 今日学习</span>
+      <span id="timerDisplay" style="font-size:18px;font-weight:700;color:#4361ee;font-family:monospace">00:00:00</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:center">
+      <button onclick="toggleTimer()" id="timerBtn" style="padding:8px 20px;border-radius:8px;border:none;background:#4361ee;color:#fff;font-size:13px;cursor:pointer">▶ 开始计时</button>
+      <button onclick="resetTimer()" style="padding:8px 14px;border-radius:8px;border:1.5px solid #ddd;background:#fff;color:#333;font-size:13px;cursor:pointer">重置</button>
+    </div>
+    <div id="historyArea" style="margin-top:12px"></div>
+  </div>
 </div>
 <script>
 (function(){
@@ -81,6 +92,91 @@ h1{text-align:center;color:#333;margin:20px 0 8px;font-size:22px}
   }
   updateProgress();
 })();
+
+// ============ 学习计时器 ============
+var timerInterval = null, timerRunning = false;
+var timerKey = 'study_timer_' + new Date().toISOString().slice(0,10);
+var elapsed = parseInt(localStorage.getItem(timerKey) || '0');
+var lastTick = null;
+
+function updateTimerDisplay() {
+  const h = Math.floor(elapsed/3600);
+  const m = Math.floor((elapsed%3600)/60);
+  const s = elapsed%60;
+  document.getElementById('timerDisplay').textContent = 
+    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerBtn').textContent = '▶ 继续';
+    document.getElementById('timerBtn').style.background = '#2ec4b6';
+    localStorage.setItem(timerKey, String(elapsed));
+  } else {
+    lastTick = Date.now();
+    timerInterval = setInterval(() => {
+      const now = Date.now();
+      elapsed += Math.round((now - lastTick)/1000);
+      lastTick = now;
+      localStorage.setItem(timerKey, String(elapsed));
+      updateTimerDisplay();
+    }, 1000);
+    timerRunning = true;
+    document.getElementById('timerBtn').textContent = '⏸ 暂停';
+    document.getElementById('timerBtn').style.background = '#e63946';
+  }
+}
+
+function resetTimer() {
+  if (timerRunning) { clearInterval(timerInterval); timerRunning = false; }
+  // Save to history before reset
+  if (elapsed > 60) saveTimerHistory();
+  elapsed = 0;
+  localStorage.setItem(timerKey, '0');
+  updateTimerDisplay();
+  document.getElementById('timerBtn').textContent = '▶ 开始计时';
+  document.getElementById('timerBtn').style.background = '#4361ee';
+}
+
+function saveTimerHistory() {
+  const histKey = 'study_history';
+  const hist = JSON.parse(localStorage.getItem(histKey) || '[]');
+  const today = new Date().toISOString().slice(0,10);
+  const existing = hist.find(h => h.date === today);
+  if (existing) { existing.seconds = elapsed; }
+  else { hist.push({date: today, seconds: elapsed}); }
+  // Keep last 30 days
+  while (hist.length > 30) hist.shift();
+  localStorage.setItem(histKey, JSON.stringify(hist));
+}
+
+function renderHistory() {
+  const hist = JSON.parse(localStorage.getItem('study_history') || '[]');
+  const el = document.getElementById('historyArea');
+  if (hist.length === 0) { el.innerHTML = ''; return; }
+  const recent = hist.slice(-7).reverse();
+  el.innerHTML = '<div style="font-size:12px;color:#888;margin-bottom:6px">📊 最近学习记录</div>' +
+    recent.map(h => {
+      const m = Math.round(h.seconds/60);
+      const barW = Math.min(100, m/120*100);
+      return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px"><span style="width:70px;color:#666">'+h.date.slice(5)+'</span><div style="flex:1;height:6px;background:#eee;border-radius:3px"><div style="height:100%;background:#4361ee;border-radius:3px;width:'+barW+'%"></div></div><span style="width:40px;text-align:right;color:#4361ee;font-weight:600">'+m+'分</span></div>';
+    }).join('');
+}
+
+// Init timer
+updateTimerDisplay();
+renderHistory();
+// Auto-save every 30s
+setInterval(() => { if (timerRunning && elapsed > 0) saveTimerHistory(); }, 30000);
+// Save on page hide
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && timerRunning) {
+    localStorage.setItem(timerKey, String(elapsed));
+    saveTimerHistory();
+  }
+});
 </script>
 
 <div class="section"><h2>📅 每日复习</h2></div>
