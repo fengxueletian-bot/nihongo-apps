@@ -23,6 +23,22 @@ h1{text-align:center;color:#333;margin:20px 0 8px;font-size:22px}
 </style>
 </head>
 <body>
+<div id="syncBanner" style="background:#fff3cd;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;max-width:400px;margin-left:auto;margin-right:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:#856404">📱 检测到其他设备有更新数据</span>
+    <button onclick="showSyncPanel()" style="padding:4px 10px;border:none;border-radius:6px;background:#4361ee;color:#fff;font-size:11px;cursor:pointer">同步</button>
+  </div>
+</div>
+<div id="syncPanel" style="display:none;background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;max-width:400px;margin-left:auto;margin-right:auto;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span style="font-size:14px;font-weight:600">📱 数据同步</span>
+    <button onclick="hideSyncPanel()" style="border:none;background:none;font-size:18px;cursor:pointer;color:#888">✕</button>
+  </div>
+  <button onclick="exportAll()" style="display:block;width:100%;padding:10px;border:none;border-radius:8px;background:#4361ee;color:#fff;font-size:13px;cursor:pointer;margin-bottom:6px">📤 导出数据到剪贴板</button>
+  <textarea id="syncAllData" style="width:100%;height:80px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:11px;margin-bottom:6px" placeholder="粘贴其他设备导出的数据..."></textarea>
+  <button onclick="importAll()" style="display:block;width:100%;padding:10px;border:none;border-radius:8px;background:#2ec4b6;color:#fff;font-size:13px;cursor:pointer">📥 导入数据</button>
+  <div id="syncAllMsg" style="text-align:center;padding:6px;font-size:12px;color:#2ec4b6;display:none"></div>
+</div>
 <h1>📚 日本語学習</h1>
 <p class="subtitle">Aya's N2/N3 学習ツール</p>
 
@@ -57,17 +73,14 @@ h1{text-align:center;color:#333;margin:20px 0 8px;font-size:22px}
     <span id="taskProgress" style="font-size:13px;color:#4361ee;font-weight:600">0/6 完成</span>
     <div style="height:4px;background:#eee;border-radius:2px;margin-top:6px"><div id="taskBar" style="height:100%;background:#4361ee;border-radius:2px;width:0%;transition:width .3s"></div></div>
   </div>
-  <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0">
+  <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:13px;color:#333">⏱️ 今日学习</span>
-      <span id="timerDisplay" style="font-size:18px;font-weight:700;color:#4361ee;font-family:monospace">00:00:00</span>
+      <span style="font-size:12px;color:#888">⏱️ 今日学习时长</span>
+      <span id="autoTimer" style="font-size:15px;font-weight:700;color:#4361ee;font-family:monospace">0分</span>
     </div>
-    <div style="display:flex;gap:8px;margin-top:8px;justify-content:center">
-      <button onclick="toggleTimer()" id="timerBtn" style="padding:8px 20px;border-radius:8px;border:none;background:#4361ee;color:#fff;font-size:13px;cursor:pointer">▶ 开始计时</button>
-      <button onclick="resetTimer()" style="padding:8px 14px;border-radius:8px;border:1.5px solid #ddd;background:#fff;color:#333;font-size:13px;cursor:pointer">重置</button>
-    </div>
-    <div id="historyArea" style="margin-top:12px"></div>
+    <div id="weekHistory" style="display:flex;gap:3px;margin-top:8px;align-items:end;height:40px"></div>
   </div>
+  
 </div>
 <script>
 (function(){
@@ -93,90 +106,78 @@ h1{text-align:center;color:#333;margin:20px 0 8px;font-size:22px}
   updateProgress();
 })();
 
-// ============ 学习计时器 ============
-var timerInterval = null, timerRunning = false;
-var timerKey = 'study_timer_' + new Date().toISOString().slice(0,10);
-var elapsed = parseInt(localStorage.getItem(timerKey) || '0');
-var lastTick = null;
-
-function updateTimerDisplay() {
-  const h = Math.floor(elapsed/3600);
-  const m = Math.floor((elapsed%3600)/60);
-  const s = elapsed%60;
-  document.getElementById('timerDisplay').textContent = 
-    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-}
-
-function toggleTimer() {
-  if (timerRunning) {
-    clearInterval(timerInterval);
-    timerRunning = false;
-    document.getElementById('timerBtn').textContent = '▶ 继续';
-    document.getElementById('timerBtn').style.background = '#2ec4b6';
-    localStorage.setItem(timerKey, String(elapsed));
-  } else {
-    lastTick = Date.now();
-    timerInterval = setInterval(() => {
-      const now = Date.now();
-      elapsed += Math.round((now - lastTick)/1000);
-      lastTick = now;
-      localStorage.setItem(timerKey, String(elapsed));
-      updateTimerDisplay();
-    }, 1000);
-    timerRunning = true;
-    document.getElementById('timerBtn').textContent = '⏸ 暂停';
-    document.getElementById('timerBtn').style.background = '#e63946';
-  }
-}
-
-function resetTimer() {
-  if (timerRunning) { clearInterval(timerInterval); timerRunning = false; }
-  // Save to history before reset
-  if (elapsed > 60) saveTimerHistory();
-  elapsed = 0;
-  localStorage.setItem(timerKey, '0');
-  updateTimerDisplay();
-  document.getElementById('timerBtn').textContent = '▶ 开始计时';
-  document.getElementById('timerBtn').style.background = '#4361ee';
-}
-
-function saveTimerHistory() {
-  const histKey = 'study_history';
-  const hist = JSON.parse(localStorage.getItem(histKey) || '[]');
+// ============ 自动计时（基于页面可见时间）============
+(function(){
   const today = new Date().toISOString().slice(0,10);
-  const existing = hist.find(h => h.date === today);
-  if (existing) { existing.seconds = elapsed; }
-  else { hist.push({date: today, seconds: elapsed}); }
-  // Keep last 30 days
-  while (hist.length > 30) hist.shift();
-  localStorage.setItem(histKey, JSON.stringify(hist));
-}
-
-function renderHistory() {
-  const hist = JSON.parse(localStorage.getItem('study_history') || '[]');
-  const el = document.getElementById('historyArea');
-  if (hist.length === 0) { el.innerHTML = ''; return; }
-  const recent = hist.slice(-7).reverse();
-  el.innerHTML = '<div style="font-size:12px;color:#888;margin-bottom:6px">📊 最近学习记录</div>' +
-    recent.map(h => {
-      const m = Math.round(h.seconds/60);
-      const barW = Math.min(100, m/120*100);
-      return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px"><span style="width:70px;color:#666">'+h.date.slice(5)+'</span><div style="flex:1;height:6px;background:#eee;border-radius:3px"><div style="height:100%;background:#4361ee;border-radius:3px;width:'+barW+'%"></div></div><span style="width:40px;text-align:right;color:#4361ee;font-weight:600">'+m+'分</span></div>';
-    }).join('');
-}
-
-// Init timer
-updateTimerDisplay();
-renderHistory();
-// Auto-save every 30s
-setInterval(() => { if (timerRunning && elapsed > 0) saveTimerHistory(); }, 30000);
-// Save on page hide
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && timerRunning) {
-    localStorage.setItem(timerKey, String(elapsed));
-    saveTimerHistory();
+  const tKey = 'auto_time_' + today;
+  let seconds = parseInt(localStorage.getItem(tKey) || '0');
+  let lastVisible = document.hidden ? null : Date.now();
+  
+  // Track visibility
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (lastVisible) { seconds += Math.round((Date.now()-lastVisible)/1000); localStorage.setItem(tKey,String(seconds)); updateAutoTimer(); }
+      lastVisible = null;
+    } else { lastVisible = Date.now(); }
+  });
+  // Periodic save
+  setInterval(() => {
+    if (lastVisible) { seconds += Math.round((Date.now()-lastVisible)/1000); lastVisible = Date.now(); localStorage.setItem(tKey,String(seconds)); updateAutoTimer(); }
+  }, 60000);
+  
+  function updateAutoTimer() {
+    const m = Math.round(seconds/60);
+    const el = document.getElementById('autoTimer');
+    if (el) el.textContent = m >= 60 ? Math.floor(m/60)+'时'+m%60+'分' : m+'分';
   }
-});
+  updateAutoTimer();
+  
+  // Week history bars
+  function renderWeekBars() {
+    const el = document.getElementById('weekHistory');
+    if (!el) return;
+    const bars = [];
+    for (let i=6;i>=0;i--) {
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const dk = 'auto_time_' + d.toISOString().slice(0,10);
+      const s = parseInt(localStorage.getItem(dk)||'0');
+      const m = Math.round(s/60);
+      const h = Math.max(4, Math.min(36, m/120*36));
+      const isToday = i===0;
+      const dayNames = ['日','月','火','水','木','金','土'];
+      bars.push('<div style="display:flex;flex-direction:column;align-items:center;flex:1"><div style="width:100%;height:'+h+'px;background:'+(isToday?'#4361ee':'#c5cae9')+';border-radius:3px"></div><div style="font-size:9px;color:#888;margin-top:2px">'+dayNames[d.getDay()]+'</div><div style="font-size:9px;color:#4361ee">'+(m>0?m+'m':'')+'</div></div>');
+    }
+    el.innerHTML = bars.join('');
+  }
+  renderWeekBars();
+})();
+
+// ============ 数据同步 ============
+function showSyncPanel(){document.getElementById('syncPanel').style.display='block';document.getElementById('syncBanner').style.display='none';}
+function hideSyncPanel(){document.getElementById('syncPanel').style.display='none';}
+function exportAll(){
+  const data={};
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){data[k]=localStorage.getItem(k);}}
+  const json=JSON.stringify(data);
+  document.getElementById('syncAllData').value=json;
+  try{navigator.clipboard.writeText(json);showAllMsg('✅ 已复制！粘贴到另一台设备导入');}
+  catch(e){document.getElementById('syncAllData').select();showAllMsg('⬆️ 请手动全选复制');}
+}
+function importAll(){
+  const raw=document.getElementById('syncAllData').value.trim();
+  if(!raw){showAllMsg('❌ 请先粘贴数据');return;}
+  try{const data=JSON.parse(raw);let c=0;for(const[k,v]of Object.entries(data)){localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));c++;}
+  showAllMsg('✅ 导入'+c+'条数据，刷新中...');setTimeout(()=>location.reload(),1500);}catch(e){showAllMsg('❌ 格式错误');}
+}
+function showAllMsg(msg){const el=document.getElementById('syncAllMsg');el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}
+// Show sync button in header for easy access
+(function(){
+  // Check if this might be a new device (no data)
+  const hasData = localStorage.length > 3;
+  if (!hasData) document.getElementById('syncBanner').style.display='block';
+})();
+
+
 </script>
 
 <div class="section"><h2>📅 每日复习</h2></div>
@@ -204,40 +205,6 @@ document.addEventListener('visibilitychange', () => {
   <a class="card" href="N2聴解マスター.html"><div class="emoji">👂</div><div class="name">N2聴解</div><div class="desc">听力训练</div></a>
 </div>
 
-<div style="max-width:400px;margin:20px auto;padding:0 12px">
-  <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)">
-    <h3 style="font-size:14px;margin-bottom:12px;color:#333">📱 跨设备数据同步</h3>
-    <p style="font-size:11px;color:#888;margin-bottom:12px">导出所有小程序的学习进度，在另一台设备导入即可同步</p>
-    <button onclick="exportAll()" style="display:block;width:100%;padding:12px;border:none;border-radius:8px;background:#4361ee;color:#fff;font-size:14px;cursor:pointer;margin-bottom:8px">📤 导出全部数据</button>
-    <textarea id="syncAllData" style="width:100%;height:100px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:11px;margin-bottom:8px" placeholder="粘贴数据到这里..."></textarea>
-    <button onclick="importAll()" style="display:block;width:100%;padding:12px;border:none;border-radius:8px;background:#2ec4b6;color:#fff;font-size:14px;cursor:pointer">📥 导入全部数据</button>
-    <div id="syncAllMsg" style="text-align:center;padding:8px;font-size:13px;color:#2ec4b6;display:none"></div>
-  </div>
-</div>
-<script>
-function exportAll(){
-  const data={};
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){data[k]=localStorage.getItem(k);}
-  }
-  const json=JSON.stringify(data);
-  document.getElementById('syncAllData').value=json;
-  try{navigator.clipboard.writeText(json);showAllMsg('✅ 已复制到剪贴板！在另一台设备粘贴导入即可');}
-  catch(e){showAllMsg('⬆️ 请手动全选复制上面的文本');}
-}
-function importAll(){
-  const raw=document.getElementById('syncAllData').value.trim();
-  if(!raw){showAllMsg('❌ 请先粘贴数据');return;}
-  try{
-    const data=JSON.parse(raw);
-    let count=0;
-    for(const[k,v]of Object.entries(data)){localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));count++;}
-    showAllMsg('✅ 导入成功！共'+count+'条数据，刷新生效');
-    setTimeout(()=>location.reload(),1500);
-  }catch(e){showAllMsg('❌ 数据格式错误');}
-}
-function showAllMsg(msg){const el=document.getElementById('syncAllMsg');el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}
-</script>
+
 </body>
 </html>
