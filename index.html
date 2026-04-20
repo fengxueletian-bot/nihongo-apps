@@ -26,6 +26,63 @@ h1{text-align:center;color:#333;margin:20px 0 8px;font-size:22px}
 <h1>📚 日本語学習</h1>
 <p class="subtitle">Aya's N2/N3 学習ツール</p>
 
+<div class="section"><h2>📋 今日学习清单</h2></div>
+<div style="background:#fff;margin:0 auto 16px;max-width:400px;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+  <div style="font-size:12px;color:#888;margin-bottom:10px">周一～周五 | 每日约2小时 | 周五为总复习日</div>
+  <label style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:10px;cursor:pointer">
+    <input type="checkbox" class="task-cb" data-task="verb" style="width:18px;height:18px;accent-color:#4361ee">
+    <div><div style="font-size:14px;font-weight:600">⚡ 动词活用热身</div><div style="font-size:11px;color:#888">5-10分 → 混合挑战模式</div></div>
+  </label>
+  <label style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:10px;cursor:pointer">
+    <input type="checkbox" class="task-cb" data-task="vocab" style="width:18px;height:18px;accent-color:#4361ee">
+    <div><div style="font-size:14px;font-weight:600">📖 N2单词学习</div><div style="font-size:11px;color:#888">25分 → 新词30个 + 填空回忆</div></div>
+  </label>
+  <label style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:10px;cursor:pointer">
+    <input type="checkbox" class="task-cb" data-task="n2grammar" style="width:18px;height:18px;accent-color:#4361ee">
+    <div><div style="font-size:14px;font-weight:600">📗 N2文法学习</div><div style="font-size:11px;color:#888">40分 → 视频 + 真题练习 + 造句</div></div>
+  </label>
+  <label style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:10px;cursor:pointer">
+    <input type="checkbox" class="task-cb" data-task="n3grammar" style="width:18px;height:18px;accent-color:#4361ee">
+    <div><div style="font-size:14px;font-weight:600">📝 N3文法复习</div><div style="font-size:11px;color:#888">15分 → 做题巩固</div></div>
+  </label>
+  <label style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:10px;cursor:pointer">
+    <input type="checkbox" class="task-cb" data-task="output" style="width:18px;height:18px;accent-color:#4361ee">
+    <div><div style="font-size:14px;font-weight:600">✍️ 造句输出</div><div style="font-size:11px;color:#888">10分 → 用今天的语法造2句话发给老师</div></div>
+  </label>
+  <label style="display:flex;align-items:center;padding:10px 0;gap:10px;cursor:pointer">
+    <input type="checkbox" class="task-cb" data-task="review" style="width:18px;height:18px;accent-color:#4361ee">
+    <div><div style="font-size:14px;font-weight:600">🔄 毎日復習</div><div style="font-size:11px;color:#888">晚上/碎片时间 → 当天内容真题</div></div>
+  </label>
+  <div style="margin-top:12px;text-align:center">
+    <span id="taskProgress" style="font-size:13px;color:#4361ee;font-weight:600">0/6 完成</span>
+    <div style="height:4px;background:#eee;border-radius:2px;margin-top:6px"><div id="taskBar" style="height:100%;background:#4361ee;border-radius:2px;width:0%;transition:width .3s"></div></div>
+  </div>
+</div>
+<script>
+(function(){
+  const today = new Date().toISOString().slice(0,10);
+  const key = 'daily_tasks_' + today;
+  let tasks = JSON.parse(localStorage.getItem(key) || '{}');
+  const cbs = document.querySelectorAll('.task-cb');
+  cbs.forEach(cb => {
+    const t = cb.dataset.task;
+    cb.checked = !!tasks[t];
+    cb.addEventListener('change', () => {
+      tasks[t] = cb.checked;
+      localStorage.setItem(key, JSON.stringify(tasks));
+      updateProgress();
+    });
+  });
+  function updateProgress() {
+    const done = Object.values(tasks).filter(v=>v).length;
+    document.getElementById('taskProgress').textContent = done + '/6 完成';
+    document.getElementById('taskBar').style.width = (done/6*100)+'%';
+    if (done === 6) document.getElementById('taskProgress').textContent = '🎉 今日全部完成！';
+  }
+  updateProgress();
+})();
+</script>
+
 <div class="section"><h2>📅 每日复习</h2></div>
 <div class="grid">
   <a class="card" href="毎日復習.html" style="grid-column:1/-1"><div class="emoji">📅</div><div class="name">毎日復習</div><div class="desc">每天学的语法，反复练到掌握（持续更新）</div></a>
