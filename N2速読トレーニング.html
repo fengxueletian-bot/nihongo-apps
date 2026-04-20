@@ -393,5 +393,7 @@ function showSyncMsg(msg) {
   setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 </script>
+<a href="index.html" style="position:fixed;bottom:16px;left:16px;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;z-index:998">🏠</a>
+<script>(function(){var t=new Date().toISOString().slice(0,10),k='auto_time_'+t,s=parseInt(localStorage.getItem(k)||'0'),lv=document.hidden?null:Date.now();document.addEventListener('visibilitychange',function(){if(document.hidden){if(lv){s+=Math.round((Date.now()-lv)/1000);localStorage.setItem(k,String(s));}lv=null;}else{lv=Date.now();}});setInterval(function(){if(lv){s+=Math.round((Date.now()-lv)/1000);lv=Date.now();localStorage.setItem(k,String(s));}},60000);})();</script>
 </body>
 </html>
