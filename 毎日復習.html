@@ -69,6 +69,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .level-learning{background:#fff3cd;color:#856404}
 .level-good{background:#d4edda;color:#155724}
 .level-mastered{background:#cce5ff;color:#004085}
+.speak-btn{display:inline-block;cursor:pointer;font-size:16px;vertical-align:middle;padding:2px 4px;opacity:.7}
+.speak-btn:active{opacity:1;transform:scale(1.2)}
+.day-chip.done{border-color:#2ec4b6;background:#e8faf8;color:#155724}
+.day-chip.done::before{content:'✅ ';font-size:10px}
+.day-chip.current{border-color:#4361ee;background:#eef;color:#4361ee;font-weight:600}
+.day-chip.current::before{content:'📍 ';font-size:10px}
+.day-chip.todo{border-color:#ffc107;background:#fffde7;color:#856404}
+.day-chip.todo::before{content:'⬜ ';font-size:10px}
+.comparison-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.comparison-table th{background:#f0f4ff;padding:6px 8px;text-align:left;color:#4361ee;font-weight:600}
+.comparison-table td{padding:6px 8px;border-bottom:1px solid #eee}
 /* Sync modal */
 .sync-btn{position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:#4361ee;color:#fff;border:none;font-size:22px;box-shadow:0 2px 12px rgba(67,97,238,.4);z-index:999;cursor:pointer}
 .sync-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
@@ -166,7 +177,8 @@ const DAILY_DATA = {
           { jp: "<ruby>若<rt>わか</rt></ruby>いうちに、いろいろな<ruby>経験<rt>けいけん</rt></ruby>をしたほうがいい。", cn: "趁年轻，最好多积累各种经验。" }
         ],
         keyPoint: "强调「趁现在这个状态还没变化之前」，带有紧迫感",
-        confusion: "vs あいだに：あいだに只表示时间段内，うちに强调「趁还来得及」"
+        confusion: "vs あいだに：あいだに只表示时间段内，うちに强调「趁还来得及」",
+        comparison: {pair:"うちに vs あいだに", rows:[["趁着（紧迫感）","期间内（中性）"],["状态变化前要做","单纯时间段"],["暖かいうちに出かけよう","暖かいあいだに散歩した"],["趁暖和赶紧出门","暖和的时候散了步"]]}
       },
       {
         name: "〜つつ（も）",
@@ -188,7 +200,8 @@ const DAILY_DATA = {
           { jp: "<ruby>物価<rt>ぶっか</rt></ruby>は<ruby>上<rt>あ</rt></ruby>がるばかりで、<ruby>生活<rt>せいかつ</rt></ruby>が<ruby>苦<rt>くる</rt></ruby>しい。", cn: "物价一直上涨，生活困难。" }
         ],
         keyPoint: "只用于消极、无奈的变化方向",
-        confusion: "vs 一方だ：一方だ中性客观（可好可坏），ばかりだ带有无奈和消极情绪"
+        confusion: "vs 一方だ：一方だ中性客观（可好可坏），ばかりだ带有无奈和消极情绪",
+        comparison: {pair:"ばかりだ vs 一方だ", rows:[["消极・无奈","中性・客观"],["只用于不好的方向","好坏都可以"],["物価が上がるばかりだ","物価が上がる一方だ"],["物价涨个不停（无奈）","物价持续上涨（客观）"]]}
       },
       {
         name: "〜一方だ（いっぽうだ）",
@@ -239,6 +252,15 @@ if (!state.totalCorrect) state.totalCorrect = 0;
 if (!state.totalAttempts) state.totalAttempts = 0;
 function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
+// TTS
+function speak(text, rate) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/[（）()]/g,'');
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = 'ja-JP'; u.rate = rate || 0.9;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
 // SM-2
 function sm2(item, quality) {
   if (!item.ef) item.ef = 2.5;
@@ -287,8 +309,16 @@ function renderDaySelector(containerId, mode) {
   const el = document.getElementById(containerId);
   el.innerHTML = days.map(d => {
     const data = DAILY_DATA[d];
-    return `<div class="day-chip ${d===currentDay?'active':''}" onclick="selectDay('${d}','${mode}')">${d}<br><span style="font-size:10px;color:#888">${data.title}</span></div>`;
-  }).join('') + `<div class="day-chip" onclick="selectDay('all','${mode}')" style="${currentDay==='all'?'border-color:#4361ee;background:#eef':''}">全部</div>`;
+    // Check completion: all grammar practiced at least once
+    const allGrammar = data.grammar.map(g => g.name);
+    const practiced = allGrammar.filter(n => state.grammarStatus[n] && state.grammarStatus[n].reps > 0).length;
+    const total = allGrammar.length;
+    const isDone = practiced === total && total > 0;
+    const isCurrent = practiced > 0 && practiced < total;
+    const statusClass = d===currentDay ? 'active' : isDone ? 'done' : isCurrent ? 'current' : 'todo';
+    const progress = total > 0 ? `${practiced}/${total}` : '';
+    return `<div class="day-chip ${statusClass}" onclick="selectDay('${d}','${mode}')">${d}<br><span style="font-size:10px">${data.title}</span><br><span style="font-size:9px;color:#888">${progress}</span></div>`;
+  }).join('') + `<div class="day-chip ${currentDay==='all'?'active':''}" onclick="selectDay('all','${mode}')">全部</div>`;
 }
 
 function selectDay(day, mode) {
@@ -318,9 +348,9 @@ function renderGrammarList() {
       <h4>${g.name} <span class="level level-${level}" style="font-size:11px">${levelText}</span></h4>
       <div class="meaning">${g.meaning}</div>
       <div style="font-size:12px;color:#4361ee;margin-bottom:6px">接续：${g.structure}</div>
-      ${g.examples.map(ex => `<div class="example">${ex.jp}<div class="example-cn">${ex.cn}</div></div>`).join('')}
+      ${g.examples.map(ex => `<div class="example">${ex.jp} <span class="speak-btn" onclick="speak('${ex.jp.replace(/'/g,"\\'")}')">🔊</span><div class="example-cn">${ex.cn}</div></div>`).join('')}
       <div style="margin-top:8px;font-size:12px"><span style="color:#e63946">⚠ 要点：</span>${g.keyPoint}</div>
-      ${g.confusion ? `<div style="margin-top:4px;font-size:12px"><span style="color:#4361ee">🔀 辨析：</span>${g.confusion}</div>` : ''}
+      ${g.confusion ? `<div style="margin-top:8px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:12px"><span style="color:#4361ee;font-weight:600">🔀 相似语法辨析：</span><div style="margin-top:4px;line-height:1.8">${g.confusion}</div>${g.comparison ? `<table class="comparison-table"><tr><th>${g.comparison.pair.split(' vs ')[0]||''}</th><th>${g.comparison.pair.split(' vs ')[1]||''}</th></tr>${g.comparison.rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')}</table>`:''}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -344,7 +374,7 @@ function showQuizQ() {
   }
   
   const q = quizQuestions[quizIdx];
-  area.innerHTML = `<div class="quiz-q">${q.q.replace('＿＿＿', '<span class="blank">＿＿＿</span>')}</div>
+  area.innerHTML = `<div class="quiz-q">${q.q.replace('＿＿＿', '<span class="blank">＿＿＿</span>')} <span class="speak-btn" onclick="speak('${q.q.replace(/＿＿＿/g,'').replace(/'/g,"\\'")}')">🔊</span></div>
     <div id="quizOptions">${q.options.map((o,i) => `<div class="quiz-option" onclick="answerQuiz(${i})">${o}</div>`).join('')}</div>
     <div id="quizExplanation"></div>`;
   
@@ -439,7 +469,7 @@ function showReviewQ() {
   }
   
   const q = reviewQuestions[reviewIdx];
-  area.innerHTML = `<div class="quiz-q">${q.q.replace('＿＿＿', '<span class="blank">＿＿＿</span>')}</div>
+  area.innerHTML = `<div class="quiz-q">${q.q.replace('＿＿＿', '<span class="blank">＿＿＿</span>')} <span class="speak-btn" onclick="speak('${q.q.replace(/＿＿＿/g,'').replace(/'/g,"\\'")}')">🔊</span></div>
     <div id="reviewOptions">${q.options.map((o,i) => `<div class="quiz-option" onclick="answerReview(${i})">${o}</div>`).join('')}</div>
     <div id="reviewExplanation"></div>`;
   
