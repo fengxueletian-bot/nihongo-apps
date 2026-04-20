@@ -204,5 +204,40 @@ document.addEventListener('visibilitychange', () => {
   <a class="card" href="N2聴解マスター.html"><div class="emoji">👂</div><div class="name">N2聴解</div><div class="desc">听力训练</div></a>
 </div>
 
+<div style="max-width:400px;margin:20px auto;padding:0 12px">
+  <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+    <h3 style="font-size:14px;margin-bottom:12px;color:#333">📱 跨设备数据同步</h3>
+    <p style="font-size:11px;color:#888;margin-bottom:12px">导出所有小程序的学习进度，在另一台设备导入即可同步</p>
+    <button onclick="exportAll()" style="display:block;width:100%;padding:12px;border:none;border-radius:8px;background:#4361ee;color:#fff;font-size:14px;cursor:pointer;margin-bottom:8px">📤 导出全部数据</button>
+    <textarea id="syncAllData" style="width:100%;height:100px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:11px;margin-bottom:8px" placeholder="粘贴数据到这里..."></textarea>
+    <button onclick="importAll()" style="display:block;width:100%;padding:12px;border:none;border-radius:8px;background:#2ec4b6;color:#fff;font-size:14px;cursor:pointer">📥 导入全部数据</button>
+    <div id="syncAllMsg" style="text-align:center;padding:8px;font-size:13px;color:#2ec4b6;display:none"></div>
+  </div>
+</div>
+<script>
+function exportAll(){
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){data[k]=localStorage.getItem(k);}
+  }
+  const json=JSON.stringify(data);
+  document.getElementById('syncAllData').value=json;
+  try{navigator.clipboard.writeText(json);showAllMsg('✅ 已复制到剪贴板！在另一台设备粘贴导入即可');}
+  catch(e){showAllMsg('⬆️ 请手动全选复制上面的文本');}
+}
+function importAll(){
+  const raw=document.getElementById('syncAllData').value.trim();
+  if(!raw){showAllMsg('❌ 请先粘贴数据');return;}
+  try{
+    const data=JSON.parse(raw);
+    let count=0;
+    for(const[k,v]of Object.entries(data)){localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));count++;}
+    showAllMsg('✅ 导入成功！共'+count+'条数据，刷新生效');
+    setTimeout(()=>location.reload(),1500);
+  }catch(e){showAllMsg('❌ 数据格式错误');}
+}
+function showAllMsg(msg){const el=document.getElementById('syncAllMsg');el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}
+</script>
 </body>
 </html>
