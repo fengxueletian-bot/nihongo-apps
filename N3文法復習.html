@@ -196,8 +196,29 @@ var qOrder = [];
 var filterType = 'all';
 var answered = false;
 
+function redoWrong() {
+  qOrder = n3Wrong.slice();
+  shuffle(qOrder);
+  currentQ = 0; n3Wrong = []; answered = false;
+  renderQuestion();
+}
+
+function startOldWrong() {
+  var saved = JSON.parse(localStorage.getItem('n3_grammar_wrong') || '[]');
+  var today = new Date().toISOString().slice(0,10);
+  var old = saved.filter(function(q){return q.date < today;});
+  if (old.length === 0) { alert('没有之前的错题~'); return; }
+  qOrder = old.map(function(q){return q.idx;});
+  shuffle(qOrder);
+  currentQ = 0; n3Wrong = []; answered = false;
+  // Clear reviewed wrong
+  localStorage.setItem('n3_grammar_wrong', JSON.stringify(saved.filter(function(q){return q.date >= today;})));
+  renderQuestion();
+}
+
 function initQuiz() {
   answered = false;
+  n3Wrong = [];
   qOrder = [];
   for (var i = 0; i < QUESTIONS.length; i++) {
     if (filterType === 'all' || QUESTIONS[i].type === filterType) qOrder.push(i);
@@ -216,10 +237,34 @@ function shuffle(arr) {
 
 var app = document.getElementById('app');
 
+var n3Wrong = [];
+
+function renderGrammarOverview() {
+  var grammarMap = {};
+  QUESTIONS.forEach(function(q) {
+    if (!grammarMap[q.grammar]) grammarMap[q.grammar] = {name:q.grammar, count:0, explain:q.explain};
+    grammarMap[q.grammar].count++;
+  });
+  var items = Object.values(grammarMap);
+  var html = '<details style="background:#f0f4ff;border-radius:10px;padding:12px;margin-bottom:16px;border-left:4px solid #4361ee">';
+  html += '<summary style="font-size:14px;font-weight:600;color:#4361ee;cursor:pointer">📋 做题前先复习语法要点（'+items.length+'个语法）▸</summary>';
+  html += '<div style="margin-top:10px;font-size:13px;line-height:1.8">';
+  items.forEach(function(g,i) {
+    html += '<div style="margin-bottom:6px;padding:6px 8px;background:#fff;border-radius:8px"><strong>'+(i+1)+'. '+g.name+'</strong> <span style="color:#888;font-size:11px">('+g.count+'题)</span></div>';
+  });
+  html += '</div></details>';
+  return html;
+}
+
 function renderHome() {
   var total = st.correct + st.wrong;
   var rate = total ? Math.round(st.correct/total*100) : 0;
-  app.innerHTML = '<div class="card"><h2>📊 <ruby>学習<rt>がくしゅう</rt></ruby>データ</h2>'+
+  // Check for old wrong questions
+  var savedWrong = JSON.parse(localStorage.getItem('n3_grammar_wrong') || '[]');
+  var today = new Date().toISOString().slice(0,10);
+  var oldWrong = savedWrong.filter(function(q){return q.date < today;});
+  var wrongBtn = oldWrong.length > 0 ? '<button class="btn btn-primary btn-block" style="background:#e74c3c;margin-bottom:12px" onclick="startOldWrong()">🔥 先复习之前的错题 ('+oldWrong.length+'题)</button>' : '';
+  app.innerHTML = wrongBtn + '<div class="card"><h2>📊 <ruby>学習<rt>がくしゅう</rt></ruby>データ</h2>'+
     '<div class="stats-bar"><div class="stat"><div class="stat-num">'+st.correct+'</div><div class="stat-label">正解</div></div>'+
     '<div class="stat"><div class="stat-num">'+st.wrong+'</div><div class="stat-label">不正解</div></div>'+
     '<div class="stat"><div class="stat-num">'+rate+'%</div><div class="stat-label">正答率</div></div>'+
@@ -233,6 +278,7 @@ function renderHome() {
     '<button class="'+(filterType==='judge'?'active':'')+'" onclick="filterType=\'judge\';initQuiz()"><span class="tag tag-judge">正誤判断</span></button>'+
     '<button class="'+(filterType==='order'?'active':'')+'" onclick="filterType=\'order\';initQuiz()"><span class="tag tag-order">排列組合</span></button>'+
     '</div>'+
+    renderGrammarOverview() +
     '<button class="btn btn-primary btn-block" onclick="initQuiz()">スタート！</button></div>';
 }
 
@@ -240,8 +286,26 @@ function renderQuestion() {
   if (currentQ >= qOrder.length) {
     var _today = new Date().toISOString().slice(0,10);
     localStorage.setItem('task_done_n3grammar_' + _today, '1');
-    app.innerHTML = '<div class="card"><h2>🎉 <ruby>完了<rt>かんりょう</rt></ruby>！</h2><p>全問終わりました！</p>'+
-      '<button class="btn btn-primary btn-block" onclick="renderHome()" style="margin-top:12px">ホームへ</button></div>';
+    // Save wrong questions
+    if (n3Wrong.length > 0) {
+      var saved = JSON.parse(localStorage.getItem('n3_grammar_wrong') || '[]');
+      n3Wrong.forEach(function(idx) {
+        var q = QUESTIONS[idx];
+        if (!saved.find(function(s){return s.idx===idx;})) saved.push({idx:idx, grammar:q.grammar, date:_today});
+      });
+      localStorage.setItem('n3_grammar_wrong', JSON.stringify(saved));
+    }
+    var score = qOrder.length - n3Wrong.length;
+    var pct = Math.round(score/qOrder.length*100);
+    var html = '<div class="card"><h2>🎉 <ruby>完了<rt>かんりょう</rt></ruby>！</h2>';
+    html += '<p style="font-size:24px;font-weight:bold;text-align:center">'+score+'/'+qOrder.length+'</p>';
+    html += '<p style="text-align:center;color:#888">正确率 '+pct+'%</p>';
+    html += '<button class="btn btn-primary btn-block" onclick="initQuiz()" style="margin-top:12px">📝 再来一轮</button>';
+    if (n3Wrong.length > 0) {
+      html += '<button class="btn btn-primary btn-block" style="background:#e74c3c;margin-top:8px" onclick="redoWrong()">🔄 重做错题 ('+n3Wrong.length+')</button>';
+    }
+    html += '<button class="btn btn-primary btn-block" onclick="renderHome()" style="margin-top:8px;background:#888">ホームへ</button></div>';
+    app.innerHTML = html;
     return;
   }
   answered = false;
@@ -308,7 +372,8 @@ function toggleOrderWord(el) {
 function showResult(isCorrect, q) {
   answered = true;
   st.answered[qOrder[currentQ]] = true;
-  if (isCorrect) st.correct++; else st.wrong++;
+  if (isCorrect) st.correct++;
+  else { st.wrong++; n3Wrong.push(qOrder[currentQ]); }
   saveSt();
   var html = '<div class="'+(isCorrect?'result-correct':'result-wrong')+'">';
   html += isCorrect ? '✅ 正解！' : '❌ 不正解…';
