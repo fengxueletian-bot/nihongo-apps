@@ -1070,7 +1070,7 @@ function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].readi
 // ============ 拼写模式 ============
 let spellWords=[], spellIdx=0, spellScoreVal=0, spellWaiting=false;
 function startSpell() {
-  const words = [...VOCABULARY[state.currentChapter].words];
+  const words = getDailyWords();
   spellWords = words.sort(()=>Math.random()-0.5).slice(0,30);
   spellIdx=0; spellScoreVal=0; spellWaiting=false; spellComposing=false;
   showSpellQ();
@@ -1439,7 +1439,7 @@ function getReviewWords() {
 // ============ 填空回忆模式 ============
 var clozeWords=[], clozeIdx=0, clozeScoreVal=0, clozeRevealed=false, clozeComposing=false;
 function startCloze() {
-  const words = [...VOCABULARY[state.currentChapter].words];
+  const words = getDailyWords();
   clozeWords = words.sort(()=>Math.random()-0.5);
   clozeIdx=0; clozeScoreVal=0;
   showClozeQ();
@@ -1590,6 +1590,22 @@ function quickExport() {
   const json = JSON.stringify(data);
   try { navigator.clipboard.writeText(json).then(() => alert('✅ 已复制！在其他设备首页粘贴导入')); }
   catch(e) { prompt('请手动复制以下数据：', json); }
+}
+
+function getDailyWords() {
+  const chapterKeys = Object.keys(VOCABULARY).sort((a,b) => {
+    const [ac,al]=a.split('-').map(Number), [bc,bl]=b.split('-').map(Number);
+    return ac-bc || al-bl;
+  });
+  const allWords = [];
+  chapterKeys.forEach(k => VOCABULARY[k].words.forEach(w => allWords.push({...w, _chapter:k})));
+  const startKey = 'n2vocab_start_date';
+  let startDate = localStorage.getItem(startKey);
+  if (!startDate) { startDate = new Date().toISOString().slice(0,10); localStorage.setItem(startKey, startDate); }
+  const dayNum = Math.floor((new Date() - new Date(startDate+'T00:00:00')) / 86400000) + 1;
+  const from = (dayNum - 1) * 30;
+  const to = Math.min(from + 30, allWords.length);
+  return allWords.slice(from, to);
 }
 
 function renderDailyTask() {
