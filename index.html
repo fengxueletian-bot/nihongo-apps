@@ -504,8 +504,10 @@ function showWeakness(){
 }
 showWeakness();
 
-/* ========== Sync via GitHub Gist (同步码) ========== */
+/* ========== Sync via GitHub Repo (同步码) ========== */
 var SYNC_TOKEN=['ghp_7dUu','om6tMfBd','ZCyzfcNQ','V5QF8ZaV','aN0DCopf'].join('');
+var SYNC_REPO='fengxueletian-bot/nihongo-apps';
+var SYNC_BRANCH='main';
 
 function toggleSync(){document.getElementById('syncOverlay').classList.toggle('show');}
 
@@ -513,6 +515,13 @@ function collectAllData(){
   var data={};
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){data[k]=localStorage.getItem(k);}}
   return data;
+}
+
+async function ghAPI(path,opts){
+  opts=opts||{};
+  var h={'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'};
+  var url='https://api.github.com/repos/'+SYNC_REPO+'/contents/sync/'+path;
+  return fetch(url,Object.assign({headers:h},opts));
 }
 
 async function doExport(){
@@ -523,42 +532,22 @@ async function doExport(){
     var code=Math.random().toString(36).substring(2,8).toUpperCase();
     data.__sync_code__=code;
     data.__sync_time__=new Date().toISOString();
-    // Create gist
-    var resp=await fetch('https://api.github.com/gists',{
-      method:'POST',
-      headers:{'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({description:'nihongo-sync-'+code,public:false,files:{'sync.json':{content:JSON.stringify(data)}}})
-    });
-    if(!resp.ok)throw new Error('上传失败');
-    var gist=await resp.json();
-    // Save mapping
-    var map=JSON.parse(localStorage.getItem('sync_code_map')||'{}');
-    map[code]=gist.id;
-    localStorage.setItem('sync_code_map',JSON.stringify(map));
-    // Update mapping gist
-    await saveSyncMap(map);
-    // Show code
+    var content=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    var filePath=code+'.json';
+    // Check if file exists (get sha)
+    var existing=await ghAPI(filePath);
+    var body={message:'sync-'+code,content:content,branch:SYNC_BRANCH};
+    if(existing.ok){var ed=await existing.json();body.sha=ed.sha;}
+    var resp=await ghAPI(filePath,{method:'PUT',body:JSON.stringify(body)});
+    if(!resp.ok){var err=await resp.json();throw new Error(err.message||'上传失败');}
     document.getElementById('syncCodeText').textContent=code;
     document.getElementById('syncCodeDisplay').style.display='block';
     document.getElementById('syncExportArea').style.display='none';
     showSyncMsg('✅ 同步码已生成！');
   }catch(e){
     showSyncMsg('❌ '+e.message);
-    btn.textContent='📤 生成同步码';btn.disabled=false;
   }
-}
-
-async function saveSyncMap(map){
-  var resp=await fetch('https://api.github.com/gists',{headers:{'Authorization':'token '+SYNC_TOKEN}});
-  var gists=await resp.json();
-  var existing=gists.find(function(g){return g.description==='nihongo-sync-map';});
-  var body={description:'nihongo-sync-map',files:{'map.json':{content:JSON.stringify(map)}}};
-  if(existing){
-    await fetch('https://api.github.com/gists/'+existing.id,{method:'PATCH',headers:{'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  }else{
-    body.public=false;
-    await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':'token '+SYNC_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  }
+  btn.textContent='📤 生成同步码';btn.disabled=false;
 }
 
 async function doImport(){
@@ -566,20 +555,11 @@ async function doImport(){
   if(!code||code.length<4){showSyncMsg('❌ 请输入同步码');return;}
   showSyncMsg('⏳ 正在同步...');
   try{
-    // Fetch mapping
-    var resp=await fetch('https://api.github.com/gists',{headers:{'Authorization':'token '+SYNC_TOKEN}});
-    var gists=await resp.json();
-    var mapGist=gists.find(function(g){return g.description==='nihongo-sync-map';});
-    if(!mapGist)throw new Error('未找到同步数据');
-    var mResp=await fetch('https://api.github.com/gists/'+mapGist.id,{headers:{'Authorization':'token '+SYNC_TOKEN}});
-    var mData=await mResp.json();
-    var map=JSON.parse(mData.files['map.json'].content);
-    var gistId=map[code];
-    if(!gistId)throw new Error('同步码不存在');
-    // Fetch data
-    var dResp=await fetch('https://api.github.com/gists/'+gistId,{headers:{'Authorization':'token '+SYNC_TOKEN}});
-    var dData=await dResp.json();
-    var data=JSON.parse(dData.files['sync.json'].content);
+    var resp=await ghAPI(code+'.json');
+    if(!resp.ok)throw new Error('同步码不存在或已过期');
+    var fileData=await resp.json();
+    var raw=decodeURIComponent(escape(atob(fileData.content.replace(/\n/g,''))));
+    var data=JSON.parse(raw);
     var count=0;
     for(var k in data){if(data.hasOwnProperty(k)&&!k.startsWith('__sync_')){localStorage.setItem(k,typeof data[k]==='string'?data[k]:JSON.stringify(data[k]));count++;}}
     showSyncMsg('✅ 导入'+count+'条数据！刷新中...');
