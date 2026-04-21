@@ -1030,6 +1030,7 @@ function showQuizQuestion() {
   }
   document.getElementById('quizCounter').textContent = `${quizIdx+1} / ${quizWords.length}`;
   document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
+    speak(quizWords[quizIdx].reading);
   document.getElementById('quizProgress').style.width = (quizIdx/quizWords.length*100)+'%';
   // No auto-speak, user clicks 🔊 if needed
 }
@@ -1053,6 +1054,7 @@ function handleQuizClick(el) {
     else state.errors.push({word:w.word,reading:w.reading,meaning:w.meaning,wrongAt:Date.now(),type:'quiz',count:1});
   }
   document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
+    speak(quizWords[quizIdx].reading);
   setTimeout(() => { quizIdx++; showQuizQuestion(); saveState(); }, 1500);
 }
 function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].reading); }
