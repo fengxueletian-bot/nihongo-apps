@@ -415,7 +415,7 @@ function renderQuestion() {
   var q = QUESTIONS[qOrder[currentQ]];
   var html = '<div class="card">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-  html += '<span style="font-size:.8rem;color:#888">'+(currentQ+1)+' / '+qOrder.length+'</span>';
+  html += '<span style="font-size:.8rem;color:#888;cursor:pointer" onclick="renderHome()">← 戻る　'+(currentQ+1)+' / '+qOrder.length+'</span>';
   var typeTag = {fill:'tag-fill',compare:'tag-compare',judge:'tag-judge',order:'tag-order'}[q.type];
   var typeName = {fill:'選択填空',compare:'辨析対決',judge:'正誤判断',order:'排列組合'}[q.type];
   html += '<span class="tag '+typeTag+'">'+typeName+'</span></div>';
