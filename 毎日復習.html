@@ -123,6 +123,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 <!-- 练习 tab -->
 <div id="tab-quiz" class="card hidden">
   <div class="day-selector" id="quizDaySelector"></div>
+  <div id="yesterdayWrongBtn"></div>
   <div id="quizGrammarNotes" style="margin-bottom:12px"></div>
   <div class="progress-bar"><div class="fill" id="quizProgress" style="width:0%"></div></div>
   <div id="quizArea"></div>
@@ -432,7 +433,7 @@ function sm2(item, quality) {
 // ============ 初始化 ============
 const days = Object.keys(DAILY_DATA);
 let currentDay = days[days.length - 1];
-let quizQuestions = [], quizIdx = 0, quizScore = 0, quizAnswered = false;
+let quizQuestions = [], quizIdx = 0, quizScore = 0, quizAnswered = false, quizWrong = [];
 let reviewQuestions = [], reviewIdx = 0, reviewScore = 0, reviewAnswered = false;
 
 function init() {
@@ -440,6 +441,14 @@ function init() {
   renderDaySelector('daySelector', 'study');
   renderDaySelector('quizDaySelector', 'quiz');
   renderGrammarList();
+  // Show yesterday's wrong questions button
+  const saved = JSON.parse(localStorage.getItem('grammar_wrong') || '[]');
+  const today = new Date().toISOString().slice(0,10);
+  const oldWrong = saved.filter(q => q.date < today);
+  const el = document.getElementById('yesterdayWrongBtn');
+  if (oldWrong.length > 0) {
+    el.innerHTML = `<button class="btn btn-primary" style="width:100%;margin-bottom:12px;background:#e74c3c" onclick="startYesterdayWrong()">🔥 先复习昨天的错题 (${oldWrong.length}题)</button>`;
+  }
 }
 
 function updateStats() {
@@ -517,10 +526,28 @@ function renderGrammarList() {
 }
 
 // ============ 练习 tab ============
+function redoWrongQuiz() {
+  quizQuestions = [...quizWrong].sort(() => Math.random() - 0.5);
+  quizIdx = 0; quizScore = 0; quizWrong = [];
+  showQuizQ();
+}
+
+function startYesterdayWrong() {
+  const saved = JSON.parse(localStorage.getItem('grammar_wrong') || '[]');
+  const today = new Date().toISOString().slice(0,10);
+  const old = saved.filter(q => q.date < today);
+  if (old.length === 0) { alert('没有之前的错题~'); return; }
+  quizQuestions = [...old].sort(() => Math.random() - 0.5);
+  quizIdx = 0; quizScore = 0; quizWrong = [];
+  showQuizQ();
+  // Clear reviewed wrong questions
+  localStorage.setItem('grammar_wrong', JSON.stringify(saved.filter(q => q.date >= today)));
+}
+
 function startQuiz() {
   const qs = currentDay === 'all' ? days.flatMap(d => DAILY_DATA[d].questions) : DAILY_DATA[currentDay].questions;
   quizQuestions = [...qs].sort(() => Math.random() - 0.5);
-  quizIdx = 0; quizScore = 0;
+  quizIdx = 0; quizScore = 0; quizWrong = [];
   // Render grammar notes overview before quiz
   const grammarItems = currentDay === 'all' ? days.flatMap(d => DAILY_DATA[d].grammar) : (DAILY_DATA[currentDay]||{}).grammar || [];
   const notesEl = document.getElementById('quizGrammarNotes');
@@ -542,8 +569,21 @@ function showQuizQ() {
   const nav = document.getElementById('quizNav');
   
   if (quizIdx >= quizQuestions.length) {
-    area.innerHTML = `<div class="review-summary"><h3>练习完成！</h3><div class="score">${quizScore}/${quizQuestions.length}</div><p style="margin-top:8px;color:#888">正确率 ${Math.round(quizScore/quizQuestions.length*100)}%</p><button class="btn btn-primary" style="margin-top:16px" onclick="startQuiz()">再来一轮</button><br><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据到其他设备</button></div>`;
+    const pct = Math.round(quizScore/quizQuestions.length*100);
+    let html = `<div class="review-summary"><h3>练习完成！</h3><div class="score">${quizScore}/${quizQuestions.length}</div><p style="margin-top:8px;color:#888">正确率 ${pct}%</p>`;
+    html += `<button class="btn btn-primary" style="margin-top:16px" onclick="startQuiz()">📝 再来一轮</button>`;
+    if (quizWrong.length > 0) {
+      html += `<button class="btn btn-primary" style="margin-top:8px;background:#e74c3c" onclick="redoWrongQuiz()">🔄 重做错题 (${quizWrong.length})</button>`;
+    }
+    html += `<br><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据</button></div>`;
+    area.innerHTML = html;
     nav.style.display = 'none';
+    // Save wrong questions for next day review
+    if (quizWrong.length > 0) {
+      const saved = JSON.parse(localStorage.getItem('grammar_wrong') || '[]');
+      quizWrong.forEach(q => { if (!saved.find(s => s.q === q.q)) saved.push({...q, date: new Date().toISOString().slice(0,10)}); });
+      localStorage.setItem('grammar_wrong', JSON.stringify(saved));
+    }
     return;
   }
   
@@ -571,6 +611,7 @@ function answerQuiz(idx) {
   
   const correct = idx === q.answer;
   if (correct) quizScore++;
+  else quizWrong.push(quizQuestions[quizIdx]);
   state.totalAttempts++;
   if (correct) state.totalCorrect++;
   
