@@ -437,10 +437,14 @@ function startQuick() {
     '<button class="btn btn-primary btn-block" id="quickSubmit" onclick="checkQuick()">チェック ✓</button>'+
     '<div id="quickResult"></div></div>';
   
-  document.getElementById('quickInput').addEventListener('keydown', function(ev){
-    if (ev.key==='Enter') checkQuick();
+  var qi = document.getElementById('quickInput');
+  var qiComposing = false;
+  qi.addEventListener('compositionstart', function(){ qiComposing=true; });
+  qi.addEventListener('compositionend', function(){ setTimeout(function(){ qiComposing=false; }, 100); });
+  qi.addEventListener('keydown', function(ev){
+    if (ev.key==='Enter' && !qiComposing) checkQuick();
   });
-  document.getElementById('quickInput').focus();
+  qi.focus();
 }
 
 function checkQuick() {
@@ -591,10 +595,14 @@ function nextChallengeQ() {
     '<input class="input-field" id="chalInput" placeholder="ひらがなで..." autocomplete="off">'+
     '<button class="btn btn-primary btn-block" onclick="checkChallenge(\''+correct.replace(/'/g,"\\'")+'\')" style="margin-top:8px">OK</button></div>';
   
-  document.getElementById('chalInput').addEventListener('keydown',function(ev){
-    if (ev.key==='Enter') checkChallenge(correct);
+  var ci = document.getElementById('chalInput');
+  var ciComposing = false;
+  ci.addEventListener('compositionstart', function(){ ciComposing=true; });
+  ci.addEventListener('compositionend', function(){ setTimeout(function(){ ciComposing=false; }, 100); });
+  ci.addEventListener('keydown',function(ev){
+    if (ev.key==='Enter' && !ciComposing) checkChallenge(correct);
   });
-  document.getElementById('chalInput').focus();
+  ci.focus();
   
   /* Update timer display */
   var startT = Date.now();
@@ -646,10 +654,14 @@ function startWeak() {
     '<div style="margin:16px 0"><input class="input-field" id="weakInput" placeholder="ひらがなで入力..." autocomplete="off"></div>'+
     '<button class="btn btn-danger btn-block" id="weakSubmit" onclick="checkWeak(\''+vDict.replace(/'/g,"\\'")+'\',\''+fId+'\',\''+correct.replace(/'/g,"\\'")+'\')" >チェック ✓</button>'+
     '<div id="weakResult"></div></div>';
-  document.getElementById('weakInput').addEventListener('keydown',function(ev){
-    if (ev.key==='Enter') document.getElementById('weakSubmit').click();
+  var wi = document.getElementById('weakInput');
+  var wiComposing = false;
+  wi.addEventListener('compositionstart', function(){ wiComposing=true; });
+  wi.addEventListener('compositionend', function(){ setTimeout(function(){ wiComposing=false; }, 100); });
+  wi.addEventListener('keydown',function(ev){
+    if (ev.key==='Enter' && !wiComposing) document.getElementById('weakSubmit').click();
   });
-  document.getElementById('weakInput').focus();
+  wi.focus();
 }
 
 var weakAnswered = false;
