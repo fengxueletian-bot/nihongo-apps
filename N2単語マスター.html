@@ -1070,7 +1070,7 @@ function startSpell() {
   // IME composition tracking
   const input = document.getElementById('kanaInput');
   input.addEventListener('compositionstart', () => { spellComposing=true; });
-  input.addEventListener('compositionend', () => { spellComposing=false; });
+  input.addEventListener('compositionend', () => { setTimeout(()=>{ spellComposing=false; }, 100); });
 }
 function showSpellQ() {
   if (spellIdx >= spellWords.length) {
@@ -1424,7 +1424,7 @@ function startCloze() {
   showClozeQ();
   const input = document.getElementById('clozeInput');
   input.addEventListener('compositionstart', () => { clozeComposing=true; });
-  input.addEventListener('compositionend', () => { clozeComposing=false; });
+  input.addEventListener('compositionend', () => { setTimeout(()=>{ clozeComposing=false; }, 100); });
 }
 function showClozeQ() {
   // Skip words whose example can't be made into a cloze
