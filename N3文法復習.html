@@ -41,7 +41,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sa
 .tag-judge{background:#fff3cd;color:#856404}
 .tag-compare{background:#d4edda;color:#155724}
 .tag-order{background:#ffe0e6;color:#c9184a}
-.nav-types{display:flex;gap:6px;padding:12px 0;overflow-x:auto}
+.nav-types{display:flex;gap:6px;padding:12px 0;overflow-x:auto;flex-wrap:wrap}
 .nav-types button{flex-shrink:0;padding:6px 12px;border:2px solid #4361ee;border-radius:20px;background:#fff;color:#4361ee;font-size:.78rem;font-weight:600;cursor:pointer}
 .nav-types button.active{background:#4361ee;color:#fff}
 ruby{ruby-position:over}rt{font-size:.6em;color:#888}
@@ -49,140 +49,212 @@ ruby{ruby-position:over}rt{font-size:.6em;color:#888}
 .order-word.selected{background:#4361ee;color:#fff}
 .order-area{min-height:50px;padding:8px;border:2px dashed #ccc;border-radius:12px;margin:8px 0}
 .hidden{display:none!important}
-
-/* Sync modal */
-.sync-btn{position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:#4361ee;color:#fff;border:none;font-size:22px;box-shadow:0 2px 12px rgba(67,97,238,.4);z-index:999;cursor:pointer}
-.sync-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
-.sync-modal.show{display:flex}
-.sync-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:360px;max-height:80vh;overflow-y:auto}
-.sync-box h3{margin-bottom:16px;font-size:16px}
-.sync-box textarea{width:100%;height:120px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:12px;margin:8px 0}
-.sync-box .btn{display:block;width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin:6px 0}
-.sync-box .btn-export{background:#4361ee;color:#fff}
-.sync-box .btn-import{background:#2ec4b6;color:#fff}
-.sync-box .btn-close{background:#eee;color:#333}
-.sync-msg{text-align:center;padding:8px;font-size:13px;color:#2ec4b6;display:none}
+.day-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.day-chip{padding:8px 14px;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;text-align:center;min-width:60px;border:2px solid #4361ee;background:#fff;color:#4361ee;transition:.2s}
+.day-chip.active{background:#4361ee;color:#fff}
+.day-chip:hover{background:#e8ecff}
+.day-chip.active:hover{background:#3a0ca3}
+.grammar-card{background:#f8f9ff;border-radius:10px;padding:10px 12px;margin:6px 0;border-left:3px solid #4361ee;font-size:.85rem;line-height:1.6}
+.grammar-card strong{color:#4361ee}
+.grammar-card .structure{color:#888;font-size:.78rem}
 </style>
 </head>
 <body>
 <div class="header">
 <h1>📝 N3 <ruby>文法復習<rt>ぶんぽうふくしゅう</rt></ruby></h1>
-<p>50の<ruby>核心文法<rt>かくしんぶんぽう</rt></ruby>をマスターしよう</p>
+<p>7日間で50の<ruby>核心文法<rt>かくしんぶんぽう</rt></ruby>をマスター</p>
 </div>
 <div class="container" id="app"></div>
 
 <script>
-/* ===== N3 GRAMMAR QUESTIONS DATABASE ===== */
-var QUESTIONS = [
-/* ようにする */
-{type:'fill',grammar:'ようにする',sentence:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>野菜<rt>やさい</rt></ruby>を<ruby>食<rt>た</rt></ruby>べる＿＿＿＿している。',options:['ようにする','ことにする','ために','ように'],answer:3,explain:'【考点】ようにしている＝習慣的に努力していること。「ように」は無意志動詞や状態の変化に使う。「ために」は意志的な目的。ここは習慣なので「ように」。'},
-{type:'compare',grammar:'ようにする',sentenceA:'毎日運動する<strong>ようにしている</strong>。',sentenceB:'毎日運動する<strong>ことにしている</strong>。',question:'どちらが「努力して習慣にしている」の意味？',answer:0,explain:'【考点】「ようにする」は努力・心がけ。「ことにする」は決定。「ようにしている」は「がんばって～している」、「ことにしている」は「～すると決めている」。'},
-{type:'judge',grammar:'ようにする',sentence:'日本語が上手になるようにした。',correct:true,explain:'【考点】「ようにする」は努力を表す。「上手になる」は無意志動詞なので「ように」が正しい。'},
-/* ことにする */
-{type:'fill',grammar:'ことにする',sentence:'<ruby>来月<rt>らいげつ</rt></ruby>から<ruby>毎朝<rt>まいあさ</rt></ruby><ruby>走<rt>はし</rt></ruby>る＿＿＿＿した。',options:['ことに','ように','ために','わけに'],answer:0,explain:'【考点】ことにする＝自分で決定する。「走る」は意志動詞。自分で決めたのだから「ことにした」。'},
-{type:'compare',grammar:'ことにする',sentenceA:'来年留学する<strong>ことにした</strong>。',sentenceB:'来年留学する<strong>ことになった</strong>。',question:'どちらが「自分で決めた」の意味？',answer:0,explain:'【考点】「ことにした」は自分の意志で決定。「ことになった」は外的な決定（会社や状況が決めた）。'},
-{type:'judge',grammar:'ことにする',sentence:'雨が降ることにした。',correct:false,explain:'【考点】「ことにする」は意志的決定。天気は自分で決められないので不自然。「雨が降ることになった」なら可能。'},
-/* ために */
-{type:'fill',grammar:'ために',sentence:'<ruby>大学<rt>だいがく</rt></ruby>に<ruby>入<rt>はい</rt></ruby>る＿＿＿＿、<ruby>毎日<rt>まいにち</rt></ruby><ruby>勉強<rt>べんきょう</rt></ruby>している。',options:['ために','ように','ことに','わけに'],answer:0,explain:'【考点】ために＝目的を表す。「入る」は意志動詞なので「ために」が正しい。「ように」は無意志動詞に使う。'},
-{type:'compare',grammar:'ために',sentenceA:'日本語が話せる<strong>ように</strong>、毎日練習する。',sentenceB:'日本語を話す<strong>ために</strong>、毎日練習する。',question:'「ために」の前は何形？',answer:1,explain:'【考点】「ために」の前は辞書形（意志動詞）。「ように」の前は可能形や無意志動詞。「話せる」は可能形→ように、「話す」は辞書形→ために。'},
-{type:'judge',grammar:'ために',sentence:'日本語が上手になるために、毎日勉強する。',correct:false,explain:'【考点】「上手になる」は無意志動詞（自然な変化）。無意志動詞には「ように」を使う。「上手になるように」が正しい。'},
-/* てしまう */
-{type:'fill',grammar:'てしまう',sentence:'<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>本<rt>ほん</rt></ruby>を<ruby>無<rt>な</rt></ruby>くして＿＿＿＿。',options:['しまった','おいた','みた','あった'],answer:0,explain:'【考点】てしまう＝完了または残念な気持ち。大切なものをなくした→後悔・残念→「てしまった」。'},
-{type:'judge',grammar:'てしまう',sentence:'ケーキを全部食べてしまった。',correct:true,explain:'【考点】「てしまう」は①完了（全部食べた）②残念・後悔の気持ち。両方の意味で使える自然な文。'},
-{type:'fill',grammar:'てしまう',sentence:'つい<ruby>嘘<rt>うそ</rt></ruby>を＿＿＿＿しまった。',options:['ついて','つけて','ついた','つき'],answer:0,explain:'【考点】「嘘をつく」→て形「嘘をついて」＋しまう。「つい」は「うっかり」の意味で、後悔のニュアンスを強める。'},
-/* ことがある */
-{type:'fill',grammar:'ことがある',sentence:'<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>った＿＿＿＿がある。',options:['こと','もの','ところ','わけ'],answer:0,explain:'【考点】たことがある＝経験を表す。「行った」（た形）＋ことがある＝行った経験がある。'},
-{type:'judge',grammar:'ことがある',sentence:'明日、雨が降ることがある。',correct:false,explain:'【考点】「たことがある」は過去の経験。未来のことには使えない。「明日雨が降るかもしれない」が正しい。ただし「辞書形＋ことがある」は「時々～する」の意味で使える。'},
-{type:'compare',grammar:'ことがある',sentenceA:'寿司を<strong>食べたことがある</strong>。',sentenceB:'寿司を<strong>食べることがある</strong>。',question:'どちらが「経験」の意味？',answer:0,explain:'【考点】「た形＋ことがある」＝経験（過去に一度でもしたことがある）。「辞書形＋ことがある」＝時々起こる。'},
-/* ばかり */
-{type:'fill',grammar:'ばかり',sentence:'<ruby>日本<rt>にほん</rt></ruby>に<ruby>来<rt>き</rt></ruby>た＿＿＿＿で、まだ<ruby>何<rt>なに</rt></ruby>も<ruby>分<rt>わ</rt></ruby>からない。',options:['ばかり','だけ','しか','ほど'],answer:0,explain:'【考点】たばかり＝～したばかり（直後）。来たばかり＝最近来たところ。'},
-{type:'judge',grammar:'ばかり',sentence:'彼はゲームばかりしている。',correct:true,explain:'【考点】名詞/て形＋ばかり＝～ばかり（それだけ繰り返し）。「ゲームばかり」＝ゲームしかしない（不満のニュアンス）。'},
-{type:'fill',grammar:'ばかり',sentence:'<ruby>甘<rt>あま</rt></ruby>いもの＿＿＿＿<ruby>食<rt>た</rt></ruby>べていると、<ruby>太<rt>ふと</rt></ruby>るよ。',options:['ばかり','だけ','しか','ほど'],answer:0,explain:'【考点】名詞＋ばかり＝それだけ（不満・批判のニュアンス）。甘いものばかり＝甘いものしか食べない。'},
-/* はず */
-{type:'fill',grammar:'はず',sentence:'<ruby>彼<rt>かれ</rt></ruby>はもう<ruby>着<rt>つ</rt></ruby>いている＿＿＿＿だ。',options:['はず','わけ','つもり','よう'],answer:0,explain:'【考点】はず＝当然そうだと推量する。根拠があって「～のはずだ」。彼が出発した時間から考えて、もう着いているはず。'},
-{type:'compare',grammar:'はず',sentenceA:'彼は来る<strong>はず</strong>だ。',sentenceB:'彼は来る<strong>つもり</strong>だ。',question:'どちらが「話し手の推量」？',answer:0,explain:'【考点】「はず」は話し手が根拠を持って推量。「つもり」は本人の意志・予定。「来るはず」は「来ると思う」、「来るつもり」は「来る予定だ（本人が決めた）」。'},
-{type:'judge',grammar:'はず',sentence:'明日は日曜日のはずだ。',correct:true,explain:'【考点】カレンダーという根拠に基づく推量。「はず」は確信度が高い推量に使う。'},
-/* わけ */
-{type:'fill',grammar:'わけ',sentence:'<ruby>日本<rt>にほん</rt></ruby>に5<ruby>年<rt>ねん</rt></ruby><ruby>住<rt>す</rt></ruby>んでいるから、<ruby>日本語<rt>にほんご</rt></ruby>が<ruby>上手<rt>じょうず</rt></ruby>な＿＿＿＿だ。',options:['わけ','はず','もの','こと'],answer:0,explain:'【考点】わけだ＝論理的帰結。「5年住んでいる→だから上手」という因果関係。'},
-{type:'fill',grammar:'わけ',sentence:'<ruby>彼<rt>かれ</rt></ruby>が<ruby>悪<rt>わる</rt></ruby>い＿＿＿＿ではない。',options:['わけ','はず','つもり','こと'],answer:0,explain:'【考点】わけではない＝部分否定。「必ずしも彼が悪いとは言えない」という意味。'},
-{type:'judge',grammar:'わけ',sentence:'お金がないわけではないが、節約している。',correct:true,explain:'【考点】わけではない＝必ずしも～ない（部分否定）。お金がないのではなく、あるけど節約している。'},
-/* つもり */
-{type:'fill',grammar:'つもり',sentence:'<ruby>来年<rt>らいねん</rt></ruby><ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>く＿＿＿＿です。',options:['つもり','はず','わけ','よう'],answer:0,explain:'【考点】つもり＝自分の意志・予定。「行くつもり」＝行く予定だ（自分で決めた）。'},
-{type:'judge',grammar:'つもり',sentence:'雨が降るつもりです。',correct:false,explain:'【考点】「つもり」は本人の意志。天気に意志はないので不自然。「雨が降るようです」「雨が降るはずです」が正しい。'},
-{type:'compare',grammar:'つもり',sentenceA:'日本語を<strong>勉強するつもり</strong>です。',sentenceB:'日本語を<strong>勉強するはず</strong>です。',question:'どちらが「自分の予定」？',answer:0,explain:'【考点】「つもり」は自分の計画。「はず」は推量。自分のことは「つもり」、他人のことは「はず」を使うことが多い。'},
-/* ようだ */
-{type:'fill',grammar:'ようだ',sentence:'<ruby>外<rt>そと</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っている＿＿＿＿だ。',options:['よう','らしい','みたい','そう'],answer:0,explain:'【考点】ようだ＝自分の五感に基づく推量。窓の外を見て判断。「ようだ」はやや書き言葉的。'},
-{type:'compare',grammar:'ようだ',sentenceA:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っている<strong>ようだ</strong>。',sentenceB:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っている<strong>らしい</strong>。',question:'どちらが「自分の目で見た」推量？',answer:0,explain:'【考点】「ようだ」は自分の五感（見た、聞いた）に基づく判断。「らしい」は伝聞や間接情報に基づく判断。'},
-{type:'judge',grammar:'ようだ',sentence:'この料理は甘いようだ。',correct:true,explain:'【考点】見た目や匂いから判断（五感）→「ようだ」。食べてみた結果なら「甘い」と断定する。'},
-/* らしい */
-{type:'fill',grammar:'らしい',sentence:'<ruby>天気予報<rt>てんきよほう</rt></ruby>によると、<ruby>明日<rt>あした</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>＿＿＿＿。',options:['らしい','ようだ','みたいだ','そうだ(様態)'],answer:0,explain:'【考点】らしい＝間接情報に基づく推量。天気予報（他人の情報）から判断→「らしい」。'},
-{type:'judge',grammar:'らしい',sentence:'田中さんは来月結婚するらしい。',correct:true,explain:'【考点】誰かから聞いた情報→「らしい」。直接見たわけではなく、噂や伝聞。'},
-{type:'fill',grammar:'らしい',sentence:'あの<ruby>人<rt>ひと</rt></ruby>は<ruby>先生<rt>せんせい</rt></ruby>＿＿＿＿。',options:['らしい','ようだ','みたいだ','だそうだ'],answer:0,explain:'【考点】名詞＋らしい。「先生らしい」は①推量（先生のようだ）②典型（先生らしい先生）の2つの意味がある。'},
-/* みたい */
-{type:'fill',grammar:'みたい',sentence:'あの<ruby>雲<rt>くも</rt></ruby>は<ruby>犬<rt>いぬ</rt></ruby>＿＿＿＿だ。',options:['みたい','らしい','よう','そう'],answer:0,explain:'【考点】みたい＝「ようだ」の口語形。比喩にも使える。「犬みたい」＝犬のように見える。'},
-{type:'judge',grammar:'みたい',sentence:'彼は元気みたいだ。',correct:true,explain:'【考点】「みたい」は「ようだ」の口語版。見た様子から「元気そうだ」と判断。日常会話でよく使う。'},
-{type:'compare',grammar:'みたい',sentenceA:'<ruby>彼女<rt>かのじょ</rt></ruby>は<ruby>怒<rt>おこ</rt></ruby>っている<strong>みたい</strong>だ。',sentenceB:'<ruby>彼女<rt>かのじょ</rt></ruby>は<ruby>怒<rt>おこ</rt></ruby>って<strong>そう</strong>だ。',question:'どちらが「見た目の様子」？',answer:1,explain:'【考点】「そうだ（様態）」はV-ます形/い形-そうだで見た目の様子。「みたい」は推量。「怒っていそうだ」は見た目、「怒っているみたい」は状況からの推量。'},
-/* そうだ（様態） */
-{type:'fill',grammar:'そうだ(様態)',sentence:'この<ruby>料理<rt>りょうり</rt></ruby>は<ruby>美味<rt>おい</rt></ruby>し＿＿＿＿だ。',options:['そう','よう','みたい','らしい'],answer:0,explain:'【考点】そうだ（様態）＝見た目の判断。い形容詞→い を取って＋そうだ。美味しい→美味しそうだ。'},
-{type:'judge',grammar:'そうだ(様態)',sentence:'雨が降りそうだ。',correct:true,explain:'【考点】動詞ます形＋そうだ＝見た目の推量。空を見て「もうすぐ降る」と判断。'},
-{type:'fill',grammar:'そうだ(様態)',sentence:'<ruby>彼<rt>かれ</rt></ruby>は<ruby>元気<rt>げんき</rt></ruby>＿＿＿＿だ。',options:['そう','な','だ','らしい'],answer:0,explain:'【考点】な形容詞＋そうだ。元気→元気そうだ（「な」は取る）。見た目で元気だと判断。'},
-/* そうだ（伝聞） */
-{type:'fill',grammar:'そうだ(伝聞)',sentence:'<ruby>天気予報<rt>てんきよほう</rt></ruby>によると、<ruby>明日<rt>あした</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>だ＿＿＿＿。',options:['そうだ','ようだ','らしい','みたいだ'],answer:0,explain:'【考点】伝聞のそうだ＝普通形＋そうだ。「雨だ」＋そうだ。「～によると」は伝聞の典型的な表現。'},
-{type:'compare',grammar:'そうだ(伝聞)',sentenceA:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>り<strong>そうだ</strong>。',sentenceB:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>る<strong>そうだ</strong>。',question:'どちらが「伝聞」？',answer:1,explain:'【考点】様態＝ます形（降り）＋そうだ（見た目で判断）。伝聞＝辞書形（降る）＋そうだ（誰かに聞いた）。接続が違う！'},
-{type:'judge',grammar:'そうだ(伝聞)',sentence:'ニュースによると、明日は暑いそうだ。',correct:true,explain:'【考点】伝聞のそうだ。い形容詞の普通形「暑い」＋そうだ。ニュースからの情報。'},
-/* ことになる */
-{type:'fill',grammar:'ことになる',sentence:'<ruby>来月<rt>らいげつ</rt></ruby>から<ruby>大阪<rt>おおさか</rt></ruby>に<ruby>転勤<rt>てんきん</rt></ruby>する＿＿＿＿。',options:['ことになった','ことにした','ようになった','ようにした'],answer:0,explain:'【考点】ことになる＝（自分の意志でなく）決まった。会社の命令で転勤が決まった→ことになった。'},
-{type:'judge',grammar:'ことになる',sentence:'会議は3時からということになった。',correct:true,explain:'【考点】ことになる＝決定された（外的要因）。会議の時間は上司や組織が決めた→ことになった。'},
-{type:'compare',grammar:'ことになる',sentenceA:'<ruby>留学<rt>りゅうがく</rt></ruby>する<strong>ことになった</strong>。',sentenceB:'<ruby>留学<rt>りゅうがく</rt></ruby>する<strong>ことにした</strong>。',question:'どちらが「外的に決まった」？',answer:0,explain:'【考点】「ことになった」は外的決定。「ことにした」は自分の決定。留学が奨学金で決まった→なった、自分で決めた→にした。'},
-/* ようになる */
-{type:'fill',grammar:'ようになる',sentence:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>練習<rt>れんしゅう</rt></ruby>して、<ruby>泳<rt>およ</rt></ruby>げる＿＿＿＿なった。',options:['ように','ことに','ために','のに'],answer:0,explain:'【考点】ようになる＝変化の結果。泳げなかった→泳げるようになった（能力の変化）。可能形＋ようになる＝できるようになった。'},
-{type:'judge',grammar:'ようになる',sentence:'日本語が話せるようになりたい。',correct:true,explain:'【考点】可能形＋ようになる＝能力の変化。「なりたい」で希望を表す。'},
-{type:'fill',grammar:'ようになる',sentence:'<ruby>子供<rt>こども</rt></ruby>が<ruby>野菜<rt>やさい</rt></ruby>を<ruby>食<rt>た</rt></ruby>べる＿＿＿＿なった。',options:['ように','ことに','ために','わけに'],answer:0,explain:'【考点】食べなかった→食べるようになった。習慣の変化を表す。'},
-/* ていく / てくる */
-{type:'fill',grammar:'ていく',sentence:'これからも<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>して＿＿＿＿つもりだ。',options:['いく','くる','おく','ある'],answer:0,explain:'【考点】ていく＝これから先への変化・継続。「これからも」→未来方向→「ていく」。'},
-{type:'compare',grammar:'ていく',sentenceA:'<ruby>人口<rt>じんこう</rt></ruby>が<ruby>減<rt>へ</rt></ruby>って<strong>いく</strong>。',sentenceB:'<ruby>人口<rt>じんこう</rt></ruby>が<ruby>減<rt>へ</rt></ruby>って<strong>きた</strong>。',question:'どちらが「これから」の変化？',answer:0,explain:'【考点】「ていく」は今→未来の変化。「てくる」は過去→今の変化。人口がこれから減る→ていく、今まで減ってきた→てきた。'},
-{type:'judge',grammar:'てくる',sentence:'最近、日本語が分かるようになってきた。',correct:true,explain:'【考点】てくる＝過去から現在への変化。「最近」→今までの変化→「てきた」。'},
-/* たところ / ているところ */
-{type:'fill',grammar:'たところ',sentence:'<ruby>今<rt>いま</rt></ruby>、<ruby>駅<rt>えき</rt></ruby>に<ruby>着<rt>つ</rt></ruby>いた＿＿＿＿です。',options:['ところ','ばかり','とき','まま'],answer:0,explain:'【考点】たところ＝ちょうど～した直後。「今着いた」→直後の状態。「ばかり」も似ているが、「ところ」はもっと直後。'},
-{type:'compare',grammar:'ているところ',sentenceA:'<ruby>今<rt>いま</rt></ruby><ruby>料理<rt>りょうり</rt></ruby>を<strong>しているところ</strong>だ。',sentenceB:'<ruby>今<rt>いま</rt></ruby><ruby>料理<rt>りょうり</rt></ruby>を<strong>したところ</strong>だ。',question:'どちらが「今まさに進行中」？',answer:0,explain:'【考点】「ているところ」は進行中。「たところ」は完了直後。料理中→しているところ、作り終わった→したところ。'},
-{type:'fill',grammar:'ているところ',sentence:'ちょうど<ruby>食事<rt>しょくじ</rt></ruby>を＿＿＿＿ところです。',options:['している','した','する','しない'],answer:0,explain:'【考点】「ちょうど」＝今まさに。進行中→ているところ。'},
-/* ことにしている / ようにしている */
-{type:'fill',grammar:'ことにしている',sentence:'<ruby>毎日<rt>まいにち</rt></ruby>7<ruby>時<rt>じ</rt></ruby>に<ruby>起<rt>お</rt></ruby>きる＿＿＿＿している。',options:['ことに','ように','ために','のに'],answer:0,explain:'【考点】ことにしている＝決めた習慣を続けている。7時に起きると決めて、それを守っている。'},
-{type:'compare',grammar:'ことにしている',sentenceA:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>牛乳<rt>ぎゅうにゅう</rt></ruby>を<ruby>飲<rt>の</rt></ruby>む<strong>ことにしている</strong>。',sentenceB:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>牛乳<rt>ぎゅうにゅう</rt></ruby>を<ruby>飲<rt>の</rt></ruby>む<strong>ようにしている</strong>。',question:'どちらが「努力して心がけている」？',answer:1,explain:'【考点】「ことにしている」＝ルールとして決めた。「ようにしている」＝努力・心がけ。ことに＝必ず守る、ように＝なるべく守ろうとしている。'},
-{type:'judge',grammar:'ようにしている',sentence:'甘いものを食べないようにしている。',correct:true,explain:'【考点】ない形＋ようにしている＝～しないように心がけている。健康のために甘いものを控える努力。'},
-/* Additional grammar points with questions */
-{type:'fill',grammar:'てもらう',sentence:'<ruby>友達<rt>ともだち</rt></ruby>に<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>教<rt>おし</rt></ruby>えて＿＿＿＿。',options:['もらった','あげた','くれた','おいた'],answer:0,explain:'【考点】てもらう＝誰かに～してもらう（受益）。友達に教えてもらった＝友達が教えてくれた（私の視点）。'},
-{type:'fill',grammar:'てあげる',sentence:'<ruby>妹<rt>いもうと</rt></ruby>に<ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んで＿＿＿＿。',options:['あげた','もらった','くれた','みた'],answer:0,explain:'【考点】てあげる＝相手のために～する。妹のために本を読んであげた。'},
-{type:'fill',grammar:'てくれる',sentence:'<ruby>母<rt>はは</rt></ruby>が<ruby>弁当<rt>べんとう</rt></ruby>を<ruby>作<rt>つく</rt></ruby>って＿＿＿＿。',options:['くれた','あげた','もらった','おいた'],answer:0,explain:'【考点】てくれる＝相手が（私のために）～してくれる。母が私のために弁当を作った。'},
-{type:'fill',grammar:'ておく',sentence:'<ruby>明日<rt>あした</rt></ruby>の<ruby>会議<rt>かいぎ</rt></ruby>の<ruby>資料<rt>しりょう</rt></ruby>を<ruby>準備<rt>じゅんび</rt></ruby>して＿＿＿＿。',options:['おいた','しまった','みた','あった'],answer:0,explain:'【考点】ておく＝事前準備。明日のために今準備しておく。'},
-{type:'fill',grammar:'てみる',sentence:'この<ruby>新<rt>あたら</rt></ruby>しいレストランに<ruby>行<rt>い</rt></ruby>って＿＿＿＿たい。',options:['み','しまい','おき','い'],answer:0,explain:'【考点】てみる＝試しに～する。新しいレストランを試してみたい。'},
-{type:'fill',grammar:'ないで',sentence:'<ruby>朝<rt>あさ</rt></ruby>ごはんを<ruby>食<rt>た</rt></ruby>べ＿＿＿＿<ruby>学校<rt>がっこう</rt></ruby>に<ruby>行<rt>い</rt></ruby>った。',options:['ないで','なくて','ずに','ないと'],answer:0,explain:'【考点】ないで＝～しないで（付帯状況）。食べない状態で学校に行った。「なくて」は理由。'},
-{type:'fill',grammar:'なければならない',sentence:'<ruby>明日<rt>あした</rt></ruby>までにレポートを<ruby>出<rt>だ</rt></ruby>さ＿＿＿＿。',options:['なければならない','ないでもいい','なくてもいい','ないほうがいい'],answer:0,explain:'【考点】なければならない＝義務・必要。「出す」→ない形「出さない」→「出さなければならない」。'},
-{type:'fill',grammar:'なくてもいい',sentence:'<ruby>明日<rt>あした</rt></ruby>は<ruby>休<rt>やす</rt></ruby>みだから、<ruby>早<rt>はや</rt></ruby>く<ruby>起<rt>お</rt></ruby>き＿＿＿＿。',options:['なくてもいい','なければならない','ないといけない','なくてはいけない'],answer:0,explain:'【考点】なくてもいい＝～しなくてもよい（不必要）。休みだから早く起きる必要がない。'},
-{type:'fill',grammar:'ことができる',sentence:'<ruby>彼<rt>かれ</rt></ruby>は3つの<ruby>言語<rt>げんご</rt></ruby>を<ruby>話<rt>はな</rt></ruby>す＿＿＿＿。',options:['ことができる','ようになる','ようにする','ことにする'],answer:0,explain:'【考点】ことができる＝能力・可能性。辞書形＋ことができる。可能形と同じ意味。'},
-{type:'fill',grammar:'ほうがいい',sentence:'<ruby>熱<rt>ねつ</rt></ruby>があるなら、<ruby>病院<rt>びょういん</rt></ruby>に<ruby>行<rt>い</rt></ruby>った＿＿＿＿。',options:['ほうがいい','ほどだ','ばかりだ','ところだ'],answer:0,explain:'【考点】た形＋ほうがいい＝アドバイス。「行ったほうがいい」＝行くべきだ。ない形の場合は「行かないほうがいい」。'},
-{type:'fill',grammar:'ようにする',sentence:'<ruby>遅刻<rt>ちこく</rt></ruby>しない＿＿＿＿してください。',options:['ように','ことに','ために','のに'],answer:0,explain:'【考点】ない形＋ようにする＝～しないように努力する。遅刻しないように気をつける。'},
-{type:'fill',grammar:'かもしれない',sentence:'<ruby>明日<rt>あした</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>る＿＿＿＿。',options:['かもしれない','にちがいない','はずだ','わけだ'],answer:0,explain:'【考点】かもしれない＝可能性（50%くらい）。「にちがいない」は確信。「はず」は根拠ある推量。'},
-{type:'fill',grammar:'にちがいない',sentence:'こんなに<ruby>混<rt>こ</rt></ruby>んでいるから、<ruby>人気<rt>にんき</rt></ruby>のある<ruby>店<rt>みせ</rt></ruby>に＿＿＿＿。',options:['ちがいない','かもしれない','はずだ','そうだ'],answer:0,explain:'【考点】にちがいない＝確信を持った推量。混んでいる→きっと人気がある。'},
-{type:'fill',grammar:'ばいい',sentence:'<ruby>分<rt>わ</rt></ruby>からないことがあったら、<ruby>先生<rt>せんせい</rt></ruby>に<ruby>聞<rt>き</rt></ruby>け＿＿＿＿。',options:['ばいい','たらいい','といい','てもいい'],answer:0,explain:'【考点】ば形＋いい＝～すればよい（アドバイス）。聞く→聞けば＋いい。'},
-{type:'fill',grammar:'のに',sentence:'<ruby>約束<rt>やくそく</rt></ruby>したのに、<ruby>彼<rt>かれ</rt></ruby>は<ruby>来<rt>こ</rt></ruby>なかった。',options:['のに','から','ので','けど'],answer:0,explain:'【考点】のに＝逆接（期待はずれ・不満）。約束した→来るはず→でも来なかった→不満。'},
-{type:'fill',grammar:'ながら',sentence:'<ruby>音楽<rt>おんがく</rt></ruby>を<ruby>聞<rt>き</rt></ruby>き＿＿＿＿<ruby>勉強<rt>べんきょう</rt></ruby>する。',options:['ながら','つつ','たり','ては'],answer:0,explain:'【考点】ます形＋ながら＝同時進行。音楽を聞くことと勉強することを同時にする。'},
-{type:'fill',grammar:'たり～たりする',sentence:'<ruby>休<rt>やす</rt></ruby>みの<ruby>日<rt>ひ</rt></ruby>は<ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んだり<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>たり＿＿＿＿。',options:['する','した','して','しよう'],answer:0,explain:'【考点】たり～たりする＝いくつかの行動を例示。最後は「する」で締める。'},
-{type:'fill',grammar:'ても',sentence:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っ＿＿＿＿、サッカーをする。',options:['ても','たら','ると','れば'],answer:0,explain:'【考点】ても＝逆接条件。雨が降る→普通はしない→でもする→「ても」。'},
-{type:'fill',grammar:'ところだ',sentence:'これから<ruby>出<rt>で</rt></ruby>かける＿＿＿＿です。',options:['ところ','ばかり','まで','はず'],answer:0,explain:'【考点】辞書形＋ところだ＝これから～する直前。「出かける」前の状態。'},
-{type:'fill',grammar:'ば',sentence:'<ruby>天気<rt>てんき</rt></ruby>がよけれ＿＿＿＿、<ruby>散歩<rt>さんぽ</rt></ruby>に<ruby>行<rt>い</rt></ruby>きましょう。',options:['ば','たら','と','なら'],answer:0,explain:'【考点】条件形（ば形）。い形容詞：よい→よければ。仮定条件を表す。'},
-{type:'fill',grammar:'たら',sentence:'<ruby>家<rt>いえ</rt></ruby>に<ruby>帰<rt>かえ</rt></ruby>っ＿＿＿＿、すぐシャワーを<ruby>浴<rt>あ</rt></ruby>びる。',options:['たら','ても','ると','れば'],answer:0,explain:'【考点】たら＝仮定条件・確定条件。帰宅後にシャワーを浴びる（時間的順序）。'},
-{type:'fill',grammar:'と',sentence:'<ruby>春<rt>はる</rt></ruby>になる＿＿＿＿、<ruby>桜<rt>さくら</rt></ruby>が<ruby>咲<rt>さ</rt></ruby>く。',options:['と','たら','ば','なら'],answer:0,explain:'【考点】と＝自然な帰結・習慣。春になる→必ず桜が咲く（自然現象）。'},
-{type:'fill',grammar:'ように',sentence:'<ruby>忘<rt>わす</rt></ruby>れない＿＿＿＿、メモした。',options:['ように','ために','のに','ことに'],answer:0,explain:'【考点】ない形＋ように＝～しないために。忘れないための方法としてメモした。「ために」は意志動詞のみ。'},
-{type:'fill',grammar:'ほど',sentence:'この<ruby>映画<rt>えいが</rt></ruby>は<ruby>泣<rt>な</rt></ruby>く＿＿＿＿<ruby>感動<rt>かんどう</rt></ruby>した。',options:['ほど','ぐらい','まで','だけ'],answer:0,explain:'【考点】ほど＝程度。「泣くほど感動した」＝泣くくらい感動的だった。'},
-/* Order type questions */
-{type:'order',grammar:'ようにする',words:['毎日','野菜を','食べる','ように','している'],correct:'毎日 野菜を 食べる ように している',explain:'【考点】ようにしている＝努力して習慣にしている。語順：副詞→目的語→動詞辞書形→ように→している。'},
-{type:'order',grammar:'ために',words:['大学に','入る','ために','毎日','勉強している'],correct:'大学に 入る ために 毎日 勉強している',explain:'【考点】ために＝目的。語順：目的＋ために＋手段。'},
-{type:'order',grammar:'てしまう',words:['財布を','電車に','忘れて','しまった'],correct:'財布を 電車に 忘れて しまった',explain:'【考点】てしまう＝後悔。「電車に忘れてしまった」は典型的な使い方。'},
-{type:'order',grammar:'ことになる',words:['来月','から','大阪に','転勤する','ことになった'],correct:'来月 から 大阪に 転勤する ことになった',explain:'【考点】ことになる＝外的決定。時間→場所→動詞＋ことになった。'},
-{type:'order',grammar:'ようになる',words:['日本語が','少し','話せる','ように','なった'],correct:'日本語が 少し 話せる ように なった',explain:'【考点】可能形＋ようになる＝能力の変化。'},
-{type:'order',grammar:'ているところ',words:['今','ちょうど','ご飯を','食べている','ところだ'],correct:'今 ちょうど ご飯を 食べている ところだ',explain:'【考点】ているところ＝進行中。「ちょうど」と一緒に使うことが多い。'}
-];
+/* ===== DAILY_DATA: 7天分组 ===== */
+var DAILY_DATA = {
+"Day1": {
+  title: "目的・決定の文法",
+  grammar: [
+    {name:"ようにする",meaning:"努力して～する（心がけ）",keyPoint:"無意志動詞・ない形に接続。「ように」は努力・心がけを表す",structure:"動詞辞書形/ない形＋ようにする"},
+    {name:"ことにする",meaning:"自分で～と決める",keyPoint:"意志動詞に接続。自分の意志で決定する",structure:"動詞辞書形/ない形＋ことにする"},
+    {name:"ために",meaning:"～の目的で",keyPoint:"意志動詞の辞書形に接続。「ように」は無意志動詞・可能形",structure:"動詞辞書形＋ために / 名詞の＋ために"}
+  ],
+  questions: [
+    {type:'fill',grammar:'ようにする',sentence:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>野菜<rt>やさい</rt></ruby>を<ruby>食<rt>た</rt></ruby>べる＿＿＿＿している。',options:['ようにする','ことにする','ために','ように'],answer:3,explain:'【考点】ようにしている＝習慣的に努力していること。「ように」は無意志動詞や状態の変化に使う。「ために」は意志的な目的。ここは習慣なので「ように」。'},
+    {type:'compare',grammar:'ようにする',sentenceA:'毎日運動する<strong>ようにしている</strong>。',sentenceB:'毎日運動する<strong>ことにしている</strong>。',question:'どちらが「努力して習慣にしている」の意味？',answer:0,explain:'【考点】「ようにする」は努力・心がけ。「ことにする」は決定。「ようにしている」は「がんばって～している」、「ことにしている」は「～すると決めている」。'},
+    {type:'judge',grammar:'ようにする',sentence:'日本語が上手になるようにした。',correct:true,explain:'【考点】「ようにする」は努力を表す。「上手になる」は無意志動詞なので「ように」が正しい。'},
+    {type:'fill',grammar:'ようにする',sentence:'<ruby>遅刻<rt>ちこく</rt></ruby>しない＿＿＿＿してください。',options:['ように','ことに','ために','のに'],answer:0,explain:'【考点】ない形＋ようにする＝～しないように努力する。遅刻しないように気をつける。'},
+    {type:'order',grammar:'ようにする',words:['毎日','野菜を','食べる','ように','している'],correct:'毎日 野菜を 食べる ように している',explain:'【考点】ようにしている＝努力して習慣にしている。語順：副詞→目的語→動詞辞書形→ように→している。'},
+    {type:'fill',grammar:'ことにする',sentence:'<ruby>来月<rt>らいげつ</rt></ruby>から<ruby>毎朝<rt>まいあさ</rt></ruby><ruby>走<rt>はし</rt></ruby>る＿＿＿＿した。',options:['ことに','ように','ために','わけに'],answer:0,explain:'【考点】ことにする＝自分で決定する。「走る」は意志動詞。自分で決めたのだから「ことにした」。'},
+    {type:'compare',grammar:'ことにする',sentenceA:'来年留学する<strong>ことにした</strong>。',sentenceB:'来年留学する<strong>ことになった</strong>。',question:'どちらが「自分で決めた」の意味？',answer:0,explain:'【考点】「ことにした」は自分の意志で決定。「ことになった」は外的な決定（会社や状況が決めた）。'},
+    {type:'judge',grammar:'ことにする',sentence:'雨が降ることにした。',correct:false,explain:'【考点】「ことにする」は意志的決定。天気は自分で決められないので不自然。「雨が降ることになった」なら可能。'},
+    {type:'fill',grammar:'ために',sentence:'<ruby>大学<rt>だいがく</rt></ruby>に<ruby>入<rt>はい</rt></ruby>る＿＿＿＿、<ruby>毎日<rt>まいにち</rt></ruby><ruby>勉強<rt>べんきょう</rt></ruby>している。',options:['ために','ように','ことに','わけに'],answer:0,explain:'【考点】ために＝目的を表す。「入る」は意志動詞なので「ために」が正しい。「ように」は無意志動詞に使う。'},
+    {type:'compare',grammar:'ために',sentenceA:'日本語が話せる<strong>ように</strong>、毎日練習する。',sentenceB:'日本語を話す<strong>ために</strong>、毎日練習する。',question:'「ために」の前は何形？',answer:1,explain:'【考点】「ために」の前は辞書形（意志動詞）。「ように」の前は可能形や無意志動詞。「話せる」は可能形→ように、「話す」は辞書形→ために。'},
+    {type:'judge',grammar:'ために',sentence:'日本語が上手になるために、毎日勉強する。',correct:false,explain:'【考点】「上手になる」は無意志動詞（自然な変化）。無意志動詞には「ように」を使う。「上手になるように」が正しい。'},
+    {type:'order',grammar:'ために',words:['大学に','入る','ために','毎日','勉強している'],correct:'大学に 入る ために 毎日 勉強している',explain:'【考点】ために＝目的。語順：目的＋ために＋手段。'}
+  ]
+},
+"Day2": {
+  title: "完了・経験・程度",
+  grammar: [
+    {name:"てしまう",meaning:"完了 or 残念・後悔",keyPoint:"て形＋しまう。口語では「ちゃう/じゃう」",structure:"動詞て形＋しまう"},
+    {name:"ことがある",meaning:"た形＝経験、辞書形＝時々起こる",keyPoint:"た形→過去の経験。辞書形→たまに発生する",structure:"動詞た形/辞書形＋ことがある"},
+    {name:"ばかり",meaning:"た形＝直後、名詞＝それだけ（不満）",keyPoint:"接続で意味が変わる。「たばかり」＝したばかり",structure:"た形＋ばかり / 名詞＋ばかり"},
+    {name:"ほど",meaning:"～くらいの程度",keyPoint:"動詞辞書形/ない形＋ほど＝その程度",structure:"動詞辞書形＋ほど / 名詞＋ほど"}
+  ],
+  questions: [
+    {type:'fill',grammar:'てしまう',sentence:'<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>本<rt>ほん</rt></ruby>を<ruby>無<rt>な</rt></ruby>くして＿＿＿＿。',options:['しまった','おいた','みた','あった'],answer:0,explain:'【考点】てしまう＝完了または残念な気持ち。大切なものをなくした→後悔・残念→「てしまった」。'},
+    {type:'judge',grammar:'てしまう',sentence:'ケーキを全部食べてしまった。',correct:true,explain:'【考点】「てしまう」は①完了（全部食べた）②残念・後悔の気持ち。両方の意味で使える自然な文。'},
+    {type:'fill',grammar:'てしまう',sentence:'つい<ruby>嘘<rt>うそ</rt></ruby>を＿＿＿＿しまった。',options:['ついて','つけて','ついた','つき'],answer:0,explain:'【考点】「嘘をつく」→て形「嘘をついて」＋しまう。「つい」は「うっかり」の意味で、後悔のニュアンスを強める。'},
+    {type:'order',grammar:'てしまう',words:['財布を','電車に','忘れて','しまった'],correct:'財布を 電車に 忘れて しまった',explain:'【考点】てしまう＝後悔。「電車に忘れてしまった」は典型的な使い方。'},
+    {type:'fill',grammar:'ことがある',sentence:'<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>った＿＿＿＿がある。',options:['こと','もの','ところ','わけ'],answer:0,explain:'【考点】たことがある＝経験を表す。「行った」（た形）＋ことがある＝行った経験がある。'},
+    {type:'judge',grammar:'ことがある',sentence:'明日、雨が降ることがある。',correct:false,explain:'【考点】「たことがある」は過去の経験。未来のことには使えない。「明日雨が降るかもしれない」が正しい。ただし「辞書形＋ことがある」は「時々～する」の意味で使える。'},
+    {type:'compare',grammar:'ことがある',sentenceA:'寿司を<strong>食べたことがある</strong>。',sentenceB:'寿司を<strong>食べることがある</strong>。',question:'どちらが「経験」の意味？',answer:0,explain:'【考点】「た形＋ことがある」＝経験（過去に一度でもしたことがある）。「辞書形＋ことがある」＝時々起こる。'},
+    {type:'fill',grammar:'ばかり',sentence:'<ruby>日本<rt>にほん</rt></ruby>に<ruby>来<rt>き</rt></ruby>た＿＿＿＿で、まだ<ruby>何<rt>なに</rt></ruby>も<ruby>分<rt>わ</rt></ruby>からない。',options:['ばかり','だけ','しか','ほど'],answer:0,explain:'【考点】たばかり＝～したばかり（直後）。来たばかり＝最近来たところ。'},
+    {type:'judge',grammar:'ばかり',sentence:'彼はゲームばかりしている。',correct:true,explain:'【考点】名詞/て形＋ばかり＝～ばかり（それだけ繰り返し）。「ゲームばかり」＝ゲームしかしない（不満のニュアンス）。'},
+    {type:'fill',grammar:'ばかり',sentence:'<ruby>甘<rt>あま</rt></ruby>いもの＿＿＿＿<ruby>食<rt>た</rt></ruby>べていると、<ruby>太<rt>ふと</rt></ruby>るよ。',options:['ばかり','だけ','しか','ほど'],answer:0,explain:'【考点】名詞＋ばかり＝それだけ（不満・批判のニュアンス）。甘いものばかり＝甘いものしか食べない。'},
+    {type:'fill',grammar:'ほど',sentence:'この<ruby>映画<rt>えいが</rt></ruby>は<ruby>泣<rt>な</rt></ruby>く＿＿＿＿<ruby>感動<rt>かんどう</rt></ruby>した。',options:['ほど','ぐらい','まで','だけ'],answer:0,explain:'【考点】ほど＝程度。「泣くほど感動した」＝泣くくらい感動的だった。'}
+  ]
+},
+"Day3": {
+  title: "推量・判断の文法",
+  grammar: [
+    {name:"はず",meaning:"当然～だ（根拠ある推量）",keyPoint:"話し手が根拠を持って推量。確信度が高い",structure:"普通形＋はずだ / 名詞の＋はずだ"},
+    {name:"わけ",meaning:"論理的帰結 / わけではない＝部分否定",keyPoint:"因果関係の帰結。「わけではない」は部分否定",structure:"普通形＋わけだ / わけではない"},
+    {name:"つもり",meaning:"～する予定（本人の意志）",keyPoint:"自分の計画・意志。他人には「はず」を使う",structure:"動詞辞書形/ない形＋つもりだ"},
+    {name:"かもしれない",meaning:"～かもしれない（可能性50%）",keyPoint:"不確かな推量。確信度は低い",structure:"普通形＋かもしれない"},
+    {name:"にちがいない",meaning:"きっと～だ（確信90%以上）",keyPoint:"強い確信。根拠があり、ほぼ間違いない",structure:"普通形＋にちがいない"}
+  ],
+  questions: [
+    {type:'fill',grammar:'はず',sentence:'<ruby>彼<rt>かれ</rt></ruby>はもう<ruby>着<rt>つ</rt></ruby>いている＿＿＿＿だ。',options:['はず','わけ','つもり','よう'],answer:0,explain:'【考点】はず＝当然そうだと推量する。根拠があって「～のはずだ」。彼が出発した時間から考えて、もう着いているはず。'},
+    {type:'compare',grammar:'はず',sentenceA:'彼は来る<strong>はず</strong>だ。',sentenceB:'彼は来る<strong>つもり</strong>だ。',question:'どちらが「話し手の推量」？',answer:0,explain:'【考点】「はず」は話し手が根拠を持って推量。「つもり」は本人の意志・予定。「来るはず」は「来ると思う」、「来るつもり」は「来る予定だ（本人が決めた）」。'},
+    {type:'judge',grammar:'はず',sentence:'明日は日曜日のはずだ。',correct:true,explain:'【考点】カレンダーという根拠に基づく推量。「はず」は確信度が高い推量に使う。'},
+    {type:'fill',grammar:'わけ',sentence:'<ruby>日本<rt>にほん</rt></ruby>に5<ruby>年<rt>ねん</rt></ruby><ruby>住<rt>す</rt></ruby>んでいるから、<ruby>日本語<rt>にほんご</rt></ruby>が<ruby>上手<rt>じょうず</rt></ruby>な＿＿＿＿だ。',options:['わけ','はず','もの','こと'],answer:0,explain:'【考点】わけだ＝論理的帰結。「5年住んでいる→だから上手」という因果関係。'},
+    {type:'fill',grammar:'わけ',sentence:'<ruby>彼<rt>かれ</rt></ruby>が<ruby>悪<rt>わる</rt></ruby>い＿＿＿＿ではない。',options:['わけ','はず','つもり','こと'],answer:0,explain:'【考点】わけではない＝部分否定。「必ずしも彼が悪いとは言えない」という意味。'},
+    {type:'judge',grammar:'わけ',sentence:'お金がないわけではないが、節約している。',correct:true,explain:'【考点】わけではない＝必ずしも～ない（部分否定）。お金がないのではなく、あるけど節約している。'},
+    {type:'fill',grammar:'つもり',sentence:'<ruby>来年<rt>らいねん</rt></ruby><ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>く＿＿＿＿です。',options:['つもり','はず','わけ','よう'],answer:0,explain:'【考点】つもり＝自分の意志・予定。「行くつもり」＝行く予定だ（自分で決めた）。'},
+    {type:'judge',grammar:'つもり',sentence:'雨が降るつもりです。',correct:false,explain:'【考点】「つもり」は本人の意志。天気に意志はないので不自然。「雨が降るようです」「雨が降るはずです」が正しい。'},
+    {type:'compare',grammar:'つもり',sentenceA:'日本語を<strong>勉強するつもり</strong>です。',sentenceB:'日本語を<strong>勉強するはず</strong>です。',question:'どちらが「自分の予定」？',answer:0,explain:'【考点】「つもり」は自分の計画。「はず」は推量。自分のことは「つもり」、他人のことは「はず」を使うことが多い。'},
+    {type:'fill',grammar:'かもしれない',sentence:'<ruby>明日<rt>あした</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>る＿＿＿＿。',options:['かもしれない','にちがいない','はずだ','わけだ'],answer:0,explain:'【考点】かもしれない＝可能性（50%くらい）。「にちがいない」は確信。「はず」は根拠ある推量。'},
+    {type:'fill',grammar:'にちがいない',sentence:'こんなに<ruby>混<rt>こ</rt></ruby>んでいるから、<ruby>人気<rt>にんき</rt></ruby>のある<ruby>店<rt>みせ</rt></ruby>に＿＿＿＿。',options:['ちがいない','かもしれない','はずだ','そうだ'],answer:0,explain:'【考点】にちがいない＝確信を持った推量。混んでいる→きっと人気がある。'}
+  ]
+},
+"Day4": {
+  title: "推測四兄弟（ようだ・らしい・みたい・そうだ）",
+  grammar: [
+    {name:"ようだ",meaning:"～のようだ（五感に基づく推量）",keyPoint:"自分の五感で判断。やや書き言葉的",structure:"普通形＋ようだ / 名詞の＋ようだ"},
+    {name:"らしい",meaning:"～らしい（間接情報に基づく推量）",keyPoint:"伝聞・噂・間接情報から判断",structure:"普通形＋らしい / 名詞＋らしい"},
+    {name:"みたい",meaning:"～みたいだ（ようだの口語版）",keyPoint:"「ようだ」のカジュアル版。比喩にも使える",structure:"普通形＋みたいだ / 名詞＋みたいだ"},
+    {name:"そうだ(様態)",meaning:"見た目の判断（～そうだ）",keyPoint:"ます形/い形(-い)＋そうだ。見た目から判断",structure:"V-ます形/い形(-い)/な形＋そうだ"},
+    {name:"そうだ(伝聞)",meaning:"～だそうだ（聞いた情報）",keyPoint:"普通形＋そうだ。「～によると」と一緒に使う",structure:"普通形＋そうだ"}
+  ],
+  questions: [
+    {type:'fill',grammar:'ようだ',sentence:'<ruby>外<rt>そと</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っている＿＿＿＿だ。',options:['よう','らしい','みたい','そう'],answer:0,explain:'【考点】ようだ＝自分の五感に基づく推量。窓の外を見て判断。「ようだ」はやや書き言葉的。'},
+    {type:'compare',grammar:'ようだ',sentenceA:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っている<strong>ようだ</strong>。',sentenceB:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っている<strong>らしい</strong>。',question:'どちらが「自分の目で見た」推量？',answer:0,explain:'【考点】「ようだ」は自分の五感（見た、聞いた）に基づく判断。「らしい」は伝聞や間接情報に基づく判断。'},
+    {type:'judge',grammar:'ようだ',sentence:'この料理は甘いようだ。',correct:true,explain:'【考点】見た目や匂いから判断（五感）→「ようだ」。食べてみた結果なら「甘い」と断定する。'},
+    {type:'fill',grammar:'らしい',sentence:'<ruby>天気予報<rt>てんきよほう</rt></ruby>によると、<ruby>明日<rt>あした</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>＿＿＿＿。',options:['らしい','ようだ','みたいだ','そうだ(様態)'],answer:0,explain:'【考点】らしい＝間接情報に基づく推量。天気予報（他人の情報）から判断→「らしい」。'},
+    {type:'judge',grammar:'らしい',sentence:'田中さんは来月結婚するらしい。',correct:true,explain:'【考点】誰かから聞いた情報→「らしい」。直接見たわけではなく、噂や伝聞。'},
+    {type:'fill',grammar:'らしい',sentence:'あの<ruby>人<rt>ひと</rt></ruby>は<ruby>先生<rt>せんせい</rt></ruby>＿＿＿＿。',options:['らしい','ようだ','みたいだ','だそうだ'],answer:0,explain:'【考点】名詞＋らしい。「先生らしい」は①推量（先生のようだ）②典型（先生らしい先生）の2つの意味がある。'},
+    {type:'fill',grammar:'みたい',sentence:'あの<ruby>雲<rt>くも</rt></ruby>は<ruby>犬<rt>いぬ</rt></ruby>＿＿＿＿だ。',options:['みたい','らしい','よう','そう'],answer:0,explain:'【考点】みたい＝「ようだ」の口語形。比喩にも使える。「犬みたい」＝犬のように見える。'},
+    {type:'judge',grammar:'みたい',sentence:'彼は元気みたいだ。',correct:true,explain:'【考点】「みたい」は「ようだ」の口語版。見た様子から「元気そうだ」と判断。日常会話でよく使う。'},
+    {type:'compare',grammar:'みたい',sentenceA:'<ruby>彼女<rt>かのじょ</rt></ruby>は<ruby>怒<rt>おこ</rt></ruby>っている<strong>みたい</strong>だ。',sentenceB:'<ruby>彼女<rt>かのじょ</rt></ruby>は<ruby>怒<rt>おこ</rt></ruby>って<strong>そう</strong>だ。',question:'どちらが「見た目の様子」？',answer:1,explain:'【考点】「そうだ（様態）」はV-ます形/い形-そうだで見た目の様子。「みたい」は推量。「怒っていそうだ」は見た目、「怒っているみたい」は状況からの推量。'},
+    {type:'fill',grammar:'そうだ(様態)',sentence:'この<ruby>料理<rt>りょうり</rt></ruby>は<ruby>美味<rt>おい</rt></ruby>し＿＿＿＿だ。',options:['そう','よう','みたい','らしい'],answer:0,explain:'【考点】そうだ（様態）＝見た目の判断。い形容詞→い を取って＋そうだ。美味しい→美味しそうだ。'},
+    {type:'judge',grammar:'そうだ(様態)',sentence:'雨が降りそうだ。',correct:true,explain:'【考点】動詞ます形＋そうだ＝見た目の推量。空を見て「もうすぐ降る」と判断。'},
+    {type:'fill',grammar:'そうだ(様態)',sentence:'<ruby>彼<rt>かれ</rt></ruby>は<ruby>元気<rt>げんき</rt></ruby>＿＿＿＿だ。',options:['そう','な','だ','らしい'],answer:0,explain:'【考点】な形容詞＋そうだ。元気→元気そうだ（「な」は取る）。見た目で元気だと判断。'},
+    {type:'fill',grammar:'そうだ(伝聞)',sentence:'<ruby>天気予報<rt>てんきよほう</rt></ruby>によると、<ruby>明日<rt>あした</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>だ＿＿＿＿。',options:['そうだ','ようだ','らしい','みたいだ'],answer:0,explain:'【考点】伝聞のそうだ＝普通形＋そうだ。「雨だ」＋そうだ。「～によると」は伝聞の典型的な表現。'},
+    {type:'compare',grammar:'そうだ(伝聞)',sentenceA:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>り<strong>そうだ</strong>。',sentenceB:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>る<strong>そうだ</strong>。',question:'どちらが「伝聞」？',answer:1,explain:'【考点】様態＝ます形（降り）＋そうだ（見た目で判断）。伝聞＝辞書形（降る）＋そうだ（誰かに聞いた）。接続が違う！'},
+    {type:'judge',grammar:'そうだ(伝聞)',sentence:'ニュースによると、明日は暑いそうだ。',correct:true,explain:'【考点】伝聞のそうだ。い形容詞の普通形「暑い」＋そうだ。ニュースからの情報。'}
+  ]
+},
+"Day5": {
+  title: "変化・方向の文法",
+  grammar: [
+    {name:"ことになる",meaning:"（外的に）～と決まる",keyPoint:"自分の意志でなく外的に決定。「ことにした」との対比が重要",structure:"動詞辞書形＋ことになる"},
+    {name:"ようになる",meaning:"変化の結果（できるようになる）",keyPoint:"可能形＋ようになる＝能力の変化。習慣の変化にも使う",structure:"動詞辞書形/可能形/ない形＋ようになる"},
+    {name:"ていく",meaning:"今→未来への変化・継続",keyPoint:"「これから」の方向。徐々に変化していく",structure:"動詞て形＋いく"},
+    {name:"てくる",meaning:"過去→現在への変化",keyPoint:"「今まで」の方向。徐々に変化してきた",structure:"動詞て形＋くる"},
+    {name:"ところ",meaning:"辞書形＝直前、ている＝進行中、た＝直後",keyPoint:"動詞の形で時間が変わる。「ちょうど」と共起しやすい",structure:"V辞書形/ている/た＋ところだ"}
+  ],
+  questions: [
+    {type:'fill',grammar:'ことになる',sentence:'<ruby>来月<rt>らいげつ</rt></ruby>から<ruby>大阪<rt>おおさか</rt></ruby>に<ruby>転勤<rt>てんきん</rt></ruby>する＿＿＿＿。',options:['ことになった','ことにした','ようになった','ようにした'],answer:0,explain:'【考点】ことになる＝（自分の意志でなく）決まった。会社の命令で転勤が決まった→ことになった。'},
+    {type:'judge',grammar:'ことになる',sentence:'会議は3時からということになった。',correct:true,explain:'【考点】ことになる＝決定された（外的要因）。会議の時間は上司や組織が決めた→ことになった。'},
+    {type:'compare',grammar:'ことになる',sentenceA:'<ruby>留学<rt>りゅうがく</rt></ruby>する<strong>ことになった</strong>。',sentenceB:'<ruby>留学<rt>りゅうがく</rt></ruby>する<strong>ことにした</strong>。',question:'どちらが「外的に決まった」？',answer:0,explain:'【考点】「ことになった」は外的決定。「ことにした」は自分の決定。留学が奨学金で決まった→なった、自分で決めた→にした。'},
+    {type:'order',grammar:'ことになる',words:['来月','から','大阪に','転勤する','ことになった'],correct:'来月 から 大阪に 転勤する ことになった',explain:'【考点】ことになる＝外的決定。時間→場所→動詞＋ことになった。'},
+    {type:'fill',grammar:'ようになる',sentence:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>練習<rt>れんしゅう</rt></ruby>して、<ruby>泳<rt>およ</rt></ruby>げる＿＿＿＿なった。',options:['ように','ことに','ために','のに'],answer:0,explain:'【考点】ようになる＝変化の結果。泳げなかった→泳げるようになった（能力の変化）。可能形＋ようになる＝できるようになった。'},
+    {type:'judge',grammar:'ようになる',sentence:'日本語が話せるようになりたい。',correct:true,explain:'【考点】可能形＋ようになる＝能力の変化。「なりたい」で希望を表す。'},
+    {type:'fill',grammar:'ようになる',sentence:'<ruby>子供<rt>こども</rt></ruby>が<ruby>野菜<rt>やさい</rt></ruby>を<ruby>食<rt>た</rt></ruby>べる＿＿＿＿なった。',options:['ように','ことに','ために','わけに'],answer:0,explain:'【考点】食べなかった→食べるようになった。習慣の変化を表す。'},
+    {type:'order',grammar:'ようになる',words:['日本語が','少し','話せる','ように','なった'],correct:'日本語が 少し 話せる ように なった',explain:'【考点】可能形＋ようになる＝能力の変化。'},
+    {type:'fill',grammar:'ていく',sentence:'これからも<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>して＿＿＿＿つもりだ。',options:['いく','くる','おく','ある'],answer:0,explain:'【考点】ていく＝これから先への変化・継続。「これからも」→未来方向→「ていく」。'},
+    {type:'compare',grammar:'ていく',sentenceA:'<ruby>人口<rt>じんこう</rt></ruby>が<ruby>減<rt>へ</rt></ruby>って<strong>いく</strong>。',sentenceB:'<ruby>人口<rt>じんこう</rt></ruby>が<ruby>減<rt>へ</rt></ruby>って<strong>きた</strong>。',question:'どちらが「これから」の変化？',answer:0,explain:'【考点】「ていく」は今→未来の変化。「てくる」は過去→今の変化。人口がこれから減る→ていく、今まで減ってきた→てきた。'},
+    {type:'judge',grammar:'てくる',sentence:'最近、日本語が分かるようになってきた。',correct:true,explain:'【考点】てくる＝過去から現在への変化。「最近」→今までの変化→「てきた」。'},
+    {type:'fill',grammar:'たところ',sentence:'<ruby>今<rt>いま</rt></ruby>、<ruby>駅<rt>えき</rt></ruby>に<ruby>着<rt>つ</rt></ruby>いた＿＿＿＿です。',options:['ところ','ばかり','とき','まま'],answer:0,explain:'【考点】たところ＝ちょうど～した直後。「今着いた」→直後の状態。「ばかり」も似ているが、「ところ」はもっと直後。'},
+    {type:'compare',grammar:'ているところ',sentenceA:'<ruby>今<rt>いま</rt></ruby><ruby>料理<rt>りょうり</rt></ruby>を<strong>しているところ</strong>だ。',sentenceB:'<ruby>今<rt>いま</rt></ruby><ruby>料理<rt>りょうり</rt></ruby>を<strong>したところ</strong>だ。',question:'どちらが「今まさに進行中」？',answer:0,explain:'【考点】「ているところ」は進行中。「たところ」は完了直後。料理中→しているところ、作り終わった→したところ。'},
+    {type:'fill',grammar:'ているところ',sentence:'ちょうど<ruby>食事<rt>しょくじ</rt></ruby>を＿＿＿＿ところです。',options:['している','した','する','しない'],answer:0,explain:'【考点】「ちょうど」＝今まさに。進行中→ているところ。'},
+    {type:'order',grammar:'ているところ',words:['今','ちょうど','ご飯を','食べている','ところだ'],correct:'今 ちょうど ご飯を 食べている ところだ',explain:'【考点】ているところ＝進行中。「ちょうど」と一緒に使うことが多い。'}
+  ]
+},
+"Day6": {
+  title: "習慣・授受・補助動詞",
+  grammar: [
+    {name:"ことにしている",meaning:"決めた習慣を守っている",keyPoint:"ルールとして決めて、守り続けている",structure:"動詞辞書形/ない形＋ことにしている"},
+    {name:"ようにしている",meaning:"努力して心がけている",keyPoint:"なるべく守ろうとしている（「ことに」ほど厳密でない）",structure:"動詞辞書形/ない形＋ようにしている"},
+    {name:"てもらう",meaning:"～してもらう（受益）",keyPoint:"人に＋てもらう。受け手の視点",structure:"人に＋動詞て形＋もらう"},
+    {name:"てあげる",meaning:"～してあげる（相手のために）",keyPoint:"相手のために行動する。目上には使わない方がよい",structure:"人に＋動詞て形＋あげる"},
+    {name:"てくれる",meaning:"～してくれる（感謝の受益）",keyPoint:"相手が自分のためにしてくれた。感謝のニュアンス",structure:"人が＋動詞て形＋くれる"},
+    {name:"ておく",meaning:"事前に準備する",keyPoint:"将来のために前もって行動する",structure:"動詞て形＋おく"},
+    {name:"てみる",meaning:"試しに～する",keyPoint:"経験してみる・試してみる",structure:"動詞て形＋みる"}
+  ],
+  questions: [
+    {type:'fill',grammar:'ことにしている',sentence:'<ruby>毎日<rt>まいにち</rt></ruby>7<ruby>時<rt>じ</rt></ruby>に<ruby>起<rt>お</rt></ruby>きる＿＿＿＿している。',options:['ことに','ように','ために','のに'],answer:0,explain:'【考点】ことにしている＝決めた習慣を続けている。7時に起きると決めて、それを守っている。'},
+    {type:'compare',grammar:'ことにしている',sentenceA:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>牛乳<rt>ぎゅうにゅう</rt></ruby>を<ruby>飲<rt>の</rt></ruby>む<strong>ことにしている</strong>。',sentenceB:'<ruby>毎日<rt>まいにち</rt></ruby><ruby>牛乳<rt>ぎゅうにゅう</rt></ruby>を<ruby>飲<rt>の</rt></ruby>む<strong>ようにしている</strong>。',question:'どちらが「努力して心がけている」？',answer:1,explain:'【考点】「ことにしている」＝ルールとして決めた。「ようにしている」＝努力・心がけ。ことに＝必ず守る、ように＝なるべく守ろうとしている。'},
+    {type:'judge',grammar:'ようにしている',sentence:'甘いものを食べないようにしている。',correct:true,explain:'【考点】ない形＋ようにしている＝～しないように心がけている。健康のために甘いものを控える努力。'},
+    {type:'fill',grammar:'てもらう',sentence:'<ruby>友達<rt>ともだち</rt></ruby>に<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>教<rt>おし</rt></ruby>えて＿＿＿＿。',options:['もらった','あげた','くれた','おいた'],answer:0,explain:'【考点】てもらう＝誰かに～してもらう（受益）。友達に教えてもらった＝友達が教えてくれた（私の視点）。'},
+    {type:'fill',grammar:'てあげる',sentence:'<ruby>妹<rt>いもうと</rt></ruby>に<ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んで＿＿＿＿。',options:['あげた','もらった','くれた','みた'],answer:0,explain:'【考点】てあげる＝相手のために～する。妹のために本を読んであげた。'},
+    {type:'fill',grammar:'てくれる',sentence:'<ruby>母<rt>はは</rt></ruby>が<ruby>弁当<rt>べんとう</rt></ruby>を<ruby>作<rt>つく</rt></ruby>って＿＿＿＿。',options:['くれた','あげた','もらった','おいた'],answer:0,explain:'【考点】てくれる＝相手が（私のために）～してくれる。母が私のために弁当を作った。'},
+    {type:'fill',grammar:'ておく',sentence:'<ruby>明日<rt>あした</rt></ruby>の<ruby>会議<rt>かいぎ</rt></ruby>の<ruby>資料<rt>しりょう</rt></ruby>を<ruby>準備<rt>じゅんび</rt></ruby>して＿＿＿＿。',options:['おいた','しまった','みた','あった'],answer:0,explain:'【考点】ておく＝事前準備。明日のために今準備しておく。'},
+    {type:'fill',grammar:'てみる',sentence:'この<ruby>新<rt>あたら</rt></ruby>しいレストランに<ruby>行<rt>い</rt></ruby>って＿＿＿＿たい。',options:['み','しまい','おき','い'],answer:0,explain:'【考点】てみる＝試しに～する。新しいレストランを試してみたい。'}
+  ]
+},
+"Day7": {
+  title: "条件・その他の重要文法",
+  grammar: [
+    {name:"ば",meaning:"仮定条件（～すれば）",keyPoint:"ば形。い形：-ければ、動詞：-えば",structure:"動詞ば形 / い形-ければ"},
+    {name:"たら",meaning:"仮定条件＋確定条件（～したら）",keyPoint:"た形＋ら。時間的順序も表せる",structure:"動詞た形＋ら"},
+    {name:"と",meaning:"自然な帰結・習慣（～すると必ず）",keyPoint:"辞書形＋と。自然現象・機械操作に多い",structure:"動詞辞書形/ない形＋と"},
+    {name:"ても",meaning:"逆接条件（～しても）",keyPoint:"て形＋も。「雨が降っても行く」",structure:"動詞て形＋も / い形-くても / な形-でも"},
+    {name:"ように",meaning:"～しないように（目的の消極形）",keyPoint:"ない形＋ように＝～しないために",structure:"動詞ない形＋ように"},
+    {name:"のに",meaning:"逆接（期待はずれ・不満）",keyPoint:"普通形＋のに。残念・不満のニュアンス",structure:"普通形＋のに"},
+    {name:"ながら",meaning:"同時進行",keyPoint:"ます形＋ながら。二つの動作を同時にする",structure:"動詞ます形＋ながら"},
+    {name:"たり～たりする",meaning:"動作の例示",keyPoint:"た形＋り。最後は「する」で締める",structure:"動詞た形＋り～たりする"},
+    {name:"ないで",meaning:"～しないで（付帯状況）",keyPoint:"ない形＋で。「なくて」は理由",structure:"動詞ない形＋で"},
+    {name:"なければならない",meaning:"義務・必要",keyPoint:"ない形→なければならない",structure:"動詞ない形→なければならない"},
+    {name:"なくてもいい",meaning:"～しなくてもよい（不必要）",keyPoint:"ない形→なくてもいい",structure:"動詞ない形→なくてもいい"},
+    {name:"ことができる",meaning:"能力・可能（可能形と同義）",keyPoint:"辞書形＋ことができる",structure:"動詞辞書形＋ことができる"},
+    {name:"ほうがいい",meaning:"アドバイス",keyPoint:"た形＋ほうがいい（肯定）、ない形＋ほうがいい（否定）",structure:"動詞た形/ない形＋ほうがいい"},
+    {name:"ばいい",meaning:"～すればよい（助言）",keyPoint:"ば形＋いい",structure:"動詞ば形＋いい"},
+    {name:"ところだ",meaning:"辞書形＋ところだ＝直前",keyPoint:"これから～する直前の状態",structure:"動詞辞書形＋ところだ"}
+  ],
+  questions: [
+    {type:'fill',grammar:'ば',sentence:'<ruby>天気<rt>てんき</rt></ruby>がよけれ＿＿＿＿、<ruby>散歩<rt>さんぽ</rt></ruby>に<ruby>行<rt>い</rt></ruby>きましょう。',options:['ば','たら','と','なら'],answer:0,explain:'【考点】条件形（ば形）。い形容詞：よい→よければ。仮定条件を表す。'},
+    {type:'fill',grammar:'たら',sentence:'<ruby>家<rt>いえ</rt></ruby>に<ruby>帰<rt>かえ</rt></ruby>っ＿＿＿＿、すぐシャワーを<ruby>浴<rt>あ</rt></ruby>びる。',options:['たら','ても','ると','れば'],answer:0,explain:'【考点】たら＝仮定条件・確定条件。帰宅後にシャワーを浴びる（時間的順序）。'},
+    {type:'fill',grammar:'と',sentence:'<ruby>春<rt>はる</rt></ruby>になる＿＿＿＿、<ruby>桜<rt>さくら</rt></ruby>が<ruby>咲<rt>さ</rt></ruby>く。',options:['と','たら','ば','なら'],answer:0,explain:'【考点】と＝自然な帰結・習慣。春になる→必ず桜が咲く（自然現象）。'},
+    {type:'fill',grammar:'ても',sentence:'<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っ＿＿＿＿、サッカーをする。',options:['ても','たら','ると','れば'],answer:0,explain:'【考点】ても＝逆接条件。雨が降る→普通はしない→でもする→「ても」。'},
+    {type:'fill',grammar:'ように',sentence:'<ruby>忘<rt>わす</rt></ruby>れない＿＿＿＿、メモした。',options:['ように','ために','のに','ことに'],answer:0,explain:'【考点】ない形＋ように＝～しないために。忘れないための方法としてメモした。「ために」は意志動詞のみ。'},
+    {type:'fill',grammar:'のに',sentence:'<ruby>約束<rt>やくそく</rt></ruby>したのに、<ruby>彼<rt>かれ</rt></ruby>は<ruby>来<rt>こ</rt></ruby>なかった。',options:['のに','から','ので','けど'],answer:0,explain:'【考点】のに＝逆接（期待はずれ・不満）。約束した→来るはず→でも来なかった→不満。'},
+    {type:'fill',grammar:'ながら',sentence:'<ruby>音楽<rt>おんがく</rt></ruby>を<ruby>聞<rt>き</rt></ruby>き＿＿＿＿<ruby>勉強<rt>べんきょう</rt></ruby>する。',options:['ながら','つつ','たり','ては'],answer:0,explain:'【考点】ます形＋ながら＝同時進行。音楽を聞くことと勉強することを同時にする。'},
+    {type:'fill',grammar:'たり～たりする',sentence:'<ruby>休<rt>やす</rt></ruby>みの<ruby>日<rt>ひ</rt></ruby>は<ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んだり<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>たり＿＿＿＿。',options:['する','した','して','しよう'],answer:0,explain:'【考点】たり～たりする＝いくつかの行動を例示。最後は「する」で締める。'},
+    {type:'fill',grammar:'ないで',sentence:'<ruby>朝<rt>あさ</rt></ruby>ごはんを<ruby>食<rt>た</rt></ruby>べ＿＿＿＿<ruby>学校<rt>がっこう</rt></ruby>に<ruby>行<rt>い</rt></ruby>った。',options:['ないで','なくて','ずに','ないと'],answer:0,explain:'【考点】ないで＝～しないで（付帯状況）。食べない状態で学校に行った。「なくて」は理由。'},
+    {type:'fill',grammar:'なければならない',sentence:'<ruby>明日<rt>あした</rt></ruby>までにレポートを<ruby>出<rt>だ</rt></ruby>さ＿＿＿＿。',options:['なければならない','ないでもいい','なくてもいい','ないほうがいい'],answer:0,explain:'【考点】なければならない＝義務・必要。「出す」→ない形「出さない」→「出さなければならない」。'},
+    {type:'fill',grammar:'なくてもいい',sentence:'<ruby>明日<rt>あした</rt></ruby>は<ruby>休<rt>やす</rt></ruby>みだから、<ruby>早<rt>はや</rt></ruby>く<ruby>起<rt>お</rt></ruby>き＿＿＿＿。',options:['なくてもいい','なければならない','ないといけない','なくてはいけない'],answer:0,explain:'【考点】なくてもいい＝～しなくてもよい（不必要）。休みだから早く起きる必要がない。'},
+    {type:'fill',grammar:'ことができる',sentence:'<ruby>彼<rt>かれ</rt></ruby>は3つの<ruby>言語<rt>げんご</rt></ruby>を<ruby>話<rt>はな</rt></ruby>す＿＿＿＿。',options:['ことができる','ようになる','ようにする','ことにする'],answer:0,explain:'【考点】ことができる＝能力・可能性。辞書形＋ことができる。可能形と同じ意味。'},
+    {type:'fill',grammar:'ほうがいい',sentence:'<ruby>熱<rt>ねつ</rt></ruby>があるなら、<ruby>病院<rt>びょういん</rt></ruby>に<ruby>行<rt>い</rt></ruby>った＿＿＿＿。',options:['ほうがいい','ほどだ','ばかりだ','ところだ'],answer:0,explain:'【考点】た形＋ほうがいい＝アドバイス。「行ったほうがいい」＝行くべきだ。ない形の場合は「行かないほうがいい」。'},
+    {type:'fill',grammar:'ばいい',sentence:'<ruby>分<rt>わ</rt></ruby>からないことがあったら、<ruby>先生<rt>せんせい</rt></ruby>に<ruby>聞<rt>き</rt></ruby>け＿＿＿＿。',options:['ばいい','たらいい','といい','てもいい'],answer:0,explain:'【考点】ば形＋いい＝～すればよい（アドバイス）。聞く→聞けば＋いい。'},
+    {type:'fill',grammar:'ところだ',sentence:'これから<ruby>出<rt>で</rt></ruby>かける＿＿＿＿です。',options:['ところ','ばかり','まで','はず'],answer:0,explain:'【考点】辞書形＋ところだ＝これから～する直前。「出かける」前の状態。'}
+  ]
+}
+};
+
+/* ===== Build flat QUESTIONS array for backward compat ===== */
+var QUESTIONS = [];
+var dayKeys = Object.keys(DAILY_DATA);
+dayKeys.forEach(function(dk) { DAILY_DATA[dk].questions.forEach(function(q){ QUESTIONS.push(q); }); });
 
 /* ===== STATE ===== */
 var st = JSON.parse(localStorage.getItem('n3_grammar_state') || '{}');
@@ -195,6 +267,26 @@ var currentQ = 0;
 var qOrder = [];
 var filterType = 'all';
 var answered = false;
+var currentDay = 'all';
+var n3Wrong = [];
+
+var app = document.getElementById('app');
+
+function shuffle(arr) {
+  for (var i = arr.length-1; i > 0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+}
+
+function getQuestionsForDay(day) {
+  if (day === 'all') return QUESTIONS;
+  return DAILY_DATA[day] ? DAILY_DATA[day].questions : [];
+}
+
+function getGlobalIndex(q) {
+  return QUESTIONS.indexOf(q);
+}
 
 function redoWrong() {
   qOrder = n3Wrong.slice();
@@ -211,7 +303,6 @@ function startOldWrong() {
   qOrder = old.map(function(q){return q.idx;});
   shuffle(qOrder);
   currentQ = 0; n3Wrong = []; answered = false;
-  // Clear reviewed wrong
   localStorage.setItem('n3_grammar_wrong', JSON.stringify(saved.filter(function(q){return q.date >= today;})));
   renderQuestion();
 }
@@ -220,7 +311,9 @@ function initQuiz() {
   answered = false;
   n3Wrong = [];
   qOrder = [];
+  var pool = getQuestionsForDay(currentDay);
   for (var i = 0; i < QUESTIONS.length; i++) {
+    if (pool.indexOf(QUESTIONS[i]) === -1) continue;
     if (filterType === 'all' || QUESTIONS[i].type === filterType) qOrder.push(i);
   }
   shuffle(qOrder);
@@ -228,29 +321,36 @@ function initQuiz() {
   renderQuestion();
 }
 
-function shuffle(arr) {
-  for (var i = arr.length-1; i > 0; i--) {
-    var j = Math.floor(Math.random()*(i+1));
-    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
-  }
+function selectDay(day) {
+  currentDay = day;
+  renderHome();
 }
 
-var app = document.getElementById('app');
-
-var n3Wrong = [];
-
-function renderGrammarOverview() {
-  var grammarMap = {};
-  QUESTIONS.forEach(function(q) {
-    if (!grammarMap[q.grammar]) grammarMap[q.grammar] = {name:q.grammar, count:0, explain:q.explain};
-    grammarMap[q.grammar].count++;
+function renderDaySelector() {
+  var html = '<div class="day-selector">';
+  dayKeys.forEach(function(dk) {
+    var d = DAILY_DATA[dk];
+    var cls = currentDay === dk ? 'active' : '';
+    html += '<div class="day-chip '+cls+'" onclick="selectDay(\''+dk+'\')">'+dk+'<br><span style="font-size:10px">'+d.title+'</span><br><span style="font-size:9px;color:#888">'+d.questions.length+'題</span></div>';
   });
-  var items = Object.values(grammarMap);
+  html += '<div class="day-chip '+(currentDay==='all'?'active':'')+'" onclick="selectDay(\'all\')">全部<br><span style="font-size:10px">混合模式</span><br><span style="font-size:9px;color:#888">'+QUESTIONS.length+'題</span></div>';
+  html += '</div>';
+  return html;
+}
+
+function renderGrammarPreview() {
+  if (currentDay === 'all') return '';
+  var d = DAILY_DATA[currentDay];
+  if (!d) return '';
   var html = '<details style="background:#f0f4ff;border-radius:10px;padding:12px;margin-bottom:16px;border-left:4px solid #4361ee">';
-  html += '<summary style="font-size:14px;font-weight:600;color:#4361ee;cursor:pointer">📋 做题前先复习语法要点（'+items.length+'个语法）▸</summary>';
-  html += '<div style="margin-top:10px;font-size:13px;line-height:1.8">';
-  items.forEach(function(g,i) {
-    html += '<div style="margin-bottom:6px;padding:6px 8px;background:#fff;border-radius:8px"><strong>'+(i+1)+'. '+g.name+'</strong> <span style="color:#888;font-size:11px">('+g.count+'题)</span></div>';
+  html += '<summary style="font-size:14px;font-weight:600;color:#4361ee;cursor:pointer">📋 '+d.title+'の文法要点（'+d.grammar.length+'個）▸</summary>';
+  html += '<div style="margin-top:10px">';
+  d.grammar.forEach(function(g) {
+    html += '<div class="grammar-card">';
+    html += '<strong>'+g.name+'</strong> — '+g.meaning+'<br>';
+    html += '<span style="color:#333">💡 '+g.keyPoint+'</span><br>';
+    html += '<span class="structure">📝 '+g.structure+'</span>';
+    html += '</div>';
   });
   html += '</div></details>';
   return html;
@@ -259,26 +359,30 @@ function renderGrammarOverview() {
 function renderHome() {
   var total = st.correct + st.wrong;
   var rate = total ? Math.round(st.correct/total*100) : 0;
-  // Check for old wrong questions
   var savedWrong = JSON.parse(localStorage.getItem('n3_grammar_wrong') || '[]');
   var today = new Date().toISOString().slice(0,10);
   var oldWrong = savedWrong.filter(function(q){return q.date < today;});
   var wrongBtn = oldWrong.length > 0 ? '<button class="btn btn-primary btn-block" style="background:#e74c3c;margin-bottom:12px" onclick="startOldWrong()">🔥 先复习之前的错题 ('+oldWrong.length+'题)</button>' : '';
-  app.innerHTML = wrongBtn + '<div class="card"><h2>📊 <ruby>学習<rt>がくしゅう</rt></ruby>データ</h2>'+
+
+  var poolSize = getQuestionsForDay(currentDay).length;
+
+  app.innerHTML = wrongBtn +
+    '<div class="card"><h2>📅 Day選択</h2>' + renderDaySelector() + '</div>' +
+    '<div class="card"><h2>📊 <ruby>学習<rt>がくしゅう</rt></ruby>データ</h2>'+
     '<div class="stats-bar"><div class="stat"><div class="stat-num">'+st.correct+'</div><div class="stat-label">正解</div></div>'+
     '<div class="stat"><div class="stat-num">'+st.wrong+'</div><div class="stat-label">不正解</div></div>'+
     '<div class="stat"><div class="stat-num">'+rate+'%</div><div class="stat-label">正答率</div></div>'+
     '<div class="stat"><div class="stat-num">'+Object.keys(st.answered).length+'/'+QUESTIONS.length+'</div><div class="stat-label">進捗</div></div></div>'+
     '<div class="progress-bar"><div class="progress-fill" style="width:'+Math.round(Object.keys(st.answered).length/QUESTIONS.length*100)+'%"></div></div></div>'+
-    '<div class="card"><h2>🎯 <ruby>問題<rt>もんだい</rt></ruby>タイプ</h2>'+
+    '<div class="card"><h2>🎯 '+(currentDay==='all'?'全部':currentDay)+' — '+poolSize+'題</h2>'+
+    renderGrammarPreview() +
     '<div class="nav-types">'+
-    '<button class="'+(filterType==='all'?'active':'')+'" onclick="filterType=\'all\';initQuiz()">全部</button>'+
-    '<button class="'+(filterType==='fill'?'active':'')+'" onclick="filterType=\'fill\';initQuiz()"><span class="tag tag-fill">選択填空</span></button>'+
-    '<button class="'+(filterType==='compare'?'active':'')+'" onclick="filterType=\'compare\';initQuiz()"><span class="tag tag-compare">辨析対決</span></button>'+
-    '<button class="'+(filterType==='judge'?'active':'')+'" onclick="filterType=\'judge\';initQuiz()"><span class="tag tag-judge">正誤判断</span></button>'+
-    '<button class="'+(filterType==='order'?'active':'')+'" onclick="filterType=\'order\';initQuiz()"><span class="tag tag-order">排列組合</span></button>'+
+    '<button class="'+(filterType==='all'?'active':'')+'" onclick="filterType=\'all\';renderHome()">全部</button>'+
+    '<button class="'+(filterType==='fill'?'active':'')+'" onclick="filterType=\'fill\';renderHome()"><span class="tag tag-fill">選択填空</span></button>'+
+    '<button class="'+(filterType==='compare'?'active':'')+'" onclick="filterType=\'compare\';renderHome()"><span class="tag tag-compare">辨析対決</span></button>'+
+    '<button class="'+(filterType==='judge'?'active':'')+'" onclick="filterType=\'judge\';renderHome()"><span class="tag tag-judge">正誤判断</span></button>'+
+    '<button class="'+(filterType==='order'?'active':'')+'" onclick="filterType=\'order\';renderHome()"><span class="tag tag-order">排列組合</span></button>'+
     '</div>'+
-    renderGrammarOverview() +
     '<button class="btn btn-primary btn-block" onclick="initQuiz()">スタート！</button></div>';
 }
 
@@ -286,7 +390,6 @@ function renderQuestion() {
   if (currentQ >= qOrder.length) {
     var _today = new Date().toISOString().slice(0,10);
     localStorage.setItem('task_done_n3grammar_' + _today, '1');
-    // Save wrong questions
     if (n3Wrong.length > 0) {
       var saved = JSON.parse(localStorage.getItem('n3_grammar_wrong') || '[]');
       n3Wrong.forEach(function(idx) {
@@ -355,7 +458,6 @@ function renderQuestion() {
   app.innerHTML = html;
 }
 
-/* Selected order words */
 var selectedOrder = [];
 function toggleOrderWord(el) {
   if (answered) return;
@@ -422,42 +524,11 @@ renderHome();
 
 // ============ 跨设备同步 ============
 function exportData() {
-  const keys = Object.keys(localStorage);
-  const data = {};
-  keys.forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
-  const json = JSON.stringify(data);
-  const ta = document.getElementById('syncData');
-  ta.value = json;
-  ta.select();
-  try { navigator.clipboard.writeText(json); showSyncMsg('✅ 已复制到剪贴板！粘贴到另一台设备导入即可'); } 
-  catch(e) { showSyncMsg('⬆️ 请手动全选复制上面的文本'); }
-}
-function importData() {
-  const raw = document.getElementById('syncData').value.trim();
-  if (!raw) { showSyncMsg('❌ 请先粘贴数据'); return; }
-  try {
-    const data = JSON.parse(raw);
-    let count = 0;
-    for (const [k, v] of Object.entries(data)) {
-      localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
-      count++;
-    }
-    showSyncMsg('✅ 导入成功！共 ' + count + ' 条数据，刷新页面生效');
-    setTimeout(() => location.reload(), 1500);
-  } catch(e) { showSyncMsg('❌ 数据格式错误，请检查'); }
-}
-function quickExport() {
   var keys = Object.keys(localStorage), data = {};
   keys.forEach(function(k) { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
   var json = JSON.stringify(data);
   try { navigator.clipboard.writeText(json).then(function() { alert("✅ 已复制！在其他设备首页粘贴导入"); }); }
   catch(e) { prompt("请手动复制以下数据：", json); }
-}
-
-function showSyncMsg(msg) {
-  const el = document.getElementById('syncMsg');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 </script>
 <a href="index.html" style="position:fixed;bottom:16px;left:16px;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;z-index:998">🏠</a>
