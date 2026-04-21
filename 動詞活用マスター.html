@@ -368,7 +368,39 @@ function renderHome() {
     '<div class="mode-card" onclick="showMode(\'quick\')"><div class="icon">⚡</div><div class="label">快速変形</div></div>'+
     '<div class="mode-card" onclick="showMode(\'reverse\')"><div class="icon">🔍</div><div class="label">逆引き</div></div>'+
     '<div class="mode-card" onclick="showMode(\'challenge\')"><div class="icon">🏆</div><div class="label">混合チャレンジ</div></div>'+
-    '</div>'+(weakCount?'<button class="btn btn-danger btn-block" onclick="showMode(\'weak\')" style="margin-top:8px">💪 弱点強化（'+weakCount+'問）</button>':'')+'</div>';
+    '</div>'+(weakCount?'<button class="btn btn-danger btn-block" onclick="showMode(\'weak\')" style="margin-top:8px">💪 弱点強化（'+weakCount+'問）</button>':'')+'</div>'+
+    '<details class="card" style="padding:12px"><summary style="font-size:15px;font-weight:600;cursor:pointer">📋 变形规则速查卡</summary><div style="margin-top:12px;font-size:13px;line-height:1.9">'+
+    '<div style="background:#e8f5e9;padding:10px;border-radius:8px;margin-bottom:10px">'+
+    '<strong>🟢 三组动词分类</strong><br>'+
+    '・<strong>一类（五段）</strong>：う段结尾（買う、書く、飲む…）→ 大部分都是<br>'+
+    '・<strong>二类（一段）</strong>：いる/える结尾（食べる、見る…）→ 去る加后缀<br>'+
+    '・<strong>三类</strong>：する、来る → 硬背就行</div>'+
+    '<div style="background:#fff3e0;padding:10px;border-radius:8px;margin-bottom:10px">'+
+    '<strong>🟠 一类动词万能规律：あいうえお移动</strong><br>'+
+    '・ない形 → <strong>あ段</strong>（書<ruby>か<rt>あ</rt></ruby>ない）<br>'+
+    '・ます形 → <strong>い段</strong>（書<ruby>き<rt>い</rt></ruby>ます）<br>'+
+    '・辞書形 → <strong>う段</strong>（書<ruby>く<rt>う</rt></ruby>）<br>'+
+    '・ば形 → <strong>え段</strong>（書<ruby>け<rt>え</rt></ruby>ば）<br>'+
+    '・意志形 → <strong>お段</strong>（書<ruby>こ<rt>お</rt></ruby>う）<br>'+
+    '⚠️ う→<strong>わ</strong>ない（買う→買<strong>わ</strong>ない，不是買あない）</div>'+
+    '<div style="background:#e3f2fd;padding:10px;border-radius:8px;margin-bottom:10px">'+
+    '<strong>🔵 て形/た形口诀（一类专用）</strong><br>'+
+    '🎵 い・ち・り → <strong>って</strong>（買って、待って、帰って）<br>'+
+    '🎵 み・に・び → <strong>んで</strong>（飲んで、死んで、遊んで）<br>'+
+    '🎵 き → <strong>いて</strong>（書いて）　ぎ → <strong>いで</strong>（泳いで）<br>'+
+    '🎵 し → <strong>して</strong>（話して）<br>'+
+    '❗ 例外：行く→行<strong>って</strong>（不是行いて）</div>'+
+    '<div style="background:#fce4ec;padding:10px;border-radius:8px;margin-bottom:10px">'+
+    '<strong>🔴 容易混淆的三兄弟</strong><br>'+
+    '・<strong>受身</strong>（被动）：一类あ段+れる / 二类る→られる<br>'+
+    '・<strong>使役</strong>（让做）：一类あ段+せる / 二类る→させる<br>'+
+    '・<strong>使役受身</strong>（被迫做）：一类あ段+せられる / 二类る→させられる<br>'+
+    '记法：受身=<strong>れる</strong>，使役=<strong>せる</strong>，使役受身=<strong>せられる</strong></div>'+
+    '<div style="background:#f3e5f5;padding:10px;border-radius:8px">'+
+    '<strong>🟣 二类动词超简单</strong><br>'+
+    '全部去掉「る」直接加：ない/ます/て/た/れば/られる/させる/よう/ろ<br>'+
+    '食べ<del>る</del> → 食べない / 食べます / 食べて / 食べれば…</div>'+
+    '</div></details>';
 }
 
 /* ===== LEARN MODE ===== */
