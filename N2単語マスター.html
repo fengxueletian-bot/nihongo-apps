@@ -1242,9 +1242,8 @@ function calcSim(a, b) {
 }
 
 // ============ 真题训练 ============
-let jlptQs=[], jlptIdx=0, jlptScoreVal=0;
+let jlptQs=[], jlptIdx=0, jlptScoreVal=0, jlptErrors=[], jlptDoneSet=new Set();
 function generateExtraJlpt(chapter) {
-  // Generate vocab-based questions from current chapter words
   const words = VOCABULARY[chapter].words;
   const extra = [];
   const shuffled = [...words].sort(() => Math.random()-0.5);
@@ -1260,17 +1259,29 @@ function generateExtraJlpt(chapter) {
   }
   return extra;
 }
-function startJlpt() {
-  jlptQs = [...(JLPT_QUESTIONS[state.currentChapter] || [])];
-  // Shuffle and pick 20 questions max
-  jlptQs = jlptQs.sort(() => Math.random() - 0.5).slice(0, 20);
+function startJlpt(mode) {
+  if (mode==='errors') {
+    jlptQs = [...jlptErrors].sort(()=>Math.random()-0.5);
+    jlptErrors = [];
+  } else {
+    const all = [...(JLPT_QUESTIONS[state.currentChapter] || [])];
+    // Prefer questions not done yet this session
+    const undone = all.filter(q => !jlptDoneSet.has(q.question));
+    const pool = undone.length >= 20 ? undone : all;
+    jlptQs = pool.sort(() => Math.random()-0.5).slice(0, 20);
+  }
   if (!jlptQs.length) { document.getElementById('jlptQuestion').innerHTML = '<p>暂无该课真题</p>'; return; }
-  jlptIdx=0; jlptScoreVal=0;
+  jlptIdx=0; jlptScoreVal=0; jlptErrors=[];
   showJlptQ();
 }
 function showJlptQ() {
   if (jlptIdx >= jlptQs.length) {
-    document.getElementById('jlptQuestion').innerHTML = `<div style="text-align:center"><h3>完成！${jlptScoreVal}/${jlptQs.length}</h3><button class="btn btn-primary" onclick="startJlpt()">再来</button><br><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据到其他设备</button></div>`;
+    const hasErrors = jlptErrors.length > 0;
+    let html = `<div style="text-align:center"><h3>完成！${jlptScoreVal}/${jlptQs.length}</h3>`;
+    html += `<button class="btn btn-primary" onclick="startJlpt()" style="margin:4px">📝 继续刷题</button>`;
+    if (hasErrors) html += `<button class="btn btn-primary" onclick="startJlpt('errors')" style="margin:4px;background:#e76f51">🔄 重做错题 (${jlptErrors.length})</button>`;
+    html += `<br><button onclick="quickExport()" style="margin-top:12px;padding:8px 16px;border:1.5px solid #4361ee;border-radius:8px;background:#fff;color:#4361ee;font-size:12px;cursor:pointer">☁️ 同步数据到其他设备</button></div>`;
+    document.getElementById('jlptQuestion').innerHTML = html;
     document.getElementById('jlptOptions').innerHTML = '';
     document.getElementById('jlptExplanation').classList.add('hidden');
     return;
@@ -1291,7 +1302,9 @@ function selectJlpt(el, selected, correct) {
   else {
     el.classList.add('wrong');
     document.querySelectorAll('#jlptOptions .quiz-option')[correct].classList.add('correct');
+    jlptErrors.push(jlptQs[jlptIdx]);
   }
+  jlptDoneSet.add(jlptQs[jlptIdx].question);
   const q = jlptQs[jlptIdx];
   const expEl = document.getElementById('jlptExplanation');
   expEl.innerHTML = `<strong>${selected===correct?'✅ 正解':'❌ 答错了'}！</strong><br>${q.explanation}`;
