@@ -881,7 +881,7 @@ function speak(text, rate=0.8) {
     speechSynthesis.speak(u);
   }
 }
-function speakWord() { const w = getCurrentWord(); speak(w.word); }
+function speakWord() { const w = getCurrentWord(); speak(w.reading); }
 function speakExample() { const w = getCurrentWord(); speak(w.example.replace(/（[^）]*）/g, ''), 0.7); }
 function getCurrentWord() { return VOCABULARY[state.currentChapter].words[state.currentIndex]; }
 
@@ -1055,7 +1055,7 @@ function handleQuizClick(el) {
   document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
   setTimeout(() => { quizIdx++; showQuizQuestion(); saveState(); }, 1500);
 }
-function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].word); }
+function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].reading); }
 
 // ============ 拼写模式 ============
 let spellWords=[], spellIdx=0, spellScoreVal=0, spellWaiting=false;
@@ -1144,7 +1144,7 @@ function checkKana() {
   document.getElementById('spellScore').textContent = `✓ ${spellScoreVal}`;
   saveState();
 }
-function speakSpellWord() { if(spellWords[spellIdx]) speak(spellWords[spellIdx].word); }
+function speakSpellWord() { if(spellWords[spellIdx]) speak(spellWords[spellIdx].reading); }
 function showKanaHint() {
   const w = spellWords[spellIdx];
   document.getElementById('kanaResult').textContent = '提示：' + w.reading.charAt(0) + '○'.repeat(w.reading.length-1);
@@ -1182,7 +1182,7 @@ function updateShadowView() {
 }
 function playShadowTarget() {
   const w = VOCABULARY[state.currentChapter].words[shadowIdx];
-  if (shadowMode==='word') speak(w.word, 0.7);
+  if (shadowMode==='word') speak(w.reading, 0.7);
   else speak(w.example.replace(/（[^）]*）/g,''), 0.65);
 }
 function nextShadow() {
