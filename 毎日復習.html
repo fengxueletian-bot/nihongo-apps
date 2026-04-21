@@ -123,6 +123,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 <!-- 练习 tab -->
 <div id="tab-quiz" class="card hidden">
   <div class="day-selector" id="quizDaySelector"></div>
+  <div id="quizGrammarNotes" style="margin-bottom:12px"></div>
   <div class="progress-bar"><div class="fill" id="quizProgress" style="width:0%"></div></div>
   <div id="quizArea"></div>
   <div class="nav-arrows" id="quizNav" style="display:none">
@@ -369,6 +370,19 @@ function startQuiz() {
   const qs = currentDay === 'all' ? days.flatMap(d => DAILY_DATA[d].questions) : DAILY_DATA[currentDay].questions;
   quizQuestions = [...qs].sort(() => Math.random() - 0.5);
   quizIdx = 0; quizScore = 0;
+  // Render grammar notes overview before quiz
+  const grammarItems = currentDay === 'all' ? days.flatMap(d => DAILY_DATA[d].grammar) : (DAILY_DATA[currentDay]||{}).grammar || [];
+  const notesEl = document.getElementById('quizGrammarNotes');
+  if (grammarItems.length > 0) {
+    let h = '<details style="background:#f0f4ff;border-radius:10px;padding:12px;border-left:4px solid #4361ee">';
+    h += '<summary style="font-size:14px;font-weight:600;color:#4361ee;cursor:pointer">📋 做题前先复习语法要点 ▸</summary>';
+    h += '<div style="margin-top:10px;font-size:13px;line-height:2">';
+    grammarItems.forEach((g,i) => {
+      h += `<div style="margin-bottom:8px;padding:8px;background:#fff;border-radius:8px"><strong>${i+1}. ${g.name}</strong> — ${g.meaning}<br><span style="color:#888;font-size:12px">接续：${g.structure}</span><br><span style="color:#e63946;font-size:12px">⚠ ${g.keyPoint}</span></div>`;
+    });
+    h += '</div></details>';
+    notesEl.innerHTML = h;
+  } else { notesEl.innerHTML = ''; }
   showQuizQ();
 }
 
