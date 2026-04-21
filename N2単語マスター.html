@@ -106,6 +106,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div class="stat"><div class="num" id="statReview">0</div><div class="label">待复习</div></div>
   </div>
 
+  <!-- 今日任务预览 -->
+  <div id="dailyTaskPreview" style="margin:0 16px 12px;padding:12px;background:#f0f4ff;border-radius:10px;border-left:4px solid #4361ee;display:none">
+    <details id="dailyTaskDetails">
+      <summary style="font-size:14px;font-weight:600;color:#4361ee;cursor:pointer">📅 今日词汇任务 <span id="dailyTaskRange" style="font-weight:400;font-size:12px;color:#666"></span></summary>
+      <div id="dailyTaskList" style="margin-top:10px;font-size:13px;line-height:1.8;max-height:300px;overflow-y:auto"></div>
+    </details>
+  </div>
+
   <div class="tabs">
     <button class="tab active" onclick="switchMode('learn')">📖 学习</button>
     <button class="tab" onclick="switchMode('quiz')">📝 测试</button>
@@ -1584,13 +1592,57 @@ function quickExport() {
   catch(e) { prompt('请手动复制以下数据：', json); }
 }
 
+function renderDailyTask() {
+  // All words in order across chapters
+  const chapterKeys = Object.keys(VOCABULARY).sort((a,b) => {
+    const [ac,al]=a.split('-').map(Number), [bc,bl]=b.split('-').map(Number);
+    return ac-bc || al-bl;
+  });
+  const allWords = [];
+  chapterKeys.forEach(k => {
+    VOCABULARY[k].words.forEach((w,i) => allWords.push({...w, chapter:k, idx:i}));
+  });
+
+  // Figure out which day we're on (day 1 = first day user opened app)
+  const startKey = 'n2vocab_start_date';
+  let startDate = localStorage.getItem(startKey);
+  if (!startDate) { startDate = new Date().toISOString().slice(0,10); localStorage.setItem(startKey, startDate); }
+  const today = new Date(); const start = new Date(startDate+'T00:00:00');
+  const dayNum = Math.floor((today - start) / 86400000) + 1;
+  const perDay = 30;
+  const from = (dayNum - 1) * perDay;
+  const to = Math.min(from + perDay, allWords.length);
+
+  if (from >= allWords.length) return; // all done
+
+  const todayWords = allWords.slice(from, to);
+  const el = document.getElementById('dailyTaskPreview');
+  const rangeEl = document.getElementById('dailyTaskRange');
+  const listEl = document.getElementById('dailyTaskList');
+
+  rangeEl.textContent = `Day${dayNum}：第${from+1}~${to}词（共${to-from}个）`;
+
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:#e0e7ff;font-weight:600"><td style="padding:4px 6px">单词</td><td>读音</td><td>意思</td></tr>';
+  todayWords.forEach((w,i) => {
+    const bg = i%2===0 ? '#fff' : '#f8f9ff';
+    html += `<tr style="background:${bg}"><td style="padding:4px 6px;font-weight:500">${w.word}</td><td style="color:#4361ee">${w.reading}</td><td style="color:#666">${w.meaning}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<div style="margin-top:8px;font-size:11px;color:#888">📖 来自：${todayWords[0]?.chapter ? VOCABULARY[todayWords[0].chapter].title : ''} ~ ${VOCABULARY[todayWords[todayWords.length-1]?.chapter]?.title || ''}</div>`;
+
+  listEl.innerHTML = html;
+  el.style.display = 'block';
+
+  // Update day info header
+  document.getElementById('dayInfo').textContent = `Day ${dayNum} | ${VOCABULARY[state.currentChapter]?.title || ''}`;
+}
+
 window.onload = function() {
   document.getElementById('chapterSelect').value = state.currentChapter;
-  // Skip to first unlearned word
-  if (!skipToUnlearned()) {
-    // All learned, stay at current
-  }
+  if (!skipToUnlearned()) {}
   updateLearnView(); updateStats();
+  renderDailyTask();
   if ('speechSynthesis' in window) speechSynthesis.getVoices();
 };
 
