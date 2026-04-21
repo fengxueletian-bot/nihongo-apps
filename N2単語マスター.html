@@ -1382,7 +1382,7 @@ function clearErrors() { if (confirm('清空？')) { state.errors=[]; saveState(
 function updateStats() {
   const total = Object.values(VOCABULARY).reduce((s,ch) => s+ch.words.length, 0);
   const learned = Object.keys(state.wordStatus).length;
-  const mastered = Object.values(state.wordStatus).filter(s => s.reviewLevel>=5).length;
+  const mastered = Object.values(state.wordStatus).filter(s => s.repetitions>=3 && s.interval>=6).length;
   const review = getReviewWords().length;
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statLearned').textContent = learned;
