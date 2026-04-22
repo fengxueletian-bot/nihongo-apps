@@ -937,7 +937,7 @@ function updateLearnView() {
   document.getElementById('learnWord').innerHTML = addRuby(w.word, w.reading);
   document.getElementById('learnReading').textContent = w.reading;
   document.getElementById('learnMeaning').textContent = w.meaning;
-  document.getElementById('learnCollocation').textContent = '【' + w.collocation + '】';
+  document.getElementById('learnCollocation').innerHTML = '【' + w.collocation + '】';
   document.getElementById('learnExample').innerHTML = `<div>${w.example}</div><div style="color:#666;margin-top:4px">${w.exampleCn}</div>`;
   document.getElementById('learnCounter').textContent = `${state.currentIndex + 1} / ${words.length}`;
   document.getElementById('learnProgress').style.width = ((state.currentIndex + 1) / words.length * 100) + '%';
@@ -1127,7 +1127,7 @@ function showSpellQ() {
   }
   const w = spellWords[spellIdx];
   document.getElementById('spellMeaning').textContent = w.meaning;
-  document.getElementById('spellHint').textContent = '搭配：' + w.collocation;
+  document.getElementById('spellHint').innerHTML = '搭配：' + w.collocation;
   document.getElementById('kanaInput').value = '';
   document.getElementById('kanaInput').classList.remove('hidden');
   document.querySelector('#mode-spell .btn-group').classList.remove('hidden');
@@ -1540,7 +1540,7 @@ function showClozeQ() {
     sentence = sentence.replace(/<ruby>[^<]*<rt>[^<]*<\/rt><\/ruby>/, blankHtml);
   }
   document.getElementById('clozeSentence').innerHTML = sentence + '<div style="font-size:13px;color:#888;margin-top:8px">' + w.exampleCn + '</div>';
-  document.getElementById('clozeHintArea').textContent = '';
+  document.getElementById('clozeHintArea').innerHTML = '';
   document.getElementById('clozeInput').value = '';
   document.getElementById('clozeInput').style.display = '';
   document.getElementById('clozeResult').textContent = '';
@@ -1576,7 +1576,7 @@ function checkCloze() {
 }
 function clozeMeaning() {
   const w = clozeWords[clozeIdx];
-  document.getElementById('clozeHintArea').textContent = '意思：' + w.meaning + ' | 搭配：' + w.collocation;
+  document.getElementById('clozeHintArea').innerHTML = '意思：' + w.meaning + ' | 搭配：' + w.collocation;
 }
 function clozeReveal() {
   const w = clozeWords[clozeIdx];
@@ -1600,7 +1600,7 @@ function switchMode(mode) {
       document.getElementById('learnWord').textContent = '🎉';
       document.getElementById('learnReading').textContent = '本課已学完！';
       document.getElementById('learnMeaning').textContent = '全部单词已学习完毕';
-      document.getElementById('learnCollocation').textContent = '';
+      document.getElementById('learnCollocation').innerHTML = '';
       document.getElementById('learnExample').innerHTML = '<div style="text-align:center"><button class="btn btn-primary" onclick="restartLearn();updateLearnView()">🔄 从头复习</button></div>';
     } else {
       updateLearnView();
