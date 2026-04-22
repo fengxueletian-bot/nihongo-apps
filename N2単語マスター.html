@@ -1127,7 +1127,7 @@ function showSpellQ() {
   }
   const w = spellWords[spellIdx];
   document.getElementById('spellMeaning').textContent = w.meaning;
-  document.getElementById('spellHint').innerHTML = '搭配：' + w.collocation;
+  document.getElementById('spellHint').innerHTML = '';
   document.getElementById('kanaInput').value = '';
   document.getElementById('kanaInput').classList.remove('hidden');
   document.querySelector('#mode-spell .btn-group').classList.remove('hidden');
