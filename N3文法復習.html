@@ -456,9 +456,12 @@ function renderQuestion() {
   }
   html += '<div id="result"></div></div>';
   app.innerHTML = html;
+  if (q.type === 'order') resetOrderState();
 }
 
 var selectedOrder = [];
+// Reset order state when rendering a new question
+function resetOrderState() { selectedOrder = []; }
 function toggleOrderWord(el) {
   if (answered) return;
   if (el.classList.contains('selected')) {
