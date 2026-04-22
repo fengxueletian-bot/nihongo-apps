@@ -127,14 +127,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <!-- ============ 学习模式 ============ -->
   <div id="mode-learn" class="card">
-    <select class="chapter-select" id="chapterSelect" onchange="changeChapter()">
-      <option value="1-1">1章1課 親類・友人・知人</option>
-      <option value="1-2">1章2課 人の性格・特徴</option>
-      <option value="1-3">1章3課 人に対する感情・行動</option>
-      <option value="2-1">2章1課 食生活</option>
-      <option value="2-2">2章2課 家事</option>
-      <option value="2-3">2章3課 健康</option>
-    </select>
+    <div id="dailyChapterInfo" style="text-align:center;font-size:13px;color:#4361ee;font-weight:600;padding:8px 0">📅 今日词汇</div>
     <div class="progress-bar"><div class="fill" id="learnProgress" style="width:0%"></div></div>
     <div class="word-display">
       <div class="word" id="learnWord"></div>
@@ -878,6 +871,37 @@ let state = JSON.parse(localStorage.getItem('n2vocab_v2') || 'null') || {
 };
 function saveState() { localStorage.setItem('n2vocab_v2', JSON.stringify(state)); }
 
+// ============ 每日词表缓存 ============
+let _dailyWordsCache = null;
+let _dailyWordsCacheDate = null;
+function getCachedDailyWords() {
+  const today = new Date().toISOString().slice(0,10);
+  if (_dailyWordsCache && _dailyWordsCacheDate === today) return _dailyWordsCache;
+  _dailyWordsCache = getDailyWords();
+  _dailyWordsCacheDate = today;
+  return _dailyWordsCache;
+}
+
+// 获取词的状态key（兼容旧数据）
+function getWordKey(word) {
+  if (word._globalIdx !== undefined) return 'g-' + word._globalIdx;
+  return word._chapter + '-' + word._chapterIdx;
+}
+function getWordStatus(word) {
+  const newKey = 'g-' + word._globalIdx;
+  if (state.wordStatus[newKey]) return { key: newKey, status: state.wordStatus[newKey] };
+  if (word._chapter !== undefined && word._chapterIdx !== undefined) {
+    const oldKey = word._chapter + '-' + word._chapterIdx;
+    if (state.wordStatus[oldKey]) {
+      state.wordStatus[newKey] = state.wordStatus[oldKey];
+      delete state.wordStatus[oldKey];
+      saveState();
+      return { key: newKey, status: state.wordStatus[newKey] };
+    }
+  }
+  return { key: newKey, status: null };
+}
+
 // ============ TTS ============
 function speak(text, rate=0.8) {
   if ('speechSynthesis' in window) {
@@ -891,20 +915,24 @@ function speak(text, rate=0.8) {
 }
 function speakWord() { const w = getCurrentWord(); speak(w.reading); }
 function speakExample() { const w = getCurrentWord(); speak(w.example.replace(/（[^）]*）/g, ''), 0.7); }
-function getCurrentWord() { return VOCABULARY[state.currentChapter].words[state.currentIndex]; }
+function getCurrentWord() {
+  const words = getCachedDailyWords();
+  return words[state.currentIndex] || words[0];
+}
 
 // ============ 学习模式 ============
 function skipToUnlearned() {
-  const words = VOCABULARY[state.currentChapter].words;
+  const words = getCachedDailyWords();
   for (let i = 0; i < words.length; i++) {
-    const key = state.currentChapter + '-' + i;
-    if (!state.wordStatus[key]) { state.currentIndex = i; saveState(); return true; }
+    const ws = getWordStatus(words[i]);
+    if (!ws.status) { state.currentIndex = i; saveState(); return true; }
   }
   return false;
 }
 function updateLearnView() {
-  const words = VOCABULARY[state.currentChapter].words;
-  const w = words[state.currentIndex];
+  const words = getCachedDailyWords();
+  if (!words.length) return;
+  const w = words[state.currentIndex] || words[0];
   document.getElementById('learnWord').innerHTML = addRuby(w.word, w.reading);
   document.getElementById('learnReading').textContent = w.reading;
   document.getElementById('learnMeaning').textContent = w.meaning;
@@ -912,12 +940,11 @@ function updateLearnView() {
   document.getElementById('learnExample').innerHTML = `<div>${w.example}</div><div style="color:#666;margin-top:4px">${w.exampleCn}</div>`;
   document.getElementById('learnCounter').textContent = `${state.currentIndex + 1} / ${words.length}`;
   document.getElementById('learnProgress').style.width = ((state.currentIndex + 1) / words.length * 100) + '%';
-  document.getElementById('dayInfo').textContent = VOCABULARY[state.currentChapter].title;
-  // Update daily progress
-  const todayKey = new Date().toDateString();
-  const todayLearned = Object.entries(state.wordStatus).filter(([k,v]) => new Date(v.learnedAt).toDateString() === todayKey).length;
+  const chapters = [...new Set(words.map(x => x._chapter))];
+  const chapterNames = chapters.map(c => VOCABULARY[c]?.title || c).join(' ~ ');
+  const learnedCount = words.filter(x => getWordStatus(x).status).length;
   const reviewCount = getReviewWords().length;
-  document.getElementById('dayInfo').textContent = VOCABULARY[state.currentChapter].title + ' | 今日已学:' + todayLearned + '/30' + (reviewCount ? ' | 待复习:'+reviewCount : '');
+  document.getElementById('dayInfo').textContent = chapterNames + ' | 已学:' + learnedCount + '/' + words.length + (reviewCount ? ' | 待复习:'+reviewCount : '');
 }
 
 function addRuby(word, reading) {
@@ -926,13 +953,13 @@ function addRuby(word, reading) {
 }
 
 function nextWord() {
-  const words = VOCABULARY[state.currentChapter].words;
+  const words = getCachedDailyWords();
   if (state.currentIndex >= words.length - 1) {
-    if (confirm('🎉 本课30词学完！要进入测试吗？')) { switchMode('quiz'); return; }
+    if (confirm('🎉 今日' + words.length + '词学完！要进入测试吗？')) { switchMode('quiz'); return; }
   }
   state.currentIndex = Math.min(state.currentIndex + 1, words.length - 1);
   updateLearnView(); saveState();
-  speakWord(); // Auto-speak new word
+  speakWord();
 }
 function prevWord() {
   state.currentIndex = Math.max(state.currentIndex - 1, 0);
@@ -943,7 +970,8 @@ function markTaskDone() {
   localStorage.setItem('task_done_vocab_' + today, '1');
 }
 function markWord(status) {
-  const key = state.currentChapter + '-' + state.currentIndex;
+  const w = getCurrentWord();
+  const key = getWordKey(w);
   if (!state.wordStatus[key]) state.wordStatus[key] = {};
   state.wordStatus[key].learnedAt = state.wordStatus[key].learnedAt || Date.now();
   state.wordStatus[key].status = status;
@@ -963,10 +991,10 @@ function restartLearn() {
   updateLearnView(); saveState();
 }
 function changeChapter() {
-  state.currentChapter = document.getElementById('chapterSelect').value;
+  // Chapter selector kept for reference; learning uses daily words
   state.currentIndex = 0;
   if (!skipToUnlearned()) {
-    if (confirm('🎉 本课已全部学完！要从头复习吗？')) { state.currentIndex = 0; }
+    if (confirm('🎉 今日词汇已全部学完！要从头复习吗？')) { state.currentIndex = 0; }
   }
   updateLearnView(); saveState();
 }
@@ -975,8 +1003,7 @@ function changeChapter() {
 let quizWords=[], quizIdx=0, quizScore=0;
 function startQuiz() {
   if (!window._reviewMode) {
-    const words = [...VOCABULARY[state.currentChapter].words];
-    quizWords = words.sort(() => Math.random()-0.5).slice(0,30);
+    quizWords = [...getCachedDailyWords()].sort(() => Math.random()-0.5);
   }
   window._reviewMode = false;
   quizIdx = 0; quizScore = 0;
@@ -1007,7 +1034,7 @@ function showQuizQuestion() {
     if (confuse) {
       options = options.concat(confuse.sort(() => Math.random()-0.5).slice(0,3));
     } else {
-      const allW = VOCABULARY[state.currentChapter].words;
+      const allW = getCachedDailyWords();
       while (options.length < 4) {
         const r = allW[Math.floor(Math.random()*allW.length)].meaning;
         if (!options.includes(r)) options.push(r);
@@ -1022,7 +1049,7 @@ function showQuizQuestion() {
     document.getElementById('quizWord').textContent = w.meaning;
     document.getElementById('quizReading').textContent = '选择对应的日语';
     document.getElementById('quizReading').style.visibility = 'visible';
-    const allW = VOCABULARY[state.currentChapter].words;
+    const allW = getCachedDailyWords();
     let options = [`${w.word}（${w.reading}）`];
     while (options.length < 4) {
       const r = allW[Math.floor(Math.random()*allW.length)];
@@ -1049,13 +1076,13 @@ function handleQuizClick(el) {
   if (selected === correct) {
     el.classList.add('correct'); quizScore++;
     const qw = quizWords[quizIdx];
-    const qkey = state.currentChapter+'-'+VOCABULARY[state.currentChapter].words.indexOf(qw);
+    const qkey = getWordKey(qw);
     updateSM2(qkey, true);
   } else {
     el.classList.add('wrong');
     document.querySelectorAll('#quizOptions .quiz-option').forEach(o => { if (o.textContent===correct) o.classList.add('correct'); });
     const w = quizWords[quizIdx];
-    const wkey = state.currentChapter+'-'+VOCABULARY[state.currentChapter].words.indexOf(w);
+    const wkey = getWordKey(w);
     updateSM2(wkey, false);
     const existQ = state.errors.find(e=>e.word===w.word);
     if (existQ) { existQ.count=(existQ.count||1)+1; existQ.wrongAt=Date.now(); }
@@ -1070,7 +1097,7 @@ function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].readi
 // ============ 拼写模式 ============
 let spellWords=[], spellIdx=0, spellScoreVal=0, spellWaiting=false;
 function startSpell() {
-  const words = getDailyWords();
+  const words = getCachedDailyWords();
   spellWords = words.sort(()=>Math.random()-0.5).slice(0,30);
   spellIdx=0; spellScoreVal=0; spellWaiting=false; spellComposing=false;
   showSpellQ();
@@ -1176,7 +1203,7 @@ function setShadowMode(mode) {
   updateShadowView();
 }
 function updateShadowView() {
-  const words = VOCABULARY[state.currentChapter].words;
+  const words = getCachedDailyWords();
   const w = words[shadowIdx];
   if (shadowMode === 'word') {
     document.getElementById('shadowMainText').innerHTML = `<ruby>${w.word}<rt>${w.reading}</rt></ruby>`;
@@ -1191,12 +1218,12 @@ function updateShadowView() {
   document.getElementById('recognizedText').textContent = '';
 }
 function playShadowTarget() {
-  const w = VOCABULARY[state.currentChapter].words[shadowIdx];
+  const w = getCachedDailyWords()[shadowIdx];
   if (shadowMode==='word') speak(w.reading, 0.7);
   else speak(w.example.replace(/（[^）]*）/g,''), 0.65);
 }
 function nextShadow() {
-  const words = VOCABULARY[state.currentChapter].words;
+  const words = getCachedDailyWords();
   shadowIdx = Math.min(shadowIdx+1, words.length-1);
   updateShadowView();
 }
@@ -1215,7 +1242,7 @@ function toggleRecording() {
       const transcript = e.results[0][0].transcript;
       const confidence = Math.round(e.results[0][0].confidence * 100);
       document.getElementById('recognizedText').textContent = '你说的：' + transcript;
-      const w = VOCABULARY[state.currentChapter].words[shadowIdx];
+      const w = getCachedDailyWords()[shadowIdx];
       const expected = shadowMode==='word' ? w.reading : w.example.replace(/（[^）]*）/g,'').replace(/[。、！？]/g,'');
       const similarity = calcSim(transcript.replace(/[。、！？\s]/g,''), expected.replace(/[。、！？\s]/g,''));
       const score = Math.round((similarity * 0.6 + confidence * 0.4));
@@ -1272,7 +1299,8 @@ function startJlpt(mode) {
     jlptQs = [...jlptErrors].sort(()=>Math.random()-0.5);
     jlptErrors = [];
   } else {
-    const all = [...(JLPT_QUESTIONS[state.currentChapter] || [])];
+    const dailyChapters = [...new Set(getCachedDailyWords().map(w => w._chapter))];
+    const all = dailyChapters.flatMap(ch => JLPT_QUESTIONS[ch] || []);
     // Prefer questions not done yet this session
     const undone = all.filter(q => !jlptDoneSet.has(q.question));
     const pool = undone.length >= 20 ? undone : all;
@@ -1421,25 +1449,34 @@ function updateSM2(wordKey, correct) {
   saveState();
 }
 
-// Override getReviewWords to use SM-2 intervals
+// Override getReviewWords to use SM-2 intervals (supports both old and new keys)
 function getReviewWords() {
   const now = Date.now(); const results = [];
+  // Build global word lookup once
+  if (!window._allWordsLookup) {
+    window._allWordsLookup = {};
+    const chapterKeys = Object.keys(VOCABULARY).sort((a,b) => { const [ac,al]=a.split('-').map(Number),[bc,bl]=b.split('-').map(Number); return ac-bc||al-bl; });
+    let gIdx = 0;
+    chapterKeys.forEach(k => VOCABULARY[k].words.forEach((w,i) => {
+      const entry = {...w, _chapter:k, _chapterIdx:i, _globalIdx:gIdx};
+      window._allWordsLookup['g-'+gIdx] = entry;
+      window._allWordsLookup[k+'-'+i] = entry;
+      gIdx++;
+    }));
+  }
   for (const [key, info] of Object.entries(state.wordStatus)) {
     if (info.nextReview && info.nextReview <= now) {
-      const parts = key.match(/^(.+)-(\d+)$/);
-      if (parts && VOCABULARY[parts[1]]) {
-        const w = VOCABULARY[parts[1]].words[parseInt(parts[2])];
-        if (w) results.push({...w, key, interval: info.interval||0, ef: info.easeFactor||2.5});
-      }
+      const w = window._allWordsLookup[key];
+      if (w) results.push({...w, key, interval: info.interval||0, ef: info.easeFactor||2.5});
     }
   }
-  return results.sort((a,b) => a.interval - b.interval); // Weakest first
+  return results.sort((a,b) => a.interval - b.interval);
 }
 
 // ============ 填空回忆模式 ============
 var clozeWords=[], clozeIdx=0, clozeScoreVal=0, clozeRevealed=false, clozeComposing=false;
 function startCloze() {
-  const words = getDailyWords();
+  const words = getCachedDailyWords();
   clozeWords = words.sort(()=>Math.random()-0.5);
   clozeIdx=0; clozeScoreVal=0;
   showClozeQ();
@@ -1533,8 +1570,7 @@ function checkCloze() {
     else state.errors.push({word:w.word,reading:w.reading,meaning:w.meaning,wrongAt:Date.now(),type:'cloze',count:1});
   }
   // Update SM-2
-  const chKey = state.currentChapter + '-' + VOCABULARY[state.currentChapter].words.indexOf(w);
-  updateSM2(chKey, correct);
+  updateSM2(getWordKey(w), correct);
   document.getElementById('clozeScore').textContent = '✓ ' + clozeScoreVal;
   clozeRevealed = true;
   saveState();
@@ -1548,8 +1584,7 @@ function clozeReveal() {
   document.getElementById('clozeResult').innerHTML = '<span style="color:#856404">👁 答案：<strong>' + w.word + '（' + w.reading + '）</strong></span>';
   clozeRevealed = true;
   // Count as fail for SM-2
-  const chKey = state.currentChapter + '-' + VOCABULARY[state.currentChapter].words.indexOf(w);
-  updateSM2(chKey, false);
+  updateSM2(getWordKey(w), false);
 }
 function nextCloze() { clozeIdx++; showClozeQ(); }
 function prevCloze() { if(clozeIdx>0){clozeIdx--; showClozeQ();} }
@@ -1598,7 +1633,7 @@ function getDailyWords() {
     return ac-bc || al-bl;
   });
   const allWords = [];
-  chapterKeys.forEach(k => VOCABULARY[k].words.forEach(w => allWords.push({...w, _chapter:k})));
+  chapterKeys.forEach(k => VOCABULARY[k].words.forEach((w,i) => { allWords.push({...w, _chapter:k, _chapterIdx:i, _globalIdx:allWords.length}); }));
   const startKey = 'n2vocab_start_date';
   let startDate = localStorage.getItem(startKey);
   if (!startDate) { startDate = new Date().toISOString().slice(0,10); localStorage.setItem(startKey, startDate); }
@@ -1651,13 +1686,12 @@ function renderDailyTask() {
   el.style.display = 'block';
 
   // Update day info header
-  document.getElementById('dayInfo').textContent = `Day ${dayNum} | ${VOCABULARY[state.currentChapter]?.title || ''}`;
+  // dayInfo is updated by updateLearnView()
 }
 
 window.onload = function() {
-  // 自动切换到今天的词所在章节
-  syncChapterToToday();
-  document.getElementById('chapterSelect').value = state.currentChapter;
+  // Daily words mode - no longer need syncChapterToToday
+  // Skip to first unlearned word in today's daily words
   if (!skipToUnlearned()) {}
   updateLearnView(); updateStats();
   renderDailyTask();
