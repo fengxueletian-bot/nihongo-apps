@@ -1397,11 +1397,17 @@ function updateReviewList() {
 function startReview() {
   const rw = getReviewWords();
   if (!rw.length) { alert('暂无需要复习的词！'); return; }
-  // Switch to quiz mode with review words
+  // Switch to spell mode with review words
   window._reviewMode = true;
-  quizWords = rw.slice(0,10);
-  quizIdx = 0; quizScore = 0;
-  switchMode('quiz');
+  window._reviewSpellWords = rw.slice(0, 10);
+  switchMode('spell');
+  // Override spell words with review words
+  spellWords = window._reviewSpellWords;
+  spellIdx = 0; spellScore = 0;
+  showSpellQ();
+  const input = document.getElementById('kanaInput');
+  input.addEventListener('compositionstart', () => { spellComposing=true; });
+  input.addEventListener('compositionend', () => { setTimeout(()=>{ spellComposing=false; }, 100); });
 }
 function updateErrorList() {
   const el = document.getElementById('errorList');
@@ -1418,9 +1424,14 @@ function updateErrorList() {
 function practiceErrors() {
   if (!state.errors.length) { alert('没有错题！'); return; }
   window._reviewMode = true;
-  quizWords = state.errors.slice(0,10);
-  quizIdx = 0; quizScore = 0;
-  switchMode('quiz');
+  window._reviewSpellWords = state.errors.slice(0, 10);
+  switchMode('spell');
+  spellWords = window._reviewSpellWords;
+  spellIdx = 0; spellScore = 0;
+  showSpellQ();
+  const input = document.getElementById('kanaInput');
+  input.addEventListener('compositionstart', () => { spellComposing=true; });
+  input.addEventListener('compositionend', () => { setTimeout(()=>{ spellComposing=false; }, 100); });
 }
 function clearErrors() { if (confirm('清空？')) { state.errors=[]; saveState(); updateErrorList(); } }
 
