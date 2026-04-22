@@ -914,7 +914,8 @@ function speak(text, rate=0.8) {
   }
 }
 function speakWord() { const w = getCurrentWord(); speak(w.reading); }
-function speakExample() { const w = getCurrentWord(); speak(w.example.replace(/（[^）]*）/g, ''), 0.7); }
+function stripRuby(s) { return s.replace(/<rt>[^<]*<\/rt>/g,'').replace(/<\/?ruby>/g,'').replace(/（[^）]*）/g,''); }
+function speakExample() { const w = getCurrentWord(); speak(stripRuby(w.example), 0.7); }
 function getCurrentWord() {
   const words = getCachedDailyWords();
   return words[state.currentIndex] || words[0];
@@ -1220,7 +1221,7 @@ function updateShadowView() {
 function playShadowTarget() {
   const w = getCachedDailyWords()[shadowIdx];
   if (shadowMode==='word') speak(w.reading, 0.7);
-  else speak(w.example.replace(/（[^）]*）/g,''), 0.65);
+  else speak(stripRuby(w.example), 0.65);
 }
 function nextShadow() {
   const words = getCachedDailyWords();
@@ -1243,7 +1244,7 @@ function toggleRecording() {
       const confidence = Math.round(e.results[0][0].confidence * 100);
       document.getElementById('recognizedText').textContent = '你说的：' + transcript;
       const w = getCachedDailyWords()[shadowIdx];
-      const expected = shadowMode==='word' ? w.reading : w.example.replace(/（[^）]*）/g,'').replace(/[。、！？]/g,'');
+      const expected = shadowMode==='word' ? w.reading : stripRuby(w.example).replace(/[。、！？]/g,'');
       const similarity = calcSim(transcript.replace(/[。、！？\s]/g,''), expected.replace(/[。、！？\s]/g,''));
       const score = Math.round((similarity * 0.6 + confidence * 0.4));
       
@@ -1499,46 +1500,44 @@ function showClozeQ() {
     return;
   }
   const w = clozeWords[clozeIdx];
-  // Create cloze sentence: replace the word with uniform ＿＿＿＿
+  // Create cloze sentence: replace the target word with blank
   let sentence = w.example;
   const blankHtml = '<span style="color:#e63946;font-weight:bold;border-bottom:2px dashed #e63946;padding:0 8px">＿＿＿＿</span>';
   let replaced = false;
-  // Strategy 1: match word with furigana pattern 漢字（かな）
-  const furiganaPattern = w.word + '（' + w.reading + '）';
-  if (sentence.includes(furiganaPattern)) {
-    sentence = sentence.replace(furiganaPattern, blankHtml);
-    replaced = true;
+  // Build ruby-aware regex: 家族 → matches <ruby>家族<rt>...</rt></ruby> or plain 家族
+  function rubyAwareReplace(sent, target) {
+    // Try matching ruby-wrapped version first
+    var chars = target.split('');
+    // Pattern: target might be inside one <ruby> tag or split across text
+    var rubyPattern = '<ruby>' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '<rt>[^<]*<\\/rt><\\/ruby>';
+    try {
+      var rx = new RegExp(rubyPattern);
+      if (rx.test(sent)) return sent.replace(rx, blankHtml);
+    } catch(e) {}
+    // Try plain text match
+    if (sent.includes(target)) return sent.replace(target, blankHtml);
+    return null;
   }
-  // Strategy 2: match reading with furigana pattern
+  // Strategy 1: match word (ruby-aware)
+  var result = rubyAwareReplace(sentence, w.word);
+  if (result) { sentence = result; replaced = true; }
+  // Strategy 2: match reading (ruby-aware)
   if (!replaced) {
-    const readingFurigana = w.reading + '（' + w.reading + '）';
-    if (sentence.includes(readingFurigana)) {
-      sentence = sentence.replace(readingFurigana, blankHtml);
+    result = rubyAwareReplace(sentence, w.reading);
+    if (result) { sentence = result; replaced = true; }
+  }
+  // Strategy 3: strip all HTML and match in plain text, then blank the ruby element
+  if (!replaced) {
+    var plain = sentence.replace(/<rt>[^<]*<\/rt>/g,'').replace(/<\/?ruby>/g,'');
+    if (plain.includes(w.word)) {
+      var rx = new RegExp('<ruby>' + w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '<rt>[^<]*</rt></ruby>|' + w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      sentence = sentence.replace(rx, blankHtml);
       replaced = true;
     }
   }
-  // Strategy 3: match word directly
-  if (!replaced && sentence.includes(w.word)) {
-    sentence = sentence.replace(w.word, blankHtml);
-    replaced = true;
-  }
-  // Strategy 4: match reading directly
-  if (!replaced && sentence.includes(w.reading)) {
-    sentence = sentence.replace(w.reading, blankHtml);
-    replaced = true;
-  }
-  // Strategy 5: strip furigana then try matching word or reading with optional furigana
+  // Strategy 4: last resort fallback
   if (!replaced) {
-    var stripped = sentence.replace(/（[^）]*）/g, '');
-    var matchTarget = stripped.includes(w.word) ? w.word : (stripped.includes(w.reading) ? w.reading : null);
-    if (matchTarget) {
-      var escaped = matchTarget.split('').map(function(c) { return c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:（[^）]*）)?'; }).join('');
-      try { sentence = sentence.replace(new RegExp(escaped), blankHtml); replaced = true; } catch(e) {}
-    }
-  }
-  // Strategy 6: last resort fallback
-  if (!replaced) {
-    sentence = sentence.replace(/^[^、。]*/, blankHtml);
+    sentence = sentence.replace(/<ruby>[^<]*<rt>[^<]*<\/rt><\/ruby>/, blankHtml);
   }
   document.getElementById('clozeSentence').innerHTML = sentence + '<div style="font-size:13px;color:#888;margin-top:8px">' + w.exampleCn + '</div>';
   document.getElementById('clozeHintArea').textContent = '';
