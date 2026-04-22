@@ -1403,7 +1403,7 @@ function startReview() {
   switchMode('spell');
   // Override spell words with review words
   spellWords = window._reviewSpellWords;
-  spellIdx = 0; spellScore = 0;
+  spellIdx = 0; spellScoreVal = 0; spellWaiting = false; spellComposing = false;
   showSpellQ();
   const input = document.getElementById('kanaInput');
   input.addEventListener('compositionstart', () => { spellComposing=true; });
@@ -1427,7 +1427,7 @@ function practiceErrors() {
   window._reviewSpellWords = state.errors.slice(0, 10);
   switchMode('spell');
   spellWords = window._reviewSpellWords;
-  spellIdx = 0; spellScore = 0;
+  spellIdx = 0; spellScoreVal = 0; spellWaiting = false; spellComposing = false;
   showSpellQ();
   const input = document.getElementById('kanaInput');
   input.addEventListener('compositionstart', () => { spellComposing=true; });
