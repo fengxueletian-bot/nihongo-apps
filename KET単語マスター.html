@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+<meta name="google" content="notranslate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>KET Word Master 🌟</title>
+<style>
+:root {
+  --primary: #6C5CE7;
+  --primary-light: #A29BFE;
+  --success: #00B894;
+  --danger: #FF6B6B;
+  --warning: #FDCB6E;
+  --info: #74B9FF;
+  --bg: #F8F7FF;
+  --card: #FFFFFF;
+  --text: #2D3436;
+  --text2: #636E72;
+  --border: #E9E5FF;
+  --shadow: rgba(108,92,231,0.1);
+  --radius: 16px;
+}
+@media(prefers-color-scheme:dark){
+  :root {
+    --bg: #1A1A2E;
+    --card: #16213E;
+    --text: #E8E8E8;
+    --text2: #A0A0B0;
+    --border: #2A2A4A;
+    --shadow: rgba(0,0,0,0.3);
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);-webkit-tap-highlight-color:transparent;}
+.app{max-width:480px;margin:0 auto;padding:12px 16px 100px;}
+.header{text-align:center;padding:16px 0 8px;}
+.header h1{font-size:26px;background:linear-gradient(135deg,#6C5CE7,#FF6B6B,#FDCB6E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header .sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.stats{display:flex;justify-content:space-around;background:var(--card);border-radius:var(--radius);padding:14px 8px;margin:12px 0;box-shadow:0 2px 12px var(--shadow);}
+.stat{text-align:center;}
+.stat .num{font-size:22px;font-weight:bold;background:linear-gradient(135deg,var(--primary),var(--info));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat .label{font-size:11px;color:var(--text2);margin-top:2px;}
+.streak-badge{display:inline-block;background:linear-gradient(135deg,#FF6B6B,#FDCB6E);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin:8px 0;}
+.tabs{display:flex;gap:6px;margin:12px 0;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:8px 14px;border-radius:20px;border:none;background:var(--card);color:var(--text2);font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px var(--shadow);transition:all .2s;}
+.tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;box-shadow:0 2px 8px rgba(108,92,231,0.3);}
+.card{background:var(--card);border-radius:var(--radius);padding:20px;margin:12px 0;box-shadow:0 2px 12px var(--shadow);}
+.progress-bar{height:8px;background:var(--border);border-radius:4px;margin:10px 0;overflow:hidden;}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--info),var(--success));border-radius:4px;transition:width .4s ease;}
+.word-big{font-size:32px;font-weight:bold;text-align:center;color:var(--text);margin:12px 0;}
+.phonetic{font-size:14px;color:var(--primary);text-align:center;}
+.meaning-text{font-size:18px;color:var(--text2);text-align:center;margin:8px 0;}
+.pos-tag{display:inline-block;background:var(--border);color:var(--primary);padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;}
+.example-box{font-size:14px;color:var(--text);margin-top:12px;padding:12px;background:var(--bg);border-radius:10px;line-height:1.8;border-left:3px solid var(--primary);}
+.example-box .highlight{color:var(--primary);font-weight:bold;}
+.btn{padding:12px 24px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.btn:active{transform:scale(0.96);}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;box-shadow:0 2px 8px rgba(108,92,231,0.3);}
+.btn-success{background:linear-gradient(135deg,var(--success),#55EFC4);color:#fff;}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#FF8E8E);color:#fff;}
+.btn-outline{background:var(--card);border:2px solid var(--border);color:var(--text);}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:10px;}
+.btn-group{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.speaker-btn{background:none;border:none;font-size:28px;cursor:pointer;padding:4px;transition:transform .2s;}
+.speaker-btn:active{transform:scale(1.2);}
+.quiz-options{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.quiz-opt{padding:14px 16px;border:2px solid var(--border);border-radius:12px;cursor:pointer;font-size:15px;transition:all .2s;background:var(--card);text-align:left;}
+.quiz-opt:active{transform:scale(0.98);}
+.quiz-opt.correct{border-color:var(--success);background:rgba(0,184,148,0.1);}
+.quiz-opt.wrong{border-color:var(--danger);background:rgba(255,107,107,0.1);}
+.quiz-opt.disabled{pointer-events:none;opacity:0.7;}
+.input-area{margin-top:14px;}
+.input-area input{width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;font-size:18px;outline:none;background:var(--card);color:var(--text);text-align:center;letter-spacing:2px;}
+.input-area input:focus{border-color:var(--primary);}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+.counter{font-size:13px;color:var(--text2);}
+.hidden{display:none!important;}
+/* Reward animation */
+.reward-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;}
+.confetti{position:absolute;width:10px;height:10px;border-radius:2px;animation:fall 2s ease-in forwards;}
+@keyframes fall{0%{opacity:1;transform:translateY(0) rotate(0deg);}100%{opacity:0;transform:translateY(100vh) rotate(720deg);}}
+.star-burst{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;animation:starburst .8s ease-out forwards;pointer-events:none;z-index:9999;}
+@keyframes starburst{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}50%{transform:translate(-50%,-50%) scale(1.3);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}
+/* Sentence fill blank */
+.sentence-fill{font-size:16px;line-height:2;text-align:center;margin:16px 0;}
+.blank-slot{display:inline-block;min-width:80px;border-bottom:3px solid var(--primary);padding:2px 8px;margin:0 4px;font-weight:bold;color:var(--primary);}
+/* Topic selector */
+.topic-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0;}
+.topic-btn{padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;font-size:13px;transition:all .2s;}
+.topic-btn.active{border-color:var(--primary);background:rgba(108,92,231,0.08);}
+.topic-btn .emoji{font-size:24px;display:block;margin-bottom:4px;}
+/* Word list */
+.word-list-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.word-list-item:last-child{border:none;}
+.wl-word{font-weight:600;font-size:15px;}
+.wl-meaning{font-size:13px;color:var(--text2);}
+.wl-status{font-size:11px;padding:3px 8px;border-radius:8px;font-weight:600;}
+.wl-new{background:#E3F2FD;color:#1565C0;}
+.wl-learning{background:#FFF3E0;color:#E65100;}
+.wl-mastered{background:#E8F5E9;color:#2E7D32;}
+/* Today panel */
+.today-panel{background:linear-gradient(135deg,rgba(108,92,231,0.08),rgba(116,185,255,0.08));border-radius:var(--radius);padding:16px;margin:12px 0;border:1px solid var(--border);}
+.today-panel h3{font-size:15px;margin-bottom:8px;}
+.today-words{display:flex;flex-wrap:wrap;gap:6px;}
+.today-word-chip{padding:4px 10px;border-radius:8px;font-size:12px;background:var(--card);border:1px solid var(--border);}
+.today-word-chip.done{background:var(--success);color:#fff;border-color:var(--success);}
+/* Settings */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border:none;}
+.setting-label{font-size:14px;}
+.setting-val{font-size:14px;color:var(--primary);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <h1>🌟 KET Word Master</h1>
+    <div class="sub" id="dateInfo"></div>
+    <div id="streakBadge" class="streak-badge hidden">🔥 0 天连续打卡</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="sToday">0</div><div class="label">今日完成</div></div>
+    <div class="stat"><div class="num" id="sStreak">0</div><div class="label">连续打卡</div></div>
+    <div class="stat"><div class="num" id="sMastered">0</div><div class="label">已掌握</div></div>
+    <div class="stat"><div class="num" id="sTotal">0</div><div class="label">总词数</div></div>
+  </div>
+
+  <div class="tabs" id="mainTabs">
+    <button class="tab active" data-mode="home">🏠 首页</button>
+    <button class="tab" data-mode="learn">👀 认词</button>
+    <button class="tab" data-mode="quiz">📝 选择</button>
+    <button class="tab" data-mode="spell">✍️ 拼写</button>
+    <button class="tab" data-mode="fill">🧩 填空</button>
+    <button class="tab" data-mode="wordlist">📖 词表</button>
+  </div>
+
+  <!-- HOME -->
+  <div id="mode-home" class="card">
+    <div class="today-panel">
+      <h3>📅 今日任务</h3>
+      <div id="todayNewLabel" style="font-size:13px;color:var(--text2);margin:6px 0;">新词：</div>
+      <div class="today-words" id="todayNewWords"></div>
+      <div id="todayRevLabel" style="font-size:13px;color:var(--text2);margin:8px 0 6px;">复习：</div>
+      <div class="today-words" id="todayRevWords"></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startDailySession()">🚀 开始学习！</button>
+    </div>
+    <div style="margin-top:16px;text-align:center;">
+      <button class="btn btn-outline btn-sm" onclick="switchMode('wordlist')">📖 浏览词表</button>
+      <button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="resetConfirm()">🗑️ 重置</button>
+    </div>
+  </div>
+
+  <!-- LEARN -->
+  <div id="mode-learn" class="card hidden">
+    <div class="progress-bar"><div class="fill" id="learnFill"></div></div>
+    <div style="text-align:center;">
+      <button class="speaker-btn" onclick="speakCurrent()">🔊</button>
+    </div>
+    <div class="word-big" id="lWord"></div>
+    <div class="phonetic" id="lPhonetic"></div>
+    <div style="text-align:center;margin:6px 0;"><span class="pos-tag" id="lPos"></span></div>
+    <div class="meaning-text" id="lMeaning"></div>
+    <div class="example-box" id="lExample"></div>
+    <div class="btn-group" style="margin-top:8px;">
+      <button class="btn btn-outline btn-sm" onclick="speakExample2()">🔊 朗读例句</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-outline btn-sm" onclick="learnPrev()">←</button>
+      <span class="counter" id="lCounter"></span>
+      <button class="btn btn-primary btn-sm" onclick="learnNext()">→</button>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-success btn-sm" onclick="learnMark(true)">👍 认识</button>
+      <button class="btn btn-danger btn-sm" onclick="learnMark(false)">🤔 不认识</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="mode-quiz" class="card hidden">
+    <div class="progress-bar"><div class="fill" id="quizFill"></div></div>
+    <div style="text-align:center;"><button class="speaker-btn" onclick="speakQuiz()">🔊</button></div>
+    <div class="word-big" id="qWord"></div>
+    <div class="quiz-options" id="qOpts"></div>
+    <div class="nav-row">
+      <span class="counter" id="qCounter"></span>
+      <span id="qScore" style="font-weight:bold;color:var(--primary);"></span>
+    </div>
+  </div>
+
+  <!-- SPELL -->
+  <div id="mode-spell" class="card hidden">
+    <div class="progress-bar"><div class="fill" id="spellFill"></div></div>
+    <div style="text-align:center;"><button class="speaker-btn" onclick="speakSpell()">🔊</button></div>
+    <div class="meaning-text" style="font-size:22px;" id="spMeaning"></div>
+    <div class="phonetic" id="spHint" style="margin:6px 0;"></div>
+    <div class="input-area">
+      <input id="spInput" placeholder="Type the word..." autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="checkSpell()">✓ Check</button>
+      <button class="btn btn-outline btn-sm" onclick="showSpellHint()">💡 Hint</button>
+    </div>
+    <div id="spResult" style="text-align:center;margin-top:10px;font-size:15px;"></div>
+    <div class="nav-row">
+      <span class="counter" id="spCounter"></span>
+      <span id="spScore" style="font-weight:bold;color:var(--primary);"></span>
+    </div>
+  </div>
+
+  <!-- FILL -->
+  <div id="mode-fill" class="card hidden">
+    <div class="progress-bar"><div class="fill" id="fillFill"></div></div>
+    <div class="sentence-fill" id="fillSentence"></div>
+    <div class="input-area">
+      <input id="fillInput" placeholder="Fill in the blank..." autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="checkFill()">✓ Check</button>
+      <button class="btn btn-outline btn-sm" onclick="speakFillSentence()">🔊</button>
+    </div>
+    <div id="fillResult" style="text-align:center;margin-top:10px;font-size:15px;"></div>
+    <div class="nav-row">
+      <span class="counter" id="fillCounter"></span>
+      <span id="fillScore" style="font-weight:bold;color:var(--primary);"></span>
+    </div>
+  </div>
+
+  <!-- WORDLIST -->
+  <div id="mode-wordlist" class="card hidden">
+    <div style="font-size:15px;font-weight:600;margin-bottom:10px;">📖 词表浏览</div>
+    <div class="topic-grid" id="topicGrid"></div>
+    <div id="wordListContainer" style="margin-top:12px;max-height:60vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<script>
+// ==================== KET VOCABULARY ====================
+const VOCAB = [
+// Family & People
+{w:"mother",p:"n.",m:"妈妈",e:"My mother is a teacher.",ph:"/ˈmʌðər/",t:"Family"},
+{w:"father",p:"n.",m:"爸爸",e:"My father works in a bank.",ph:"/ˈfɑːðər/",t:"Family"},
+{w:"sister",p:"n.",m:"姐妹",e:"I have one sister.",ph:"/ˈsɪstər/",t:"Family"},
+{w:"brother",p:"n.",m:"兄弟",e:"My brother is older than me.",ph:"/ˈbrʌðər/",t:"Family"},
+{w:"parent",p:"n.",m:"父/母",e:"My parents are very kind.",ph:"/ˈperənt/",t:"Family"},
+{w:"daughter",p:"n.",m:"女儿",e:"She is their daughter.",ph:"/ˈdɔːtər/",t:"Family"},
+{w:"son",p:"n.",m:"儿子",e:"He is their only son.",ph:"/sʌn/",t:"Family"},
+{w:"uncle",p:"n.",m:"叔叔",e:"My uncle lives in London.",ph:"/ˈʌŋkl/",t:"Family"},
+{w:"aunt",p:"n.",m:"阿姨",e:"My aunt gave me a present.",ph:"/ænt/",t:"Family"},
+{w:"cousin",p:"n.",m:"堂/表兄弟姐妹",e:"My cousin is the same age as me.",ph:"/ˈkʌzn/",t:"Family"},
+{w:"grandparent",p:"n.",m:"祖父母",e:"I visit my grandparents every week.",ph:"/ˈɡrænperənt/",t:"Family"},
+{w:"husband",p:"n.",m:"丈夫",e:"Her husband is a doctor.",ph:"/ˈhʌzbənd/",t:"Family"},
+{w:"wife",p:"n.",m:"妻子",e:"His wife is very friendly.",ph:"/waɪf/",t:"Family"},
+{w:"friend",p:"n.",m:"朋友",e:"She is my best friend.",ph:"/frend/",t:"Family"},
+{w:"neighbour",p:"n.",m:"邻居",e:"Our neighbour has a big dog.",ph:"/ˈneɪbər/",t:"Family"},
+{w:"baby",p:"n.",m:"婴儿",e:"The baby is sleeping.",ph:"/ˈbeɪbi/",t:"Family"},
+{w:"child",p:"n.",m:"孩子",e:"Every child needs love.",ph:"/tʃaɪld/",t:"Family"},
+{w:"teenager",p:"n.",m:"青少年",e:"She is a teenager now.",ph:"/ˈtiːneɪdʒər/",t:"Family"},
+{w:"adult",p:"n.",m:"成年人",e:"Only adults can drive.",ph:"/ˈædʌlt/",t:"Family"},
+{w:"person",p:"n.",m:"人",e:"She is a nice person.",ph:"/ˈpɜːrsn/",t:"Family"},
+
+// School
+{w:"teacher",p:"n.",m:"老师",e:"The teacher gave us homework.",ph:"/ˈtiːtʃər/",t:"School"},
+{w:"student",p:"n.",m:"学生",e:"I am a student.",ph:"/ˈstuːdnt/",t:"School"},
+{w:"classroom",p:"n.",m:"教室",e:"Our classroom is on the second floor.",ph:"/ˈklæsruːm/",t:"School"},
+{w:"lesson",p:"n.",m:"课",e:"We have six lessons today.",ph:"/ˈlesn/",t:"School"},
+{w:"homework",p:"n.",m:"作业",e:"I finished my homework.",ph:"/ˈhoʊmwɜːrk/",t:"School"},
+{w:"exam",p:"n.",m:"考试",e:"The exam was difficult.",ph:"/ɪɡˈzæm/",t:"School"},
+{w:"subject",p:"n.",m:"科目",e:"Maths is my favourite subject.",ph:"/ˈsʌbdʒɪkt/",t:"School"},
+{w:"dictionary",p:"n.",m:"词典",e:"I looked it up in the dictionary.",ph:"/ˈdɪkʃəneri/",t:"School"},
+{w:"notebook",p:"n.",m:"笔记本",e:"Write it in your notebook.",ph:"/ˈnoʊtbʊk/",t:"School"},
+{w:"pencil",p:"n.",m:"铅笔",e:"Can I borrow your pencil?",ph:"/ˈpensl/",t:"School"},
+{w:"pen",p:"n.",m:"钢笔",e:"Please write in pen.",ph:"/pen/",t:"School"},
+{w:"rubber",p:"n.",m:"橡皮",e:"I need a rubber to correct my mistake.",ph:"/ˈrʌbər/",t:"School"},
+{w:"ruler",p:"n.",m:"尺子",e:"Use a ruler to draw a line.",ph:"/ˈruːlər/",t:"School"},
+{w:"library",p:"n.",m:"图书馆",e:"I borrowed a book from the library.",ph:"/ˈlaɪbreri/",t:"School"},
+{w:"playground",p:"n.",m:"操场",e:"Children play on the playground.",ph:"/ˈpleɪɡraʊnd/",t:"School"},
+{w:"learn",p:"v.",m:"学习",e:"I want to learn English.",ph:"/lɜːrn/",t:"School"},
+{w:"study",p:"v.",m:"学习;研究",e:"I study hard every day.",ph:"/ˈstʌdi/",t:"School"},
+{w:"read",p:"v.",m:"读",e:"I read books every night.",ph:"/riːd/",t:"School"},
+{w:"write",p:"v.",m:"写",e:"Please write your name here.",ph:"/raɪt/",t:"School"},
+{w:"understand",p:"v.",m:"理解",e:"Do you understand the question?",ph:"/ˌʌndərˈstænd/",t:"School"},
+{w:"remember",p:"v.",m:"记住",e:"Remember to bring your book.",ph:"/rɪˈmembər/",t:"School"},
+{w:"forget",p:"v.",m:"忘记",e:"Don't forget your homework!",ph:"/fərˈɡet/",t:"School"},
+{w:"answer",p:"n./v.",m:"回答",e:"Can you answer the question?",ph:"/ˈænsər/",t:"School"},
+{w:"question",p:"n.",m:"问题",e:"I have a question for you.",ph:"/ˈkwestʃən/",t:"School"},
+{w:"mistake",p:"n.",m:"错误",e:"Everyone makes mistakes.",ph:"/mɪˈsteɪk/",t:"School"},
+
+// Food & Drink
+{w:"breakfast",p:"n.",m:"早餐",e:"I eat breakfast at seven.",ph:"/ˈbrekfəst/",t:"Food"},
+{w:"lunch",p:"n.",m:"午餐",e:"What did you have for lunch?",ph:"/lʌntʃ/",t:"Food"},
+{w:"dinner",p:"n.",m:"晚餐",e:"We have dinner at six.",ph:"/ˈdɪnər/",t:"Food"},
+{w:"meal",p:"n.",m:"一餐",e:"That was a delicious meal.",ph:"/miːl/",t:"Food"},
+{w:"rice",p:"n.",m:"米饭",e:"I like rice with chicken.",ph:"/raɪs/",t:"Food"},
+{w:"bread",p:"n.",m:"面包",e:"I had bread for breakfast.",ph:"/bred/",t:"Food"},
+{w:"cheese",p:"n.",m:"奶酪",e:"Do you like cheese?",ph:"/tʃiːz/",t:"Food"},
+{w:"egg",p:"n.",m:"鸡蛋",e:"I had two eggs for breakfast.",ph:"/eɡ/",t:"Food"},
+{w:"chicken",p:"n.",m:"鸡肉",e:"We had chicken for dinner.",ph:"/ˈtʃɪkɪn/",t:"Food"},
+{w:"fish",p:"n.",m:"鱼",e:"I like to eat fish.",ph:"/fɪʃ/",t:"Food"},
+{w:"meat",p:"n.",m:"肉",e:"I don't eat meat.",ph:"/miːt/",t:"Food"},
+{w:"vegetable",p:"n.",m:"蔬菜",e:"Eat more vegetables!",ph:"/ˈvedʒtəbl/",t:"Food"},
+{w:"fruit",p:"n.",m:"水果",e:"I eat fruit every day.",ph:"/fruːt/",t:"Food"},
+{w:"apple",p:"n.",m:"苹果",e:"I want an apple, please.",ph:"/ˈæpl/",t:"Food"},
+{w:"banana",p:"n.",m:"香蕉",e:"Monkeys love bananas.",ph:"/bəˈnænə/",t:"Food"},
+{w:"orange",p:"n.",m:"橙子",e:"This orange is very sweet.",ph:"/ˈɔːrɪndʒ/",t:"Food"},
+{w:"cake",p:"n.",m:"蛋糕",e:"I made a chocolate cake.",ph:"/keɪk/",t:"Food"},
+{w:"chocolate",p:"n.",m:"巧克力",e:"I love chocolate!",ph:"/ˈtʃɔːklət/",t:"Food"},
+{w:"sugar",p:"n.",m:"糖",e:"Do you take sugar in your tea?",ph:"/ˈʃʊɡər/",t:"Food"},
+{w:"salt",p:"n.",m:"盐",e:"Please pass the salt.",ph:"/sɔːlt/",t:"Food"},
+{w:"water",p:"n.",m:"水",e:"Can I have some water?",ph:"/ˈwɔːtər/",t:"Food"},
+{w:"juice",p:"n.",m:"果汁",e:"I'd like some orange juice.",ph:"/dʒuːs/",t:"Food"},
+{w:"milk",p:"n.",m:"牛奶",e:"I drink milk every morning.",ph:"/mɪlk/",t:"Food"},
+{w:"tea",p:"n.",m:"茶",e:"Would you like a cup of tea?",ph:"/tiː/",t:"Food"},
+{w:"coffee",p:"n.",m:"咖啡",e:"My mum drinks coffee.",ph:"/ˈkɔːfi/",t:"Food"},
+{w:"hungry",p:"adj.",m:"饿的",e:"I'm very hungry.",ph:"/ˈhʌŋɡri/",t:"Food"},
+{w:"thirsty",p:"adj.",m:"渴的",e:"I'm thirsty. Can I have water?",ph:"/ˈθɜːrsti/",t:"Food"},
+{w:"delicious",p:"adj.",m:"美味的",e:"The food was delicious!",ph:"/dɪˈlɪʃəs/",t:"Food"},
+{w:"cook",p:"v.",m:"做饭",e:"My dad can cook very well.",ph:"/kʊk/",t:"Food"},
+{w:"eat",p:"v.",m:"吃",e:"Let's eat together.",ph:"/iːt/",t:"Food"},
+
+// Animals
+{w:"dog",p:"n.",m:"狗",e:"I have a pet dog.",ph:"/dɔːɡ/",t:"Animals"},
+{w:"cat",p:"n.",m:"猫",e:"The cat is sleeping on the sofa.",ph:"/kæt/",t:"Animals"},
+{w:"bird",p:"n.",m:"鸟",e:"I can hear a bird singing.",ph:"/bɜːrd/",t:"Animals"},
+{w:"fish",p:"n.",m:"鱼",e:"There are many fish in the sea.",ph:"/fɪʃ/",t:"Animals"},
+{w:"horse",p:"n.",m:"马",e:"She loves riding horses.",ph:"/hɔːrs/",t:"Animals"},
+{w:"rabbit",p:"n.",m:"兔子",e:"My rabbit has long ears.",ph:"/ˈræbɪt/",t:"Animals"},
+{w:"elephant",p:"n.",m:"大象",e:"Elephants are very big.",ph:"/ˈelɪfənt/",t:"Animals"},
+{w:"monkey",p:"n.",m:"猴子",e:"The monkey is eating a banana.",ph:"/ˈmʌŋki/",t:"Animals"},
+{w:"lion",p:"n.",m:"狮子",e:"The lion is the king of animals.",ph:"/ˈlaɪən/",t:"Animals"},
+{w:"bear",p:"n.",m:"熊",e:"Bears like honey.",ph:"/ber/",t:"Animals"},
+{w:"tiger",p:"n.",m:"老虎",e:"Tigers are orange with black stripes.",ph:"/ˈtaɪɡər/",t:"Animals"},
+{w:"snake",p:"n.",m:"蛇",e:"Some people are afraid of snakes.",ph:"/sneɪk/",t:"Animals"},
+{w:"cow",p:"n.",m:"牛",e:"Cows give us milk.",ph:"/kaʊ/",t:"Animals"},
+{w:"sheep",p:"n.",m:"羊",e:"There are sheep on the hill.",ph:"/ʃiːp/",t:"Animals"},
+{w:"chicken",p:"n.",m:"鸡",e:"We keep chickens in the garden.",ph:"/ˈtʃɪkɪn/",t:"Animals"},
+{w:"pet",p:"n.",m:"宠物",e:"Do you have any pets?",ph:"/pet/",t:"Animals"},
+{w:"zoo",p:"n.",m:"动物园",e:"Let's go to the zoo!",ph:"/zuː/",t:"Animals"},
+{w:"animal",p:"n.",m:"动物",e:"I love animals.",ph:"/ˈænɪml/",t:"Animals"},
+
+// Sports & Hobbies
+{w:"football",p:"n.",m:"足球",e:"I play football after school.",ph:"/ˈfʊtbɔːl/",t:"Sports"},
+{w:"basketball",p:"n.",m:"篮球",e:"He is good at basketball.",ph:"/ˈbæskɪtbɔːl/",t:"Sports"},
+{w:"swimming",p:"n.",m:"游泳",e:"Swimming is my favourite sport.",ph:"/ˈswɪmɪŋ/",t:"Sports"},
+{w:"tennis",p:"n.",m:"网球",e:"We play tennis on Saturday.",ph:"/ˈtenɪs/",t:"Sports"},
+{w:"run",p:"v.",m:"跑",e:"I run every morning.",ph:"/rʌn/",t:"Sports"},
+{w:"dance",p:"v./n.",m:"跳舞",e:"She loves to dance.",ph:"/dæns/",t:"Sports"},
+{w:"sing",p:"v.",m:"唱歌",e:"Can you sing this song?",ph:"/sɪŋ/",t:"Sports"},
+{w:"draw",p:"v.",m:"画画",e:"I like to draw pictures.",ph:"/drɔː/",t:"Sports"},
+{w:"paint",p:"v.",m:"画;涂色",e:"She painted a beautiful picture.",ph:"/peɪnt/",t:"Sports"},
+{w:"play",p:"v.",m:"玩;演奏",e:"Let's play together!",ph:"/pleɪ/",t:"Sports"},
+{w:"game",p:"n.",m:"游戏;比赛",e:"We won the game!",ph:"/ɡeɪm/",t:"Sports"},
+{w:"team",p:"n.",m:"队伍",e:"Our team is very strong.",ph:"/tiːm/",t:"Sports"},
+{w:"win",p:"v.",m:"赢",e:"I want to win the race!",ph:"/wɪn/",t:"Sports"},
+{w:"lose",p:"v.",m:"输;丢失",e:"Don't lose your key.",ph:"/luːz/",t:"Sports"},
+{w:"hobby",p:"n.",m:"爱好",e:"What's your hobby?",ph:"/ˈhɑːbi/",t:"Sports"},
+{w:"music",p:"n.",m:"音乐",e:"I listen to music every day.",ph:"/ˈmjuːzɪk/",t:"Sports"},
+{w:"guitar",p:"n.",m:"吉他",e:"He can play the guitar.",ph:"/ɡɪˈtɑːr/",t:"Sports"},
+{w:"piano",p:"n.",m:"钢琴",e:"She plays the piano well.",ph:"/piˈænoʊ/",t:"Sports"},
+{w:"photo",p:"n.",m:"照片",e:"Let's take a photo!",ph:"/ˈfoʊtoʊ/",t:"Sports"},
+{w:"camera",p:"n.",m:"相机",e:"I got a new camera.",ph:"/ˈkæmərə/",t:"Sports"},
+
+// Daily Life
+{w:"house",p:"n.",m:"房子",e:"We live in a big house.",ph:"/haʊs/",t:"Daily"},
+{w:"room",p:"n.",m:"房间",e:"My room is very clean.",ph:"/ruːm/",t:"Daily"},
+{w:"bedroom",p:"n.",m:"卧室",e:"I sleep in my bedroom.",ph:"/ˈbedruːm/",t:"Daily"},
+{w:"bathroom",p:"n.",m:"浴室",e:"The bathroom is upstairs.",ph:"/ˈbæθruːm/",t:"Daily"},
+{w:"kitchen",p:"n.",m:"厨房",e:"Mum is cooking in the kitchen.",ph:"/ˈkɪtʃɪn/",t:"Daily"},
+{w:"garden",p:"n.",m:"花园",e:"We have a beautiful garden.",ph:"/ˈɡɑːrdn/",t:"Daily"},
+{w:"door",p:"n.",m:"门",e:"Please close the door.",ph:"/dɔːr/",t:"Daily"},
+{w:"window",p:"n.",m:"窗户",e:"Open the window, please.",ph:"/ˈwɪndoʊ/",t:"Daily"},
+{w:"table",p:"n.",m:"桌子",e:"Put the book on the table.",ph:"/ˈteɪbl/",t:"Daily"},
+{w:"chair",p:"n.",m:"椅子",e:"Sit on the chair, please.",ph:"/tʃer/",t:"Daily"},
+{w:"bed",p:"n.",m:"床",e:"I go to bed at nine.",ph:"/bed/",t:"Daily"},
+{w:"clock",p:"n.",m:"钟",e:"The clock says it's ten.",ph:"/klɑːk/",t:"Daily"},
+{w:"phone",p:"n.",m:"电话;手机",e:"Can I use your phone?",ph:"/foʊn/",t:"Daily"},
+{w:"computer",p:"n.",m:"电脑",e:"I use the computer for homework.",ph:"/kəmˈpjuːtər/",t:"Daily"},
+{w:"television",p:"n.",m:"电视",e:"I watch television after dinner.",ph:"/ˈtelɪvɪʒn/",t:"Daily"},
+{w:"morning",p:"n.",m:"早上",e:"Good morning!",ph:"/ˈmɔːrnɪŋ/",t:"Daily"},
+{w:"afternoon",p:"n.",m:"下午",e:"I play sports in the afternoon.",ph:"/ˌæftərˈnuːn/",t:"Daily"},
+{w:"evening",p:"n.",m:"傍晚",e:"We eat dinner in the evening.",ph:"/ˈiːvnɪŋ/",t:"Daily"},
+{w:"night",p:"n.",m:"夜晚",e:"Good night! Sleep well.",ph:"/naɪt/",t:"Daily"},
+{w:"today",p:"n./adv.",m:"今天",e:"Today is Monday.",ph:"/təˈdeɪ/",t:"Daily"},
+{w:"tomorrow",p:"n./adv.",m:"明天",e:"See you tomorrow!",ph:"/təˈmɔːroʊ/",t:"Daily"},
+{w:"yesterday",p:"n./adv.",m:"昨天",e:"I went shopping yesterday.",ph:"/ˈjestərdeɪ/",t:"Daily"},
+{w:"week",p:"n.",m:"周;星期",e:"I exercise three times a week.",ph:"/wiːk/",t:"Daily"},
+{w:"weekend",p:"n.",m:"周末",e:"What do you do at the weekend?",ph:"/ˈwiːkend/",t:"Daily"},
+{w:"month",p:"n.",m:"月",e:"There are twelve months in a year.",ph:"/mʌnθ/",t:"Daily"},
+{w:"year",p:"n.",m:"年",e:"I am ten years old.",ph:"/jɪr/",t:"Daily"},
+{w:"birthday",p:"n.",m:"生日",e:"Happy birthday!",ph:"/ˈbɜːrθdeɪ/",t:"Daily"},
+{w:"holiday",p:"n.",m:"假期",e:"We go on holiday in summer.",ph:"/ˈhɑːlədeɪ/",t:"Daily"},
+{w:"party",p:"n.",m:"派对",e:"Come to my birthday party!",ph:"/ˈpɑːrti/",t:"Daily"},
+{w:"present",p:"n.",m:"礼物",e:"Thank you for the present!",ph:"/ˈpreznt/",t:"Daily"},
+{w:"sleep",p:"v.",m:"睡觉",e:"I sleep for eight hours.",ph:"/sliːp/",t:"Daily"},
+{w:"wake",p:"v.",m:"醒来",e:"I wake up at seven.",ph:"/weɪk/",t:"Daily"},
+{w:"wash",p:"v.",m:"洗",e:"Wash your hands before eating.",ph:"/wɔːʃ/",t:"Daily"},
+{w:"clean",p:"adj./v.",m:"干净的;打扫",e:"Please clean your room.",ph:"/kliːn/",t:"Daily"},
+{w:"clothes",p:"n.",m:"衣服",e:"I put on my clothes.",ph:"/kloʊðz/",t:"Daily"},
+{w:"shirt",p:"n.",m:"衬衫",e:"He wore a blue shirt.",ph:"/ʃɜːrt/",t:"Daily"},
+{w:"trousers",p:"n.",m:"裤子",e:"These trousers are too long.",ph:"/ˈtraʊzərz/",t:"Daily"},
+{w:"shoes",p:"n.",m:"鞋子",e:"I need new shoes.",ph:"/ʃuːz/",t:"Daily"},
+{w:"hat",p:"n.",m:"帽子",e:"She is wearing a red hat.",ph:"/hæt/",t:"Daily"},
+{w:"bag",p:"n.",m:"包",e:"Put it in your bag.",ph:"/bæɡ/",t:"Daily"},
+{w:"money",p:"n.",m:"钱",e:"I don't have enough money.",ph:"/ˈmʌni/",t:"Daily"},
+{w:"shop",p:"n./v.",m:"商店;购物",e:"Let's go to the shop.",ph:"/ʃɑːp/",t:"Daily"},
+{w:"buy",p:"v.",m:"买",e:"I want to buy a new book.",ph:"/baɪ/",t:"Daily"},
+{w:"sell",p:"v.",m:"卖",e:"He sells flowers.",ph:"/sel/",t:"Daily"},
+{w:"price",p:"n.",m:"价格",e:"What is the price?",ph:"/praɪs/",t:"Daily"},
+{w:"cheap",p:"adj.",m:"便宜的",e:"This bag is very cheap.",ph:"/tʃiːp/",t:"Daily"},
+{w:"expensive",p:"adj.",m:"贵的",e:"That car is too expensive.",ph:"/ɪkˈspensɪv/",t:"Daily"},
+
+// Travel & Transport
+{w:"bus",p:"n.",m:"公交车",e:"I go to school by bus.",ph:"/bʌs/",t:"Travel"},
+{w:"train",p:"n.",m:"火车",e:"The train is fast.",ph:"/treɪn/",t:"Travel"},
+{w:"car",p:"n.",m:"汽车",e:"My dad drives a car.",ph:"/kɑːr/",t:"Travel"},
+{w:"bicycle",p:"n.",m:"自行车",e:"I ride my bicycle to school.",ph:"/ˈbaɪsɪkl/",t:"Travel"},
+{w:"plane",p:"n.",m:"飞机",e:"We went to Japan by plane.",ph:"/pleɪn/",t:"Travel"},
+{w:"boat",p:"n.",m:"船",e:"We went fishing by boat.",ph:"/boʊt/",t:"Travel"},
+{w:"taxi",p:"n.",m:"出租车",e:"Let's take a taxi.",ph:"/ˈtæksi/",t:"Travel"},
+{w:"station",p:"n.",m:"车站",e:"Meet me at the station.",ph:"/ˈsteɪʃn/",t:"Travel"},
+{w:"airport",p:"n.",m:"机场",e:"The airport is far away.",ph:"/ˈerpɔːrt/",t:"Travel"},
+{w:"ticket",p:"n.",m:"票",e:"I bought a train ticket.",ph:"/ˈtɪkɪt/",t:"Travel"},
+{w:"map",p:"n.",m:"地图",e:"Look at the map.",ph:"/mæp/",t:"Travel"},
+{w:"hotel",p:"n.",m:"旅馆",e:"We stayed at a nice hotel.",ph:"/hoʊˈtel/",t:"Travel"},
+{w:"travel",p:"v.",m:"旅行",e:"I love to travel.",ph:"/ˈtrævl/",t:"Travel"},
+{w:"visit",p:"v.",m:"拜访;参观",e:"I visited my grandma.",ph:"/ˈvɪzɪt/",t:"Travel"},
+{w:"arrive",p:"v.",m:"到达",e:"We arrived at the hotel.",ph:"/əˈraɪv/",t:"Travel"},
+{w:"leave",p:"v.",m:"离开",e:"The bus leaves at eight.",ph:"/liːv/",t:"Travel"},
+{w:"road",p:"n.",m:"路",e:"Cross the road carefully.",ph:"/roʊd/",t:"Travel"},
+{w:"street",p:"n.",m:"街道",e:"I live on Park Street.",ph:"/striːt/",t:"Travel"},
+{w:"bridge",p:"n.",m:"桥",e:"Walk across the bridge.",ph:"/brɪdʒ/",t:"Travel"},
+{w:"city",p:"n.",m:"城市",e:"London is a big city.",ph:"/ˈsɪti/",t:"Travel"},
+{w:"town",p:"n.",m:"小镇",e:"I live in a small town.",ph:"/taʊn/",t:"Travel"},
+{w:"village",p:"n.",m:"村庄",e:"My grandma lives in a village.",ph:"/ˈvɪlɪdʒ/",t:"Travel"},
+{w:"country",p:"n.",m:"国家;乡村",e:"China is a big country.",ph:"/ˈkʌntri/",t:"Travel"},
+{w:"mountain",p:"n.",m:"山",e:"We climbed the mountain.",ph:"/ˈmaʊntn/",t:"Travel"},
+{w:"river",p:"n.",m:"河",e:"The river is very long.",ph:"/ˈrɪvər/",t:"Travel"},
+{w:"sea",p:"n.",m:"海",e:"I can see the sea!",ph:"/siː/",t:"Travel"},
+{w:"beach",p:"n.",m:"海滩",e:"We played on the beach.",ph:"/biːtʃ/",t:"Travel"},
+{w:"park",p:"n.",m:"公园",e:"Let's go to the park.",ph:"/pɑːrk/",t:"Travel"},
+{w:"museum",p:"n.",m:"博物馆",e:"We visited the museum.",ph:"/mjuˈziːəm/",t:"Travel"},
+
+// Weather
+{w:"weather",p:"n.",m:"天气",e:"What's the weather like today?",ph:"/ˈweðər/",t:"Weather"},
+{w:"sunny",p:"adj.",m:"晴朗的",e:"It's a sunny day.",ph:"/ˈsʌni/",t:"Weather"},
+{w:"cloudy",p:"adj.",m:"多云的",e:"It's cloudy today.",ph:"/ˈklaʊdi/",t:"Weather"},
+{w:"rainy",p:"adj.",m:"下雨的",e:"It's a rainy day.",ph:"/ˈreɪni/",t:"Weather"},
+{w:"windy",p:"adj.",m:"刮风的",e:"It's very windy outside.",ph:"/ˈwɪndi/",t:"Weather"},
+{w:"snowy",p:"adj.",m:"下雪的",e:"It's snowy in winter.",ph:"/ˈsnoʊi/",t:"Weather"},
+{w:"cold",p:"adj.",m:"冷的",e:"It's very cold today.",ph:"/koʊld/",t:"Weather"},
+{w:"hot",p:"adj.",m:"热的",e:"It's hot in summer.",ph:"/hɑːt/",t:"Weather"},
+{w:"warm",p:"adj.",m:"温暖的",e:"It's warm and sunny.",ph:"/wɔːrm/",t:"Weather"},
+{w:"cool",p:"adj.",m:"凉爽的",e:"It's cool in autumn.",ph:"/kuːl/",t:"Weather"},
+{w:"rain",p:"n./v.",m:"雨;下雨",e:"It started to rain.",ph:"/reɪn/",t:"Weather"},
+{w:"snow",p:"n./v.",m:"雪;下雪",e:"Children love snow!",ph:"/snoʊ/",t:"Weather"},
+{w:"wind",p:"n.",m:"风",e:"The wind is strong today.",ph:"/wɪnd/",t:"Weather"},
+{w:"sun",p:"n.",m:"太阳",e:"The sun is shining.",ph:"/sʌn/",t:"Weather"},
+{w:"sky",p:"n.",m:"天空",e:"The sky is blue.",ph:"/skaɪ/",t:"Weather"},
+{w:"spring",p:"n.",m:"春天",e:"Flowers grow in spring.",ph:"/sprɪŋ/",t:"Weather"},
+{w:"summer",p:"n.",m:"夏天",e:"I love summer holidays.",ph:"/ˈsʌmər/",t:"Weather"},
+{w:"autumn",p:"n.",m:"秋天",e:"Leaves fall in autumn.",ph:"/ˈɔːtəm/",t:"Weather"},
+{w:"winter",p:"n.",m:"冬天",e:"It snows in winter.",ph:"/ˈwɪntər/",t:"Weather"},
+
+// Body & Health
+{w:"head",p:"n.",m:"头",e:"My head hurts.",ph:"/hed/",t:"Body"},
+{w:"eye",p:"n.",m:"眼睛",e:"She has blue eyes.",ph:"/aɪ/",t:"Body"},
+{w:"ear",p:"n.",m:"耳朵",e:"I have two ears.",ph:"/ɪr/",t:"Body"},
+{w:"nose",p:"n.",m:"鼻子",e:"My nose is cold.",ph:"/noʊz/",t:"Body"},
+{w:"mouth",p:"n.",m:"嘴",e:"Open your mouth, please.",ph:"/maʊθ/",t:"Body"},
+{w:"tooth",p:"n.",m:"牙齿",e:"Brush your teeth every day.",ph:"/tuːθ/",t:"Body"},
+{w:"hair",p:"n.",m:"头发",e:"She has long hair.",ph:"/her/",t:"Body"},
+{w:"hand",p:"n.",m:"手",e:"Wash your hands!",ph:"/hænd/",t:"Body"},
+{w:"arm",p:"n.",m:"胳膊",e:"He broke his arm.",ph:"/ɑːrm/",t:"Body"},
+{w:"leg",p:"n.",m:"腿",e:"My leg hurts.",ph:"/leɡ/",t:"Body"},
+{w:"foot",p:"n.",m:"脚",e:"I hurt my foot.",ph:"/fʊt/",t:"Body"},
+{w:"stomach",p:"n.",m:"胃;肚子",e:"I have a stomach ache.",ph:"/ˈstʌmək/",t:"Body"},
+{w:"heart",p:"n.",m:"心脏;心",e:"My heart is beating fast.",ph:"/hɑːrt/",t:"Body"},
+{w:"doctor",p:"n.",m:"医生",e:"I need to see a doctor.",ph:"/ˈdɑːktər/",t:"Body"},
+{w:"hospital",p:"n.",m:"医院",e:"He went to the hospital.",ph:"/ˈhɑːspɪtl/",t:"Body"},
+{w:"medicine",p:"n.",m:"药",e:"Take your medicine.",ph:"/ˈmedɪsn/",t:"Body"},
+{w:"ill",p:"adj.",m:"生病的",e:"She is ill today.",ph:"/ɪl/",t:"Body"},
+{w:"healthy",p:"adj.",m:"健康的",e:"Eat healthy food.",ph:"/ˈhelθi/",t:"Body"},
+{w:"tired",p:"adj.",m:"累的",e:"I'm very tired.",ph:"/ˈtaɪərd/",t:"Body"},
+
+// Feelings & Description
+{w:"happy",p:"adj.",m:"开心的",e:"I'm happy to see you!",ph:"/ˈhæpi/",t:"Feelings"},
+{w:"sad",p:"adj.",m:"难过的",e:"She looks sad.",ph:"/sæd/",t:"Feelings"},
+{w:"angry",p:"adj.",m:"生气的",e:"Don't be angry!",ph:"/ˈæŋɡri/",t:"Feelings"},
+{w:"afraid",p:"adj.",m:"害怕的",e:"I'm afraid of spiders.",ph:"/əˈfreɪd/",t:"Feelings"},
+{w:"excited",p:"adj.",m:"兴奋的",e:"I'm excited about the trip!",ph:"/ɪkˈsaɪtɪd/",t:"Feelings"},
+{w:"surprised",p:"adj.",m:"惊讶的",e:"I was very surprised!",ph:"/sərˈpraɪzd/",t:"Feelings"},
+{w:"bored",p:"adj.",m:"无聊的",e:"I'm bored. Let's play!",ph:"/bɔːrd/",t:"Feelings"},
+{w:"worried",p:"adj.",m:"担心的",e:"My mum is worried about me.",ph:"/ˈwɜːrid/",t:"Feelings"},
+{w:"kind",p:"adj.",m:"友善的",e:"She is very kind.",ph:"/kaɪnd/",t:"Feelings"},
+{w:"funny",p:"adj.",m:"有趣的",e:"The movie was very funny.",ph:"/ˈfʌni/",t:"Feelings"},
+{w:"beautiful",p:"adj.",m:"美丽的",e:"What a beautiful day!",ph:"/ˈbjuːtɪfl/",t:"Feelings"},
+{w:"ugly",p:"adj.",m:"丑的",e:"That building is ugly.",ph:"/ˈʌɡli/",t:"Feelings"},
+{w:"big",p:"adj.",m:"大的",e:"We have a big garden.",ph:"/bɪɡ/",t:"Feelings"},
+{w:"small",p:"adj.",m:"小的",e:"I have a small dog.",ph:"/smɔːl/",t:"Feelings"},
+{w:"tall",p:"adj.",m:"高的",e:"He is very tall.",ph:"/tɔːl/",t:"Feelings"},
+{w:"short",p:"adj.",m:"矮的;短的",e:"She has short hair.",ph:"/ʃɔːrt/",t:"Feelings"},
+{w:"long",p:"adj.",m:"长的",e:"It's a long road.",ph:"/lɔːŋ/",t:"Feelings"},
+{w:"new",p:"adj.",m:"新的",e:"I got a new phone.",ph:"/nuː/",t:"Feelings"},
+{w:"old",p:"adj.",m:"旧的;老的",e:"This is an old house.",ph:"/oʊld/",t:"Feelings"},
+{w:"young",p:"adj.",m:"年轻的",e:"She is young and strong.",ph:"/jʌŋ/",t:"Feelings"},
+{w:"fast",p:"adj./adv.",m:"快的",e:"He runs very fast.",ph:"/fæst/",t:"Feelings"},
+{w:"slow",p:"adj./adv.",m:"慢的",e:"The bus is very slow.",ph:"/sloʊ/",t:"Feelings"},
+{w:"easy",p:"adj.",m:"容易的",e:"This question is easy.",ph:"/ˈiːzi/",t:"Feelings"},
+{w:"difficult",p:"adj.",m:"困难的",e:"The test was difficult.",ph:"/ˈdɪfɪkəlt/",t:"Feelings"},
+{w:"important",p:"adj.",m:"重要的",e:"This is very important.",ph:"/ɪmˈpɔːrtnt/",t:"Feelings"},
+{w:"favourite",p:"adj.",m:"最喜欢的",e:"Blue is my favourite colour.",ph:"/ˈfeɪvərɪt/",t:"Feelings"},
+{w:"different",p:"adj.",m:"不同的",e:"We are all different.",ph:"/ˈdɪfrənt/",t:"Feelings"},
+{w:"same",p:"adj.",m:"相同的",e:"We go to the same school.",ph:"/seɪm/",t:"Feelings"},
+{w:"right",p:"adj.",m:"正确的;右边的",e:"That's the right answer!",ph:"/raɪt/",t:"Feelings"},
+{w:"wrong",p:"adj.",m:"错误的",e:"Sorry, that's wrong.",ph:"/rɔːŋ/",t:"Feelings"},
+
+// Actions & Verbs
+{w:"go",p:"v.",m:"去",e:"Let's go to school.",ph:"/ɡoʊ/",t:"Actions"},
+{w:"come",p:"v.",m:"来",e:"Come here, please.",ph:"/kʌm/",t:"Actions"},
+{w:"walk",p:"v.",m:"走路",e:"I walk to school every day.",ph:"/wɔːk/",t:"Actions"},
+{w:"talk",p:"v.",m:"说话",e:"Can we talk?",ph:"/tɔːk/",t:"Actions"},
+{w:"listen",p:"v.",m:"听",e:"Listen to the teacher.",ph:"/ˈlɪsn/",t:"Actions"},
+{w:"look",p:"v.",m:"看",e:"Look at this picture!",ph:"/lʊk/",t:"Actions"},
+{w:"watch",p:"v.",m:"观看",e:"I watch TV after dinner.",ph:"/wɑːtʃ/",t:"Actions"},
+{w:"see",p:"v.",m:"看见",e:"Can you see the bird?",ph:"/siː/",t:"Actions"},
+{w:"hear",p:"v.",m:"听见",e:"I can hear music.",ph:"/hɪr/",t:"Actions"},
+{w:"say",p:"v.",m:"说",e:"What did you say?",ph:"/seɪ/",t:"Actions"},
+{w:"tell",p:"v.",m:"告诉",e:"Tell me the truth.",ph:"/tel/",t:"Actions"},
+{w:"ask",p:"v.",m:"问",e:"Can I ask a question?",ph:"/æsk/",t:"Actions"},
+{w:"give",p:"v.",m:"给",e:"Give me a pencil, please.",ph:"/ɡɪv/",t:"Actions"},
+{w:"take",p:"v.",m:"拿;带",e:"Take your umbrella.",ph:"/teɪk/",t:"Actions"},
+{w:"put",p:"v.",m:"放",e:"Put the book on the desk.",ph:"/pʊt/",t:"Actions"},
+{w:"open",p:"v.",m:"打开",e:"Open your books, please.",ph:"/ˈoʊpən/",t:"Actions"},
+{w:"close",p:"v.",m:"关闭",e:"Close the door, please.",ph:"/kloʊz/",t:"Actions"},
+{w:"start",p:"v.",m:"开始",e:"The movie starts at seven.",ph:"/stɑːrt/",t:"Actions"},
+{w:"finish",p:"v.",m:"完成",e:"I finished my work.",ph:"/ˈfɪnɪʃ/",t:"Actions"},
+{w:"stop",p:"v.",m:"停止",e:"Stop talking, please!",ph:"/stɑːp/",t:"Actions"},
+{w:"wait",p:"v.",m:"等待",e:"Wait for me!",ph:"/weɪt/",t:"Actions"},
+{w:"help",p:"v.",m:"帮助",e:"Can you help me?",ph:"/help/",t:"Actions"},
+{w:"try",p:"v.",m:"尝试",e:"Try again!",ph:"/traɪ/",t:"Actions"},
+{w:"want",p:"v.",m:"想要",e:"I want some water.",ph:"/wɑːnt/",t:"Actions"},
+{w:"need",p:"v.",m:"需要",e:"I need your help.",ph:"/niːd/",t:"Actions"},
+{w:"like",p:"v.",m:"喜欢",e:"I like chocolate.",ph:"/laɪk/",t:"Actions"},
+{w:"love",p:"v.",m:"爱;非常喜欢",e:"I love my family.",ph:"/lʌv/",t:"Actions"},
+{w:"hate",p:"v.",m:"讨厌",e:"I hate getting up early.",ph:"/heɪt/",t:"Actions"},
+{w:"know",p:"v.",m:"知道",e:"I know the answer!",ph:"/noʊ/",t:"Actions"},
+{w:"think",p:"v.",m:"想;认为",e:"I think it's a good idea.",ph:"/θɪŋk/",t:"Actions"},
+{w:"believe",p:"v.",m:"相信",e:"I believe you.",ph:"/bɪˈliːv/",t:"Actions"},
+{w:"hope",p:"v.",m:"希望",e:"I hope you are well.",ph:"/hoʊp/",t:"Actions"},
+{w:"feel",p:"v.",m:"感觉",e:"I feel happy today.",ph:"/fiːl/",t:"Actions"},
+{w:"find",p:"v.",m:"找到",e:"I can't find my keys.",ph:"/faɪnd/",t:"Actions"},
+{w:"bring",p:"v.",m:"带来",e:"Bring your books tomorrow.",ph:"/brɪŋ/",t:"Actions"},
+{w:"carry",p:"v.",m:"搬;提",e:"Can you carry this bag?",ph:"/ˈkæri/",t:"Actions"},
+{w:"send",p:"v.",m:"发送",e:"I'll send you an email.",ph:"/send/",t:"Actions"},
+{w:"receive",p:"v.",m:"收到",e:"I received a letter.",ph:"/rɪˈsiːv/",t:"Actions"},
+{w:"choose",p:"v.",m:"选择",e:"Choose one colour.",ph:"/tʃuːz/",t:"Actions"},
+{w:"decide",p:"v.",m:"决定",e:"I can't decide.",ph:"/dɪˈsaɪd/",t:"Actions"},
+{w:"change",p:"v.",m:"改变",e:"Let's change the plan.",ph:"/tʃeɪndʒ/",t:"Actions"},
+{w:"happen",p:"v.",m:"发生",e:"What happened?",ph:"/ˈhæpən/",t:"Actions"},
+{w:"move",p:"v.",m:"移动;搬家",e:"Don't move!",ph:"/muːv/",t:"Actions"},
+{w:"turn",p:"v.",m:"转",e:"Turn left at the corner.",ph:"/tɜːrn/",t:"Actions"},
+{w:"use",p:"v.",m:"使用",e:"Can I use your pen?",ph:"/juːz/",t:"Actions"},
+{w:"make",p:"v.",m:"制作;使得",e:"Let's make a cake!",ph:"/meɪk/",t:"Actions"},
+{w:"work",p:"v./n.",m:"工作",e:"She works in a hospital.",ph:"/wɜːrk/",t:"Actions"},
+{w:"live",p:"v.",m:"住;生活",e:"I live in Beijing.",ph:"/lɪv/",t:"Actions"},
+{w:"spend",p:"v.",m:"花费;度过",e:"I spent my holiday at the beach.",ph:"/spend/",t:"Actions"},
+{w:"enjoy",p:"v.",m:"享受",e:"I enjoy reading books.",ph:"/ɪnˈdʒɔɪ/",t:"Actions"},
+{w:"agree",p:"v.",m:"同意",e:"I agree with you.",ph:"/əˈɡriː/",t:"Actions"},
+{w:"mean",p:"v.",m:"意思是",e:"What does this word mean?",ph:"/miːn/",t:"Actions"},
+{w:"begin",p:"v.",m:"开始",e:"Let's begin the lesson.",ph:"/bɪˈɡɪn/",t:"Actions"},
+{w:"keep",p:"v.",m:"保持;保留",e:"Keep quiet, please.",ph:"/kiːp/",t:"Actions"},
+{w:"wear",p:"v.",m:"穿",e:"I wear a uniform to school.",ph:"/wer/",t:"Actions"},
+{w:"catch",p:"v.",m:"接住;赶上",e:"Catch the ball!",ph:"/kætʃ/",t:"Actions"},
+{w:"throw",p:"v.",m:"扔",e:"Throw the ball to me!",ph:"/θroʊ/",t:"Actions"},
+{w:"break",p:"v.",m:"打破",e:"Don't break the window!",ph:"/breɪk/",t:"Actions"},
+{w:"fix",p:"v.",m:"修理",e:"Can you fix my bike?",ph:"/fɪks/",t:"Actions"},
+{w:"build",p:"v.",m:"建造",e:"They built a new school.",ph:"/bɪld/",t:"Actions"},
+{w:"grow",p:"v.",m:"生长;种植",e:"Plants grow in spring.",ph:"/ɡroʊ/",t:"Actions"},
+{w:"fly",p:"v.",m:"飞",e:"Birds can fly.",ph:"/flaɪ/",t:"Actions"},
+{w:"drive",p:"v.",m:"开车",e:"My mum drives to work.",ph:"/draɪv/",t:"Actions"},
+{w:"ride",p:"v.",m:"骑",e:"I can ride a bicycle.",ph:"/raɪd/",t:"Actions"},
+{w:"climb",p:"v.",m:"爬",e:"We climbed the hill.",ph:"/klaɪm/",t:"Actions"},
+{w:"jump",p:"v.",m:"跳",e:"The cat jumped on the table.",ph:"/dʒʌmp/",t:"Actions"},
+{w:"sit",p:"v.",m:"坐",e:"Please sit down.",ph:"/sɪt/",t:"Actions"},
+{w:"stand",p:"v.",m:"站",e:"Stand up, please!",ph:"/stænd/",t:"Actions"},
+{w:"fall",p:"v.",m:"落下;摔倒",e:"Be careful! Don't fall.",ph:"/fɔːl/",t:"Actions"},
+{w:"pick",p:"v.",m:"捡;挑选",e:"Pick a card!",ph:"/pɪk/",t:"Actions"},
+{w:"pass",p:"v.",m:"传递;经过",e:"Pass me the salt, please.",ph:"/pæs/",t:"Actions"},
+{w:"pay",p:"v.",m:"支付",e:"How do you want to pay?",ph:"/peɪ/",t:"Actions"},
+{w:"meet",p:"v.",m:"见面",e:"Nice to meet you!",ph:"/miːt/",t:"Actions"},
+{w:"invite",p:"v.",m:"邀请",e:"I invited my friends to the party.",ph:"/ɪnˈvaɪt/",t:"Actions"},
+{w:"call",p:"v.",m:"打电话;叫",e:"Call me later!",ph:"/kɔːl/",t:"Actions"},
+{w:"smile",p:"v./n.",m:"微笑",e:"She smiled at me.",ph:"/smaɪl/",t:"Actions"},
+{w:"laugh",p:"v.",m:"笑",e:"We all laughed.",ph:"/læf/",t:"Actions"},
+{w:"cry",p:"v.",m:"哭",e:"Don't cry!",ph:"/kraɪ/",t:"Actions"},
+
+// Places & Nature
+{w:"school",p:"n.",m:"学校",e:"I go to school every day.",ph:"/skuːl/",t:"Places"},
+{w:"supermarket",p:"n.",m:"超市",e:"We buy food at the supermarket.",ph:"/ˈsuːpərmɑːrkɪt/",t:"Places"},
+{w:"restaurant",p:"n.",m:"餐厅",e:"Let's eat at the restaurant.",ph:"/ˈrestərɑːnt/",t:"Places"},
+{w:"cinema",p:"n.",m:"电影院",e:"Let's go to the cinema!",ph:"/ˈsɪnəmə/",t:"Places"},
+{w:"bank",p:"n.",m:"银行",e:"The bank is next to the shop.",ph:"/bæŋk/",t:"Places"},
+{w:"church",p:"n.",m:"教堂",e:"The church is very old.",ph:"/tʃɜːrtʃ/",t:"Places"},
+{w:"market",p:"n.",m:"市场",e:"We went to the market.",ph:"/ˈmɑːrkɪt/",t:"Places"},
+{w:"office",p:"n.",m:"办公室",e:"Dad works in an office.",ph:"/ˈɔːfɪs/",t:"Places"},
+{w:"farm",p:"n.",m:"农场",e:"We visited a farm.",ph:"/fɑːrm/",t:"Places"},
+{w:"forest",p:"n.",m:"森林",e:"The forest is very green.",ph:"/ˈfɔːrɪst/",t:"Places"},
+{w:"lake",p:"n.",m:"湖",e:"We swam in the lake.",ph:"/leɪk/",t:"Places"},
+{w:"island",p:"n.",m:"岛",e:"We went to a small island.",ph:"/ˈaɪlənd/",t:"Places"},
+{w:"field",p:"n.",m:"田野;场地",e:"The children played in the field.",ph:"/fiːld/",t:"Places"},
+{w:"flower",p:"n.",m:"花",e:"I picked some flowers.",ph:"/ˈflaʊər/",t:"Places"},
+{w:"tree",p:"n.",m:"树",e:"There is a big tree in the garden.",ph:"/triː/",t:"Places"},
+{w:"grass",p:"n.",m:"草",e:"The children sat on the grass.",ph:"/ɡræs/",t:"Places"},
+
+// Numbers & Time related
+{w:"number",p:"n.",m:"数字",e:"What's your phone number?",ph:"/ˈnʌmbər/",t:"Other"},
+{w:"time",p:"n.",m:"时间",e:"What time is it?",ph:"/taɪm/",t:"Other"},
+{w:"hour",p:"n.",m:"小时",e:"I waited for one hour.",ph:"/ˈaʊər/",t:"Other"},
+{w:"minute",p:"n.",m:"分钟",e:"Wait a minute!",ph:"/ˈmɪnɪt/",t:"Other"},
+{w:"half",p:"n./adj.",m:"一半",e:"It's half past three.",ph:"/hæf/",t:"Other"},
+{w:"colour",p:"n.",m:"颜色",e:"What colour do you like?",ph:"/ˈkʌlər/",t:"Other"},
+{w:"red",p:"adj.",m:"红色的",e:"I have a red bag.",ph:"/red/",t:"Other"},
+{w:"blue",p:"adj.",m:"蓝色的",e:"The sky is blue.",ph:"/bluː/",t:"Other"},
+{w:"green",p:"adj.",m:"绿色的",e:"The grass is green.",ph:"/ɡriːn/",t:"Other"},
+{w:"yellow",p:"adj.",m:"黄色的",e:"Bananas are yellow.",ph:"/ˈjeloʊ/",t:"Other"},
+{w:"white",p:"adj.",m:"白色的",e:"She wore a white dress.",ph:"/waɪt/",t:"Other"},
+{w:"black",p:"adj.",m:"黑色的",e:"I have black hair.",ph:"/blæk/",t:"Other"},
+{w:"brown",p:"adj.",m:"棕色的",e:"He has brown eyes.",ph:"/braʊn/",t:"Other"},
+{w:"pink",p:"adj.",m:"粉色的",e:"She likes pink.",ph:"/pɪŋk/",t:"Other"},
+{w:"grey",p:"adj.",m:"灰色的",e:"The cat is grey.",ph:"/ɡreɪ/",t:"Other"},
+{w:"world",p:"n.",m:"世界",e:"Travel around the world!",ph:"/wɜːrld/",t:"Other"},
+{w:"name",p:"n.",m:"名字",e:"What's your name?",ph:"/neɪm/",t:"Other"},
+{w:"age",p:"n.",m:"年龄",e:"What's your age?",ph:"/eɪdʒ/",t:"Other"},
+{w:"language",p:"n.",m:"语言",e:"English is a language.",ph:"/ˈlæŋɡwɪdʒ/",t:"Other"},
+{w:"word",p:"n.",m:"单词",e:"How do you spell this word?",ph:"/wɜːrd/",t:"Other"},
+{w:"letter",p:"n.",m:"信;字母",e:"I wrote a letter to my friend.",ph:"/ˈletər/",t:"Other"},
+{w:"email",p:"n.",m:"电子邮件",e:"Send me an email.",ph:"/ˈiːmeɪl/",t:"Other"},
+{w:"message",p:"n.",m:"消息",e:"I got a message from Tom.",ph:"/ˈmesɪdʒ/",t:"Other"},
+{w:"story",p:"n.",m:"故事",e:"Tell me a story!",ph:"/ˈstɔːri/",t:"Other"},
+{w:"book",p:"n.",m:"书",e:"I'm reading a good book.",ph:"/bʊk/",t:"Other"},
+{w:"page",p:"n.",m:"页",e:"Turn to page ten.",ph:"/peɪdʒ/",t:"Other"},
+{w:"picture",p:"n.",m:"图片;照片",e:"Look at this picture.",ph:"/ˈpɪktʃər/",t:"Other"},
+{w:"film",p:"n.",m:"电影",e:"Let's watch a film!",ph:"/fɪlm/",t:"Other"},
+{w:"song",p:"n.",m:"歌曲",e:"I like this song.",ph:"/sɔːŋ/",t:"Other"},
+{w:"news",p:"n.",m:"新闻",e:"Did you hear the news?",ph:"/nuːz/",t:"Other"},
+{w:"information",p:"n.",m:"信息",e:"I need some information.",ph:"/ˌɪnfərˈmeɪʃn/",t:"Other"},
+{w:"idea",p:"n.",m:"想法;主意",e:"That's a great idea!",ph:"/aɪˈdiːə/",t:"Other"},
+{w:"problem",p:"n.",m:"问题;难题",e:"No problem!",ph:"/ˈprɑːbləm/",t:"Other"},
+{w:"example",p:"n.",m:"例子",e:"Give me an example.",ph:"/ɪɡˈzæmpl/",t:"Other"},
+{w:"place",p:"n.",m:"地方",e:"This is a nice place.",ph:"/pleɪs/",t:"Other"},
+{w:"thing",p:"n.",m:"事情;东西",e:"I have many things to do.",ph:"/θɪŋ/",t:"Other"},
+{w:"way",p:"n.",m:"方式;路",e:"Which way do I go?",ph:"/weɪ/",t:"Other"},
+{w:"side",p:"n.",m:"边;面",e:"On the other side of the road.",ph:"/saɪd/",t:"Other"},
+{w:"top",p:"n.",m:"顶部",e:"He stood on top of the hill.",ph:"/tɑːp/",t:"Other"},
+{w:"end",p:"n./v.",m:"结尾;结束",e:"This is the end of the story.",ph:"/end/",t:"Other"},
+{w:"part",p:"n.",m:"部分",e:"This is the best part.",ph:"/pɑːrt/",t:"Other"},
+{w:"group",p:"n.",m:"组;团体",e:"We worked in groups.",ph:"/ɡruːp/",t:"Other"},
+{w:"job",p:"n.",m:"工作",e:"She has a good job.",ph:"/dʒɑːb/",t:"Other"},
+{w:"programme",p:"n.",m:"节目;程序",e:"I like this TV programme.",ph:"/ˈproʊɡræm/",t:"Other"},
+{w:"internet",p:"n.",m:"互联网",e:"I use the internet every day.",ph:"/ˈɪntərnet/",t:"Other"},
+{w:"address",p:"n.",m:"地址",e:"What's your address?",ph:"/əˈdres/",t:"Other"},
+{w:"paper",p:"n.",m:"纸",e:"Write on the paper.",ph:"/ˈpeɪpər/",t:"Other"},
+{w:"magazine",p:"n.",m:"杂志",e:"I read a magazine.",ph:"/ˌmæɡəˈziːn/",t:"Other"},
+{w:"newspaper",p:"n.",m:"报纸",e:"Dad reads the newspaper.",ph:"/ˈnuːzpeɪpər/",t:"Other"},
+{w:"cup",p:"n.",m:"杯子",e:"A cup of tea, please.",ph:"/kʌp/",t:"Other"},
+{w:"bottle",p:"n.",m:"瓶子",e:"A bottle of water.",ph:"/ˈbɑːtl/",t:"Other"},
+{w:"key",p:"n.",m:"钥匙",e:"I lost my key.",ph:"/kiː/",t:"Other"},
+{w:"umbrella",p:"n.",m:"雨伞",e:"Take an umbrella!",ph:"/ʌmˈbrelə/",t:"Other"},
+{w:"wallet",p:"n.",m:"钱包",e:"My wallet is in my pocket.",ph:"/ˈwɑːlɪt/",t:"Other"},
+{w:"everybody",p:"pron.",m:"每个人",e:"Everybody is here.",ph:"/ˈevribɑːdi/",t:"Other"},
+{w:"somebody",p:"pron.",m:"某人",e:"Somebody called you.",ph:"/ˈsʌmbɑːdi/",t:"Other"},
+{w:"nobody",p:"pron.",m:"没有人",e:"Nobody knows.",ph:"/ˈnoʊbɑːdi/",t:"Other"},
+{w:"everything",p:"pron.",m:"一切",e:"Everything is fine.",ph:"/ˈevriθɪŋ/",t:"Other"},
+{w:"something",p:"pron.",m:"某物",e:"I want something to eat.",ph:"/ˈsʌmθɪŋ/",t:"Other"},
+{w:"nothing",p:"pron.",m:"没有东西",e:"There is nothing here.",ph:"/ˈnʌθɪŋ/",t:"Other"},
+{w:"everywhere",p:"adv.",m:"到处",e:"I looked everywhere.",ph:"/ˈevriˌwer/",t:"Other"},
+{w:"somewhere",p:"adv.",m:"某处",e:"Let's go somewhere fun.",ph:"/ˈsʌmˌwer/",t:"Other"},
+{w:"always",p:"adv.",m:"总是",e:"I always eat breakfast.",ph:"/ˈɔːlweɪz/",t:"Other"},
+{w:"never",p:"adv.",m:"从不",e:"I never eat fast food.",ph:"/ˈnevər/",t:"Other"},
+{w:"sometimes",p:"adv.",m:"有时",e:"I sometimes walk to school.",ph:"/ˈsʌmtaɪmz/",t:"Other"},
+{w:"often",p:"adv.",m:"经常",e:"I often play football.",ph:"/ˈɔːfn/",t:"Other"},
+{w:"usually",p:"adv.",m:"通常",e:"I usually go to bed at nine.",ph:"/ˈjuːʒuəli/",t:"Other"},
+{w:"already",p:"adv.",m:"已经",e:"I've already done it.",ph:"/ɔːlˈredi/",t:"Other"},
+{w:"still",p:"adv.",m:"仍然",e:"He is still sleeping.",ph:"/stɪl/",t:"Other"},
+{w:"just",p:"adv.",m:"刚刚;只是",e:"I just got home.",ph:"/dʒʌst/",t:"Other"},
+{w:"almost",p:"adv.",m:"几乎",e:"I'm almost finished.",ph:"/ˈɔːlmoʊst/",t:"Other"},
+{w:"really",p:"adv.",m:"真的",e:"I really like it!",ph:"/ˈriːəli/",t:"Other"},
+{w:"together",p:"adv.",m:"一起",e:"Let's play together!",ph:"/təˈɡeðər/",t:"Other"},
+{w:"enough",p:"adj./adv.",m:"足够的",e:"Is there enough food?",ph:"/ɪˈnʌf/",t:"Other"},
+{w:"also",p:"adv.",m:"也",e:"I also like music.",ph:"/ˈɔːlsoʊ/",t:"Other"},
+{w:"again",p:"adv.",m:"再次",e:"Say it again, please.",ph:"/əˈɡen/",t:"Other"},
+{w:"only",p:"adj./adv.",m:"唯一的;只",e:"I'm the only child.",ph:"/ˈoʊnli/",t:"Other"},
+{w:"perhaps",p:"adv.",m:"也许",e:"Perhaps it will rain.",ph:"/pərˈhæps/",t:"Other"},
+{w:"quite",p:"adv.",m:"相当",e:"It's quite cold today.",ph:"/kwaɪt/",t:"Other"},
+{w:"especially",p:"adv.",m:"尤其",e:"I love fruit, especially oranges.",ph:"/ɪˈspeʃəli/",t:"Other"},
+{w:"outside",p:"adv./n.",m:"外面",e:"Let's go outside!",ph:"/ˌaʊtˈsaɪd/",t:"Other"},
+{w:"inside",p:"adv./n.",m:"里面",e:"Come inside, it's raining.",ph:"/ˌɪnˈsaɪd/",t:"Other"},
+];
+
+// De-duplicate by word
+const seen = new Set();
+const WORDS = [];
+VOCAB.forEach(v => { if(!seen.has(v.w)){seen.add(v.w);WORDS.push(v);} });
+
+const TOPICS = [...new Set(WORDS.map(w=>w.t))];
+const TOPIC_EMOJI = {Family:"👨‍👩‍👧‍👦",School:"🏫",Food:"🍔",Animals:"🐾",Sports:"⚽",Daily:"🏠",Travel:"✈️",Weather:"🌤️",Body:"💪",Feelings:"😊",Actions:"🏃",Places:"🏛️",Other:"📦"};
+const NEW_PER_DAY = 10;
+const STORAGE_KEY = "ket_word_master_v1";
+
+// ==================== SM-2 Algorithm ====================
+function defaultCard(wordIdx){
+  return {idx:wordIdx, ef:2.5, interval:0, reps:0, nextReview:0, lastReview:0};
+}
+function sm2Update(card, quality){
+  // quality: 0-5, >=3 = correct
+  if(quality < 3){
+    card.reps = 0;
+    card.interval = 1;
+  } else {
+    card.reps++;
+    if(card.reps===1) card.interval=1;
+    else if(card.reps===2) card.interval=3;
+    else card.interval = Math.round(card.interval * card.ef);
+  }
+  card.ef = Math.max(1.3, card.ef + (0.1 - (5-quality)*(0.08+(5-quality)*0.02)));
+  const now = todayNum();
+  card.lastReview = now;
+  card.nextReview = now + card.interval;
+  return card;
+}
+function todayNum(){
+  const d = new Date();
+  return Math.floor(d.getTime()/86400000);
+}
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+// ==================== STATE ====================
+let state;
+function loadState(){
+  try{ state = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){}
+  if(!state) state = {};
+  if(!state.cards) state.cards = {};
+  if(!state.unlocked) state.unlocked = 0;
+  if(!state.todayDone) state.todayDone = [];
+  if(!state.lastDate) state.lastDate = "";
+  if(!state.streak) state.streak = 0;
+  if(!state.totalDays) state.totalDays = 0;
+  checkNewDay();
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function checkNewDay(){
+  const today = todayStr();
+  if(state.lastDate !== today){
+    const yest = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    if(state.lastDate === yest && state.todayDone.length > 0){
+      state.streak++;
+    } else if(state.lastDate && state.lastDate !== yest){
+      state.streak = 0;
+    }
+    // Unlock new words
+    state.unlocked = Math.min(WORDS.length, state.unlocked + NEW_PER_DAY);
+    state.todayDone = [];
+    state.lastDate = today;
+    saveState();
+  }
+  if(state.unlocked === 0){
+    state.unlocked = NEW_PER_DAY;
+    saveState();
+  }
+}
+function getCard(idx){
+  if(!state.cards[idx]) state.cards[idx] = defaultCard(idx);
+  return state.cards[idx];
+}
+function isMastered(idx){
+  const c = getCard(idx);
+  return c.reps >= 4 && c.interval >= 7;
+}
+
+// ==================== TODAY'S WORDS ====================
+function getTodayNew(){
+  // Latest unlocked batch
+  const start = Math.max(0, state.unlocked - NEW_PER_DAY);
+  const end = state.unlocked;
+  return Array.from({length:end-start},(_,i)=>start+i).filter(i=>i<WORDS.length);
+}
+function getTodayReview(){
+  const now = todayNum();
+  const rev = [];
+  for(let i=0;i<state.unlocked && i<WORDS.length;i++){
+    const c = getCard(i);
+    if(c.lastReview > 0 && c.nextReview <= now && !getTodayNew().includes(i)){
+      rev.push(i);
+    }
+  }
+  return rev.slice(0, 20); // cap at 20 review words
+}
+function getTodayAll(){
+  return [...getTodayNew(), ...getTodayReview()];
+}
+
+// ==================== SPEECH ====================
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+// ==================== REWARD EFFECTS ====================
+function showConfetti(){
+  const overlay = document.createElement('div');
+  overlay.className = 'reward-overlay';
+  const colors = ['#6C5CE7','#FF6B6B','#FDCB6E','#00B894','#74B9FF','#FD79A8'];
+  for(let i=0;i<30;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.top = '-10px';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDelay = Math.random()*0.5+'s';
+    c.style.width = (6+Math.random()*8)+'px';
+    c.style.height = (6+Math.random()*8)+'px';
+    overlay.appendChild(c);
+  }
+  document.body.appendChild(overlay);
+  setTimeout(()=>overlay.remove(),2500);
+}
+function showStar(emoji){
+  const s = document.createElement('div');
+  s.className = 'star-burst';
+  s.textContent = emoji || '⭐';
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(), 900);
+}
+function celebrate(){
+  showConfetti();
+  showStar(['🌟','🎉','🏆','💯','👏','🥳'][Math.floor(Math.random()*6)]);
+}
+
+// ==================== UI ====================
+let currentMode = 'home';
+let sessionWords = [];
+let sessionIdx = 0;
+let quizCorrect = 0;
+let spellCorrect = 0;
+let fillCorrect = 0;
+let answered = false;
+
+function $(id){ return document.getElementById(id); }
+
+function switchMode(mode){
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
+  ['home','learn','quiz','spell','fill','wordlist'].forEach(m=>{
+    $('mode-'+m).classList.toggle('hidden', m!==mode);
+  });
+  if(mode==='home') renderHome();
+  if(mode==='wordlist') renderWordList();
+}
+
+// Tab clicks
+$('mainTabs').addEventListener('click',e=>{
+  const tab = e.target.closest('.tab');
+  if(tab && tab.dataset.mode) switchMode(tab.dataset.mode);
+});
+
+function renderHome(){
+  const newW = getTodayNew();
+  const revW = getTodayReview();
+  $('todayNewWords').innerHTML = newW.map(i=>`<span class="today-word-chip${state.todayDone.includes(i)?' done':''}">${WORDS[i].w}</span>`).join('');
+  $('todayRevWords').innerHTML = revW.length ? revW.map(i=>`<span class="today-word-chip${state.todayDone.includes(i)?' done':''}">${WORDS[i].w}</span>`).join('') : '<span style="font-size:12px;color:var(--text2);">暂无复习词</span>';
+  updateStats();
+}
+
+function updateStats(){
+  $('sToday').textContent = state.todayDone.length;
+  $('sStreak').textContent = state.streak;
+  const mastered = Object.values(state.cards).filter(c=>c.reps>=4&&c.interval>=7).length;
+  $('sMastered').textContent = mastered;
+  $('sTotal').textContent = WORDS.length;
+  if(state.streak > 0){
+    $('streakBadge').classList.remove('hidden');
+    $('streakBadge').textContent = `🔥 ${state.streak} 天连续打卡`;
+  } else {
+    $('streakBadge').classList.add('hidden');
+  }
+  const d = new Date();
+  $('dateInfo').textContent = d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+}
+
+function startDailySession(){
+  sessionWords = getTodayAll();
+  if(sessionWords.length === 0){
+    alert("今天没有新词了，太棒了！🎉");
+    return;
+  }
+  sessionIdx = 0;
+  switchMode('learn');
+  renderLearn();
+}
+
+// ==================== LEARN MODE ====================
+function renderLearn(){
+  if(sessionIdx >= sessionWords.length){
+    // Finished learning, go to quiz
+    switchMode('quiz');
+    quizCorrect = 0;
+    sessionIdx = 0;
+    shuffle(sessionWords);
+    renderQuiz();
+    return;
+  }
+  const wIdx = sessionWords[sessionIdx];
+  const w = WORDS[wIdx];
+  $('learnFill').style.width = ((sessionIdx+1)/sessionWords.length*100)+'%';
+  $('lWord').textContent = w.w;
+  $('lPhonetic').textContent = w.ph || '';
+  $('lPos').textContent = w.p;
+  $('lMeaning').textContent = w.m;
+  const ex = w.e.replace(new RegExp(`(${w.w})`,'gi'),'<span class="highlight">$1</span>');
+  $('lExample').innerHTML = ex;
+  $('lCounter').textContent = `${sessionIdx+1} / ${sessionWords.length}`;
+  speak(w.w);
+}
+function speakCurrent(){
+  const w = WORDS[sessionWords[sessionIdx]];
+  if(w) speak(w.w);
+}
+function speakExample2(){
+  const w = WORDS[sessionWords[sessionIdx]];
+  if(w) speak(w.e);
+}
+function learnPrev(){ if(sessionIdx>0){sessionIdx--;renderLearn();} }
+function learnNext(){ sessionIdx++;renderLearn(); }
+function learnMark(known){
+  const wIdx = sessionWords[sessionIdx];
+  const card = getCard(wIdx);
+  sm2Update(card, known ? 4 : 1);
+  if(!state.todayDone.includes(wIdx)) state.todayDone.push(wIdx);
+  saveState();
+  if(known) showStar('👍');
+  sessionIdx++;
+  renderLearn();
+}
+
+// ==================== QUIZ MODE ====================
+function renderQuiz(){
+  if(sessionIdx >= sessionWords.length){
+    const pct = Math.round(quizCorrect/sessionWords.length*100);
+    $('mode-quiz').innerHTML = `<div style="text-align:center;padding:30px 0;">
+      <div style="font-size:48px;margin-bottom:16px;">${pct>=80?'🏆':pct>=60?'👍':'💪'}</div>
+      <div style="font-size:22px;font-weight:bold;">选择题完成！</div>
+      <div style="font-size:16px;color:var(--text2);margin:8px 0;">正确率: ${pct}% (${quizCorrect}/${sessionWords.length})</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startSpellMode()">✍️ 继续拼写</button>
+        <button class="btn btn-outline" onclick="switchMode('home')">🏠 首页</button>
+      </div>
+    </div>`;
+    if(pct >= 80) celebrate();
+    return;
+  }
+  answered = false;
+  const wIdx = sessionWords[sessionIdx];
+  const w = WORDS[wIdx];
+  $('quizFill').style.width = ((sessionIdx+1)/sessionWords.length*100)+'%';
+  $('qWord').textContent = w.w;
+  $('qCounter').textContent = `${sessionIdx+1} / ${sessionWords.length}`;
+  $('qScore').textContent = `✓${quizCorrect}`;
+  // Generate options
+  const correct = w.m;
+  const wrongs = WORDS.filter((_,i)=>i!==wIdx).sort(()=>Math.random()-0.5).slice(0,3).map(x=>x.m);
+  const opts = shuffle([correct, ...wrongs]);
+  $('qOpts').innerHTML = opts.map(o=>`<div class="quiz-opt" onclick="pickQuiz(this,'${escHtml(o)}','${escHtml(correct)}')">${o}</div>`).join('');
+  speak(w.w);
+}
+function speakQuiz(){
+  const w = WORDS[sessionWords[sessionIdx]];
+  if(w) speak(w.w);
+}
+function pickQuiz(el, picked, correct){
+  if(answered) return;
+  answered = true;
+  const isCorrect = picked === correct;
+  el.classList.add(isCorrect?'correct':'wrong');
+  if(isCorrect){
+    quizCorrect++;
+    showStar('✅');
+    const card = getCard(sessionWords[sessionIdx]);
+    sm2Update(card, 4);
+  } else {
+    // Highlight correct
+    document.querySelectorAll('.quiz-opt').forEach(o=>{
+      if(o.textContent===correct) o.classList.add('correct');
+      o.classList.add('disabled');
+    });
+    const card = getCard(sessionWords[sessionIdx]);
+    sm2Update(card, 1);
+  }
+  if(!state.todayDone.includes(sessionWords[sessionIdx])) state.todayDone.push(sessionWords[sessionIdx]);
+  saveState();
+  setTimeout(()=>{sessionIdx++;renderQuiz();},1200);
+}
+
+// ==================== SPELL MODE ====================
+function startSpellMode(){
+  sessionIdx = 0;
+  spellCorrect = 0;
+  shuffle(sessionWords);
+  switchMode('spell');
+  renderSpell();
+}
+function renderSpell(){
+  if(sessionIdx >= sessionWords.length){
+    const pct = Math.round(spellCorrect/sessionWords.length*100);
+    $('mode-spell').innerHTML = `<div style="text-align:center;padding:30px 0;">
+      <div style="font-size:48px;margin-bottom:16px;">${pct>=80?'🌟':pct>=60?'👍':'💪'}</div>
+      <div style="font-size:22px;font-weight:bold;">拼写完成！</div>
+      <div style="font-size:16px;color:var(--text2);margin:8px 0;">正确率: ${pct}% (${spellCorrect}/${sessionWords.length})</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startFillMode()">🧩 继续填空</button>
+        <button class="btn btn-outline" onclick="switchMode('home')">🏠 首页</button>
+      </div>
+    </div>`;
+    if(pct >= 80) celebrate();
+    return;
+  }
+  answered = false;
+  const w = WORDS[sessionWords[sessionIdx]];
+  $('spellFill').style.width = ((sessionIdx+1)/sessionWords.length*100)+'%';
+  $('spMeaning').textContent = w.m;
+  $('spHint').textContent = '';
+  $('spInput').value = '';
+  $('spResult').textContent = '';
+  $('spCounter').textContent = `${sessionIdx+1} / ${sessionWords.length}`;
+  $('spScore').textContent = `✓${spellCorrect}`;
+  $('spInput').focus();
+  speak(w.w);
+}
+function speakSpell(){
+  const w = WORDS[sessionWords[sessionIdx]];
+  if(w) speak(w.w);
+}
+function showSpellHint(){
+  const w = WORDS[sessionWords[sessionIdx]];
+  const hint = w.w[0] + '_'.repeat(w.w.length-1);
+  $('spHint').textContent = `提示: ${hint} (${w.w.length}个字母)`;
+}
+function checkSpell(){
+  if(answered) { sessionIdx++; renderSpell(); return; }
+  answered = true;
+  const w = WORDS[sessionWords[sessionIdx]];
+  const input = $('spInput').value.trim().toLowerCase();
+  const correct = w.w.toLowerCase();
+  if(input === correct){
+    spellCorrect++;
+    $('spResult').innerHTML = `<span style="color:var(--success);">✅ 正确！<strong>${w.w}</strong></span>`;
+    showStar('🎯');
+    sm2Update(getCard(sessionWords[sessionIdx]), 5);
+  } else {
+    $('spResult').innerHTML = `<span style="color:var(--danger);">❌ 正确答案: <strong>${w.w}</strong></span>`;
+    sm2Update(getCard(sessionWords[sessionIdx]), 1);
+  }
+  if(!state.todayDone.includes(sessionWords[sessionIdx])) state.todayDone.push(sessionWords[sessionIdx]);
+  saveState();
+  setTimeout(()=>{sessionIdx++;renderSpell();},1500);
+}
+$('spInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter') checkSpell();
+});
+
+// ==================== FILL MODE ====================
+function startFillMode(){
+  sessionIdx = 0;
+  fillCorrect = 0;
+  shuffle(sessionWords);
+  switchMode('fill');
+  renderFill();
+}
+function renderFill(){
+  if(sessionIdx >= sessionWords.length){
+    const pct = Math.round(fillCorrect/sessionWords.length*100);
+    $('mode-fill').innerHTML = `<div style="text-align:center;padding:30px 0;">
+      <div style="font-size:48px;margin-bottom:16px;">${pct>=80?'🎊':pct>=60?'👍':'💪'}</div>
+      <div style="font-size:22px;font-weight:bold;">今日学习完成！</div>
+      <div style="font-size:16px;color:var(--text2);margin:8px 0;">填空正确率: ${pct}% (${fillCorrect}/${sessionWords.length})</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="switchMode('home')">🏠 返回首页</button>
+      </div>
+    </div>`;
+    if(pct >= 60){ celebrate(); state.streak = Math.max(state.streak,1); saveState(); }
+    return;
+  }
+  answered = false;
+  const w = WORDS[sessionWords[sessionIdx]];
+  const sentence = w.e.replace(new RegExp(`\\b${w.w}\\b`,'i'), '<span class="blank-slot" id="blankSlot">______</span>');
+  $('fillFill').style.width = ((sessionIdx+1)/sessionWords.length*100)+'%';
+  $('fillSentence').innerHTML = sentence;
+  $('fillInput').value = '';
+  $('fillResult').textContent = '';
+  $('fillCounter').textContent = `${sessionIdx+1} / ${sessionWords.length}`;
+  $('fillScore').textContent = `✓${fillCorrect}`;
+  $('fillInput').focus();
+}
+function speakFillSentence(){
+  const w = WORDS[sessionWords[sessionIdx]];
+  if(w) speak(w.e);
+}
+function checkFill(){
+  if(answered){ sessionIdx++; renderFill(); return; }
+  answered = true;
+  const w = WORDS[sessionWords[sessionIdx]];
+  const input = $('fillInput').value.trim().toLowerCase();
+  const correct = w.w.toLowerCase();
+  const slot = $('blankSlot');
+  if(input === correct){
+    fillCorrect++;
+    if(slot) slot.textContent = w.w;
+    $('fillResult').innerHTML = `<span style="color:var(--success);">✅ 正确！</span>`;
+    showStar('💯');
+    sm2Update(getCard(sessionWords[sessionIdx]), 5);
+  } else {
+    if(slot) slot.textContent = w.w;
+    $('fillResult').innerHTML = `<span style="color:var(--danger);">❌ 答案: <strong>${w.w}</strong> (${w.m})</span>`;
+    sm2Update(getCard(sessionWords[sessionIdx]), 1);
+  }
+  if(!state.todayDone.includes(sessionWords[sessionIdx])) state.todayDone.push(sessionWords[sessionIdx]);
+  saveState();
+  setTimeout(()=>{sessionIdx++;renderFill();},1500);
+}
+$('fillInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter') checkFill();
+});
+
+// ==================== WORDLIST ====================
+let selectedTopic = null;
+function renderWordList(){
+  $('topicGrid').innerHTML = [{t:null,label:'全部',emoji:'📚'},...TOPICS.map(t=>({t,label:t,emoji:TOPIC_EMOJI[t]||'📦'}))].map(({t,label,emoji})=>
+    `<div class="topic-btn${selectedTopic===t?' active':''}" onclick="selectTopic(${t===null?'null':"'"+t+"'"})"><span class="emoji">${emoji}</span>${label}</div>`
+  ).join('');
+  const filtered = selectedTopic ? WORDS.filter(w=>w.t===selectedTopic) : WORDS;
+  $('wordListContainer').innerHTML = filtered.map((w,i)=>{
+    const realIdx = WORDS.indexOf(w);
+    const card = getCard(realIdx);
+    let status='wl-new', statusText='新词';
+    if(card.reps>=4&&card.interval>=7){status='wl-mastered';statusText='已掌握';}
+    else if(card.reps>0){status='wl-learning';statusText='学习中';}
+    return `<div class="word-list-item" onclick="speak('${w.w}')">
+      <div><div class="wl-word">${w.w} <span style="font-size:12px;color:var(--text2);">${w.p}</span></div><div class="wl-meaning">${w.m}</div></div>
+      <span class="wl-status ${status}">${statusText}</span>
+    </div>`;
+  }).join('');
+}
+function selectTopic(t){
+  selectedTopic = t;
+  renderWordList();
+}
+
+// ==================== UTILS ====================
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+function escHtml(s){return s.replace(/'/g,"\\'").replace(/"/g,"&quot;");}
+
+function resetConfirm(){
+  if(confirm("确定要重置所有学习进度吗？此操作不可恢复！")){
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+// ==================== INIT ====================
+loadState();
+renderHome();
+updateStats();
+</script>
+</body>
+</html>
