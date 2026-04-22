@@ -1655,12 +1655,36 @@ function renderDailyTask() {
 }
 
 window.onload = function() {
+  // 自动切换到今天的词所在章节
+  syncChapterToToday();
   document.getElementById('chapterSelect').value = state.currentChapter;
   if (!skipToUnlearned()) {}
   updateLearnView(); updateStats();
   renderDailyTask();
   if ('speechSynthesis' in window) speechSynthesis.getVoices();
 };
+
+function syncChapterToToday() {
+  const chapterKeys = Object.keys(VOCABULARY).sort((a,b) => {
+    const [ac,al]=a.split('-').map(Number), [bc,bl]=b.split('-').map(Number);
+    return ac-bc || al-bl;
+  });
+  const allWords = [];
+  const wordChapterMap = [];
+  chapterKeys.forEach(k => VOCABULARY[k].words.forEach(w => { allWords.push(w); wordChapterMap.push(k); }));
+  const startKey = 'n2vocab_start_date';
+  let startDate = localStorage.getItem(startKey);
+  if (!startDate) return;
+  const dayNum = Math.floor((new Date() - new Date(startDate+'T00:00:00')) / 86400000) + 1;
+  const from = (dayNum - 1) * 30;
+  if (from >= allWords.length) return;
+  const todayChapter = wordChapterMap[from];
+  if (todayChapter && todayChapter !== state.currentChapter) {
+    state.currentChapter = todayChapter;
+    state.currentIndex = 0;
+    localStorage.setItem('n2vocab_state', JSON.stringify(state));
+  }
+}
 
 // ============ 跨设备同步 ============
 function exportData() {
