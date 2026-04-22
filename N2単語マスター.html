@@ -1300,12 +1300,29 @@ function startJlpt(mode) {
     jlptQs = [...jlptErrors].sort(()=>Math.random()-0.5);
     jlptErrors = [];
   } else {
-    const dailyChapters = [...new Set(getCachedDailyWords().map(w => w._chapter))];
-    const all = dailyChapters.flatMap(ch => JLPT_QUESTIONS[ch] || []);
-    // Prefer questions not done yet this session
-    const undone = all.filter(q => !jlptDoneSet.has(q.question));
-    const pool = undone.length >= 20 ? undone : all;
-    jlptQs = pool.sort(() => Math.random()-0.5).slice(0, 20);
+    // Figure out which chapters have NEW words today (not in yesterday's set)
+    const daily = getCachedDailyWords();
+    const dailyChapters = [...new Set(daily.map(w => w._chapter))];
+    // Find chapters that are "new today" (words from this chapter started appearing today)
+    const startKey = 'n2vocab_start_date';
+    const startDate = localStorage.getItem(startKey);
+    const dayNum = startDate ? Math.floor((new Date() - new Date(startDate+'T00:00:00')) / 86400000) + 1 : 1;
+    const yesterdayFrom = Math.max(0, (dayNum - 2) * 30);
+    const yesterdayTo = (dayNum - 1) * 30;
+    // Build all words list to find yesterday's chapters
+    const chapterKeys = Object.keys(VOCABULARY).sort((a,b)=>{const[ac,al]=a.split('-').map(Number),[bc,bl]=b.split('-').map(Number);return ac-bc||al-bl;});
+    const allW = []; chapterKeys.forEach(k=>VOCABULARY[k].words.forEach(w=>allW.push({...w,_chapter:k})));
+    const yesterdayChapters = dayNum > 1 ? [...new Set(allW.slice(yesterdayFrom,yesterdayTo).map(w=>w._chapter))] : [];
+    const newChapters = dailyChapters.filter(ch => !yesterdayChapters.includes(ch));
+    // Prioritize new chapter questions, then fill from all daily chapters
+    let priorityQs = newChapters.flatMap(ch => JLPT_QUESTIONS[ch] || []);
+    let otherQs = dailyChapters.filter(ch => !newChapters.includes(ch)).flatMap(ch => JLPT_QUESTIONS[ch] || []);
+    // Prefer undone questions
+    const undoneP = priorityQs.filter(q => !jlptDoneSet.has(q.question));
+    const undoneO = otherQs.filter(q => !jlptDoneSet.has(q.question));
+    let pool = [...(undoneP.length ? undoneP : priorityQs).sort(()=>Math.random()-0.5)];
+    if (pool.length < 20) pool = pool.concat((undoneO.length ? undoneO : otherQs).sort(()=>Math.random()-0.5));
+    jlptQs = pool.slice(0, 20);
   }
   if (!jlptQs.length) { document.getElementById('jlptQuestion').innerHTML = '<p>暂无该课真题</p>'; return; }
   jlptIdx=0; jlptScoreVal=0; jlptErrors=[];
