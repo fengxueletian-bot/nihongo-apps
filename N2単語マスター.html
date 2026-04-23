@@ -1017,25 +1017,21 @@ function showQuizQuestion() {
     return;
   }
   const w = quizWords[quizIdx];
-  // 50% 日→中, 50% 中→日
-  const isJpToCn = Math.random() > 0.4;
-  
-  if (isJpToCn) {
-    // Don't show reading together with kanji - prevent cheating
-    if (w.word !== w.reading) {
-      document.getElementById('quizWord').textContent = w.word;
-      document.getElementById('quizReading').style.visibility = 'hidden';
-    } else {
-      document.getElementById('quizWord').textContent = w.reading;
-      document.getElementById('quizReading').style.visibility = 'hidden';
-    }
+  const allW = getCachedDailyWords();
+  // 三种题型随机：1=听日语选中文 2=看中文选平假名 3=看平假名选中文
+  const qType = Math.floor(Math.random() * 3);
+
+  if (qType === 0) {
+    // 题型1：听日语读音→选中文意思
+    document.getElementById('quizWord').textContent = '🔊 听读音，选中文';
+    document.getElementById('quizReading').textContent = '点击下方按钮重新播放';
+    document.getElementById('quizReading').style.visibility = 'visible';
+    speak(w.reading);
     let options = [w.meaning];
-    // 用混淆选项
     const confuse = CONFUSING_OPTIONS[w.meaning];
     if (confuse) {
       options = options.concat(confuse.sort(() => Math.random()-0.5).slice(0,3));
     } else {
-      const allW = getCachedDailyWords();
       while (options.length < 4) {
         const r = allW[Math.floor(Math.random()*allW.length)].meaning;
         if (!options.includes(r)) options.push(r);
@@ -1043,32 +1039,51 @@ function showQuizQuestion() {
     }
     options = options.slice(0,4).sort(() => Math.random()-0.5);
     window._quizCorrect = w.meaning;
-    document.getElementById('quizOptions').innerHTML = options.map((o,i) =>
+    window._quizType = 'listen';
+    document.getElementById('quizOptions').innerHTML = 
+      `<div style="text-align:center;margin-bottom:12px"><button class="btn btn-outline btn-sm" onclick="speak('${w.reading.replace(/'/g,"\\'")}')">🔊 再听一次</button></div>` +
+      options.map(o => `<div class="quiz-option" onclick="handleQuizClick(this)">${o}</div>`).join('');
+  } else if (qType === 1) {
+    // 题型2：看中文→选平假名
+    document.getElementById('quizWord').textContent = w.meaning;
+    document.getElementById('quizReading').textContent = '选择对应的平假名读音';
+    document.getElementById('quizReading').style.visibility = 'visible';
+    let options = [w.reading];
+    while (options.length < 4) {
+      const r = allW[Math.floor(Math.random()*allW.length)].reading;
+      if (!options.includes(r)) options.push(r);
+    }
+    options.sort(() => Math.random()-0.5);
+    window._quizCorrect = w.reading;
+    window._quizType = 'cn2kana';
+    document.getElementById('quizOptions').innerHTML = options.map(o =>
       `<div class="quiz-option" onclick="handleQuizClick(this)">${o}</div>`
     ).join('');
   } else {
-    document.getElementById('quizWord').textContent = w.meaning;
-    document.getElementById('quizReading').textContent = '选择对应的日语';
-    document.getElementById('quizReading').style.visibility = 'visible';
-    const allW = getCachedDailyWords();
-    let options = [`${w.word}（${w.reading}）`];
-    while (options.length < 4) {
-      const r = allW[Math.floor(Math.random()*allW.length)];
-      const opt = `${r.word}（${r.reading}）`;
-      if (!options.includes(opt)) options.push(opt);
+    // 题型3：看平假名→选中文意思
+    document.getElementById('quizWord').textContent = w.reading;
+    document.getElementById('quizReading').textContent = '';
+    document.getElementById('quizReading').style.visibility = 'hidden';
+    let options = [w.meaning];
+    const confuse = CONFUSING_OPTIONS[w.meaning];
+    if (confuse) {
+      options = options.concat(confuse.sort(() => Math.random()-0.5).slice(0,3));
+    } else {
+      while (options.length < 4) {
+        const r = allW[Math.floor(Math.random()*allW.length)].meaning;
+        if (!options.includes(r)) options.push(r);
+      }
     }
-    options.sort(() => Math.random()-0.5);
-    const correct = `${w.word}（${w.reading}）`;
-    window._quizCorrect = correct;
-    document.getElementById('quizOptions').innerHTML = options.map((o,i) =>
+    options = options.slice(0,4).sort(() => Math.random()-0.5);
+    window._quizCorrect = w.meaning;
+    window._quizType = 'kana2cn';
+    document.getElementById('quizOptions').innerHTML = options.map(o =>
       `<div class="quiz-option" onclick="handleQuizClick(this)">${o}</div>`
     ).join('');
   }
   document.getElementById('quizCounter').textContent = `${quizIdx+1} / ${quizWords.length}`;
   document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
-    speak(quizWords[quizIdx].reading);
   document.getElementById('quizProgress').style.width = (quizIdx/quizWords.length*100)+'%';
-  // No auto-speak, user clicks 🔊 if needed
 }
 function handleQuizClick(el) {
   const selected = el.textContent;
@@ -1090,7 +1105,7 @@ function handleQuizClick(el) {
     else state.errors.push({word:w.word,reading:w.reading,meaning:w.meaning,wrongAt:Date.now(),type:'quiz',count:1});
   }
   document.getElementById('quizScore').textContent = `✓ ${quizScore}`;
-    speak(quizWords[quizIdx].reading);
+  speak(quizWords[quizIdx].reading);
   setTimeout(() => { quizIdx++; showQuizQuestion(); saveState(); }, 1500);
 }
 function speakQuizWord() { if(quizWords[quizIdx]) speak(quizWords[quizIdx].reading); }
